@@ -1,19 +1,15 @@
--- Script 02: Khung schema bảng và dữ liệu mẫu cho hệ thống quản lí nhà trọ
-USE NhaTroDB;
-GO
+-- Script 02: Khung schema bảng và dữ liệu mẫu cho hệ thống quản lí nhà trọ (MySQL)
+-- Thực thi trên MySQL Workbench hoặc MySQL CLI sau khi đã chạy script 01
 
--- (Các thành viên trong nhóm sẽ bổ sung bảng cụ thể: PhongTro, KhachThue, HopDong, HoaDon, DichVu,...)
--- Ví dụ khung bảng kiểm tra kết nối:
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'he_thong')
-BEGIN
-    CREATE TABLE he_thong (
-        id INT IDENTITY(1,1) PRIMARY KEY,
-        ten_he_thong NVARCHAR(100) NOT NULL,
-        ngay_tao DATETIME DEFAULT GETDATE(),
-        ghi_chu NVARCHAR(255)
-    );
+USE nhatro_db;
 
-    INSERT INTO he_thong (ten_he_thong, ghi_chu)
-    VALUES (N'Hệ thống Quản lí Nhà trọ', N'Khởi tạo khung đồ án');
-END
-GO
+-- Bảng hệ thống kiểm tra kết nối
+CREATE TABLE IF NOT EXISTS he_thong (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ten_he_thong VARCHAR(100) NOT NULL,
+    ngay_tao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ghi_chu VARCHAR(255)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO he_thong (ten_he_thong, ghi_chu)
+VALUES ('Hệ thống Quản lí Nhà trọ', 'Khởi tạo khung đồ án MySQL');

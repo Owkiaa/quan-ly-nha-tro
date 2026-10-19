@@ -1,13 +1,10 @@
--- Script 01: Tạo cơ sở dữ liệu NhaTroDB cho hệ thống quản lí nhà trọ
--- Thực thi trên SQL Server Management Studio (SSMS) hoặc Azure Data Studio
+-- Script 01: Tạo cơ sở dữ liệu nhatro_db cho hệ thống quản lí nhà trọ (MySQL)
+-- Thực thi trên MySQL Workbench, phpMyAdmin hoặc MySQL CLI
 
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'NhaTroDB')
-BEGIN
-    CREATE DATABASE NhaTroDB;
-    PRINT N'Đã tạo cơ sở dữ liệu NhaTroDB thành công.';
-END
-ELSE
-BEGIN
-    PRINT N'Cơ sở dữ liệu NhaTroDB đã tồn tại.';
-END
-GO
+CREATE DATABASE IF NOT EXISTS nhatro_db
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+
+USE nhatro_db;
+
+SELECT 'Đã tạo cơ sở dữ liệu nhatro_db thành công!' AS thong_bao;
