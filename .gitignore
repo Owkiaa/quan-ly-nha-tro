@@ -1,0 +1,32 @@
+# Build & Target files
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IDE & Editor files
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+*.log
+logs/
+
+# Sensitive & Secrets (Mật khẩu, cấu hình môi trường bảo mật)
+.env
+.env.*
+!*.env.example
+application-local.properties
+application-secret.properties
+secrets.properties
+passwords.txt
+
+# OS Generated files
+.DS_Store
+Thumbs.db
