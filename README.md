@@ -6,28 +6,22 @@
 ## 2. Công nghệ & Phiên bản sử dụng
 - **Java SE Development Kit (JDK)**: `17 LTS` (Eclipse Adoptium Temurin 17 / OpenJDK 17)
 - **Framework**: `Spring Boot 3.3.5` (Spring Web, Thymeleaf, Spring Data JPA)
-- **Database**: `MySQL 8.0+` (Driver: `com.mysql:mysql-connector-j`)
+- **Database**: `Microsoft SQL Server` (Driver: `com.microsoft.sqlserver:mssql-jdbc`)
 - **Frontend UI**: `Thymeleaf Template Engine` kết hợp `Bootstrap 5.3 CDN`
 - **Socket**: Java Networking (`java.net.Socket`, `ServerSocket`) độc lập phục vụ đa client
 - **Build Tool**: `Apache Maven 3.9+` (hoặc Maven Wrapper đi kèm `mvnw`)
 
 ## 3. Yêu cầu cài đặt
 1. **JDK 17**: Cài đặt và cấu hình biến môi trường `JAVA_HOME` trỏ đến thư mục cài JDK 17, đồng thời thêm `%JAVA_HOME%\bin` vào `PATH`.
-2. **MySQL Server 8.0+**: Đang chạy dịch vụ MySQL trên cổng `3306`.
+2. **Microsoft SQL Server**: Bản 2017/2019/2022 hoặc SQL Server Express, đã kích hoạt xác thực SQL Server (SQL Server and Windows Authentication mode), mở cổng `1433`.
 3. **Apache Maven**: Đã được cài đặt hoặc sử dụng trực tiếp `./mvnw` / `mvnw.cmd` đi kèm dự án.
 
-## 4. Cách tạo cơ sở dữ liệu `nhatro_db`
-1. Mở **MySQL Workbench**, **phpMyAdmin**, hoặc **MySQL Command Line Client**.
-2. Đăng nhập vào MySQL Server của bạn (tài khoản `root` hoặc tài khoản có quyền tạo CSDL).
+## 4. Cách tạo cơ sở dữ liệu `NhaTroDB`
+1. Mở **SQL Server Management Studio (SSMS)** hoặc **Azure Data Studio**.
+2. Kết nối tới SQL Server instance của bạn (tài khoản `sa` hoặc tài khoản có quyền sysadmin/dbcreator).
 3. Chạy lần lượt các file script trong thư mục `sql/`:
-   - [sql/01_create_database.sql](sql/01_create_database.sql): Tạo cơ sở dữ liệu `nhatro_db` với bảng mã `utf8mb4`.
+   - [sql/01_create_database.sql](sql/01_create_database.sql): Tạo cơ sở dữ liệu `NhaTroDB`.
    - [sql/02_schema_and_sample_data.sql](sql/02_schema_and_sample_data.sql): Khởi tạo các bảng và dữ liệu mẫu ban đầu.
-   
-   *Hoặc thực thi nhanh qua dòng lệnh:*
-   ```bash
-   mysql -u root -p < sql/01_create_database.sql
-   mysql -u root -p nhatro_db < sql/02_schema_and_sample_data.sql
-   ```
 
 ## 5. Cách chạy Server
 1. Thiết lập biến môi trường mật khẩu cơ sở dữ liệu (để bảo mật, không commit mật khẩu thật lên Git):
@@ -39,7 +33,7 @@
      ```powershell
      $env:DB_PASSWORD="your_actual_password"
      ```
-   *(Nếu bạn dùng username khác `root`, có thể thiết lập thêm biến môi trường `$env:DB_USERNAME="your_username"`).*
+   *(Nếu bạn dùng username khác `sa`, có thể thiết lập thêm biến môi trường `$env:DB_USERNAME="your_username"`).*
 
 2. Khởi chạy ứng dụng Spring Boot bằng Maven Wrapper:
    ```bash
@@ -66,7 +60,7 @@ Client là ứng dụng Java độc lập nằm trong thư mục `client/`:
 ## 7. Danh sách thành viên
 | STT | Họ và Tên | MSSV | Vai trò / Nhiệm vụ |
 |:---:|:---|:---:|:---|
-| 1 | *Đang cập nhật* | *Đang cập nhật* | *Đang cập nhật* |
-| 2 | *Đang cập nhật* | *Đang cập nhật* | *Đang cập nhật* |
-| 3 | *Đang cập nhật* | *Đang cập nhật* | *Đang cập nhật* |
-| 4 | *Đang cập nhật* | *Đang cập nhật* | *Đang cập nhật* |
+| 1 | Nguyễn Minh Tâm | 2001240423 | Trưởng nhóm, Cơ sở dữ liệu & Entity, JPA Repository |
+| 2 | *Đang cập nhật* | *Đang cập nhật* | Nghiệp vụ Hợp đồng, Hóa đơn & Xử lý Đồng thời |
+| 3 | *Đang cập nhật* | *Đang cập nhật* | Giao diện Thymeleaf & Bootstrap CDN |
+| 4 | *Đang cập nhật* | *Đang cập nhật* | Mạng Socket (Đa Client) & Kiểm thử |
