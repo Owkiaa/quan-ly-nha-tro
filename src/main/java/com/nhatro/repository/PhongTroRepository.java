@@ -23,6 +23,8 @@ public interface PhongTroRepository extends JpaRepository<PhongTro, Integer> {
 
     boolean existsByMaPhong(String maPhong);
 
+    long countByTrangThai(String trangThai);
+
     @Query("SELECT p FROM PhongTro p WHERE " +
            "(:keyword IS NULL OR :keyword = '' OR LOWER(p.maPhong) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.tenPhong) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:trangThai IS NULL OR :trangThai = '' OR p.trangThai = :trangThai)")

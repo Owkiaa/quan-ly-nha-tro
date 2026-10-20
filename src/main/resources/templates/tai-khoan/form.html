@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/fragments :: head('Tạo Tài Khoản Mới')}"></head>
+<body>
+
+    <!-- Top Navbar Ngang -->
+    <nav th:replace="~{layout/fragments :: navbar('tai-khoan')}"></nav>
+
+    <main class="main-container">
+        <div class="container-xl">
+            <div th:replace="~{layout/fragments :: alerts}"></div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a th:href="@{/tai-khoan}" class="btn btn-outline-secondary btn-sm mb-2">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Quay lại danh sách
+                    </a>
+                    <h3 class="fw-bold mb-1">Tạo Tài Khoản Người Dùng Mới</h3>
+                    <p class="text-muted small mb-0">Cấp tài khoản và thiết lập quyền truy cập hệ thống</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="card card-custom p-4">
+                        <form th:action="@{/tai-khoan/them}" method="POST" th:object="${taiKhoan}">
+                            <div class="mb-3">
+                                <label for="tenDangNhap" class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="tenDangNhap" th:field="*{tenDangNhap}"
+                                       placeholder="Ví dụ: staff_lan, tenant_hung..." required autofocus>
+                                <div class="form-text">Viết liền không dấu, không chứa khoảng trắng.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="rawPassword" class="form-label">Mật khẩu ban đầu <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="rawPassword" name="rawPassword"
+                                       placeholder="Tối thiểu 6 ký tự" minlength="6" required>
+                                <div class="form-text">Mật khẩu sẽ được tự động băm SHA-256 kèm muối khi lưu vào CSDL.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="vaiTro" class="form-label">Vai trò phân quyền <span class="text-danger">*</span></label>
+                                <select class="form-select" id="vaiTro" th:field="*{vaiTro}" required onchange="handleRoleChange(this.value)">
+                                    <option value="STAFF">Nhân viên quản lý (STAFF)</option>
+                                    <option value="ADMIN">Quản trị viên toàn quyền (ADMIN)</option>
+                                    <option value="TENANT">Khách thuê phòng (TENANT)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-4" id="tenantSelectGroup" style="display: none;">
+                                <label for="khachId" class="form-label">Liên kết hồ sơ khách thuê</label>
+                                <select class="form-select" id="khachId" name="khachId">
+                                    <option value="">-- Chọn khách thuê liên kết --</option>
+                                    <option th:each="khach : ${danhSachKhach}"
+                                            th:value="${khach.id}"
+                                            th:text="${khach.hoTen} + ' - CCCD: ' + ${khach.cccd} + ' (SĐT: ' + ${khach.soDienThoai} + ')'">
+                                    </option>
+                                </select>
+                                <div class="form-text">Tài khoản vai trò TENANT cần liên kết hồ sơ khách để xem hợp đồng và hóa đơn.</div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                                <a th:href="@{/tai-khoan}" class="btn btn-outline-secondary btn-sm px-3">Hủy bỏ</a>
+                                <button type="submit" class="btn btn-primary btn-sm px-4">
+                                    <i class="fa-solid fa-floppy-disk me-1"></i> Tạo Tài Khoản
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="card card-custom p-4">
+                        <h6 class="fw-bold mb-3 text-warning-emphasis">
+                            <i class="fa-solid fa-shield-halved me-1"></i> Phân quyền các vai trò
+                        </h6>
+                        <ul class="small text-muted ps-3 mb-0" style="font-size: 0.825rem; line-height: 1.7;">
+                            <li class="mb-2"><strong>ADMIN:</strong> Toàn quyền trên toàn hệ thống, có thể tạo và quản lý tài khoản nhân viên.</li>
+                            <li class="mb-2"><strong>STAFF:</strong> Quản lý danh mục phòng trọ, hồ sơ khách thuê, quản lý hợp đồng, hóa đơn tiền phòng.</li>
+                            <li><strong>TENANT:</strong> Chỉ truy cập Cổng khách thuê để tra cứu phòng, theo dõi hợp đồng, hóa đơn và gửi phản ánh sự cố.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{layout/fragments :: footer}"></footer>
+
+    <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+    <script>
+        function handleRoleChange(role) {
+            const group = document.getElementById('tenantSelectGroup');
+            if (role === 'TENANT') {
+                group.style.display = 'block';
+            } else {
+                group.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
