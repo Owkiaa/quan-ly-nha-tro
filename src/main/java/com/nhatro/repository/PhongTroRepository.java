@@ -1,0 +1,30 @@
+package com.nhatro.repository;
+
+import com.nhatro.entity.PhongTro;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface PhongTroRepository extends JpaRepository<PhongTro, Integer> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM PhongTro p WHERE p.id = :id")
+    Optional<PhongTro> findByIdForUpdate(@Param("id") Integer id);
+
+    Optional<PhongTro> findByMaPhong(String maPhong);
+
+    boolean existsByMaPhong(String maPhong);
+
+    @Query("SELECT p FROM PhongTro p WHERE " +
+           "(:keyword IS NULL OR :keyword = '' OR LOWER(p.maPhong) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.tenPhong) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:trangThai IS NULL OR :trangThai = '' OR p.trangThai = :trangThai)")
+    Page<PhongTro> search(@Param("keyword") String keyword, @Param("trangThai") String trangThai, Pageable pageable);
+}
