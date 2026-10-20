@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/fragments :: head(${isEdit} ? 'Chỉnh Sửa Phòng Trọ' : 'Thêm Phòng Trọ Mới')}"></head>
+<body>
+
+    <!-- Top Navbar Ngang -->
+    <nav th:replace="~{layout/fragments :: navbar('phong-tro')}"></nav>
+
+    <main class="main-container">
+        <div class="container-xl">
+            <div th:replace="~{layout/fragments :: alerts}"></div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a th:href="@{/phong-tro}" class="btn btn-outline-secondary btn-sm mb-2">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Quay lại danh sách
+                    </a>
+                    <h3 class="fw-bold mb-1" th:text="${isEdit} ? 'Chỉnh Sửa Phòng Trọ: ' + ${phongTro.maPhong} : 'Thêm Phòng Trọ Mới'">Thêm Phòng Trọ</h3>
+                    <p class="text-muted small mb-0">Điền đầy đủ thông tin kỹ thuật, giá thuê và hình ảnh phòng</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card card-custom p-4">
+                        <form th:action="${isEdit} ? @{/phong-tro/sua/{id}(id=${phongTro.id})} : @{/phong-tro/them}"
+                              method="POST"
+                              enctype="multipart/form-data"
+                              th:object="${phongTro}">
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="maPhong" class="form-label">Mã phòng <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control font-mono" id="maPhong" th:field="*{maPhong}"
+                                           placeholder="Ví dụ: P101, P201..." required>
+                                    <div class="form-text">Mã định danh duy nhất của phòng trong hệ thống.</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="tenPhong" class="form-label">Tên phòng <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="tenPhong" th:field="*{tenPhong}"
+                                           placeholder="Ví dụ: Phòng 101" required>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="loaiPhong" class="form-label">Loại phòng</label>
+                                    <select class="form-select" id="loaiPhong" th:field="*{loaiPhong}">
+                                        <option value="Đơn">Phòng Đơn</option>
+                                        <option value="Đôi">Phòng Đôi</option>
+                                        <option value="Studio">Phòng Studio</option>
+                                        <option value="Gác lửng">Phòng Gác lửng</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="dienTich" class="form-label">Diện tích (m²)</label>
+                                    <input type="number" step="0.5" min="5" class="form-control font-mono" id="dienTich" th:field="*{dienTich}"
+                                           placeholder="Ví dụ: 25.5">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="giaThue" class="form-label">Giá thuê (VNĐ/tháng) <span class="text-danger">*</span></label>
+                                    <input type="number" step="10000" min="100000" class="form-control font-mono" id="giaThue" th:field="*{giaThue}"
+                                           placeholder="Ví dụ: 2500000" required>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="trangThai" class="form-label">Trạng thái phòng <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="trangThai" th:field="*{trangThai}" required>
+                                        <option value="TRONG">Phòng trống (TRONG)</option>
+                                        <option value="DA_DAT">Đã giữ chỗ (DA_DAT)</option>
+                                        <option value="DA_THUE">Đang thuê (DA_THUE)</option>
+                                        <option value="BAO_TRI">Bảo trì (BAO_TRI)</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="imageFile" class="form-label">Ảnh đại diện phòng</label>
+                                    <input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/*">
+                                    <input type="hidden" th:field="*{hinhAnh}">
+                                    <div class="form-text" th:if="${phongTro.hinhAnh != null and !phongTro.hinhAnh.isEmpty()}">
+                                        Ảnh hiện tại: <span th:text="${phongTro.hinhAnh}"></span>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="moTa" class="form-label">Mô tả chi tiết / Tiện nghi</label>
+                                    <textarea class="form-control" id="moTa" th:field="*{moTa}" rows="3"
+                                              placeholder="Ví dụ: Cửa sổ thoáng mát, máy lạnh, ban công riêng, gần cầu thang..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                                <a th:href="@{/phong-tro}" class="btn btn-outline-secondary btn-sm px-3">Hủy bỏ</a>
+                                <button type="submit" class="btn btn-primary btn-sm px-4">
+                                    <i class="fa-solid fa-floppy-disk me-1"></i> Lưu Phòng Trọ
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card card-custom p-3 text-center mb-3">
+                        <h6 class="fw-bold mb-2 small text-muted text-uppercase">Xem Trước Ảnh Phòng</h6>
+                        <div class="rounded-3 overflow-hidden border bg-light d-flex align-items-center justify-content-center" style="height: 190px;">
+                            <img th:if="${phongTro.hinhAnh != null and !phongTro.hinhAnh.isEmpty()}"
+                                 th:src="${phongTro.hinhAnh}"
+                                 id="imagePreview"
+                                 class="w-100 h-100 object-fit-cover"
+                                 onerror="this.src='https://placehold.co/400x300/ede8df/78716c?text=Chua+co+anh';"
+                                 alt="Ảnh xem trước">
+                            <img th:unless="${phongTro.hinhAnh != null and !phongTro.hinhAnh.isEmpty()}"
+                                 src="https://placehold.co/400x300/ede8df/78716c?text=Chua+co+anh"
+                                 id="imagePreview"
+                                 class="w-100 h-100 object-fit-cover"
+                                 alt="Ảnh xem trước">
+                        </div>
+                    </div>
+
+                    <div class="card card-custom p-3">
+                        <h6 class="fw-bold mb-2 small text-warning-emphasis">
+                            <i class="fa-solid fa-circle-info me-1"></i> Trạng thái quy chuẩn phòng
+                        </h6>
+                        <ul class="small text-muted ps-3 mb-0" style="font-size: 0.8rem; line-height: 1.6;">
+                            <li><strong>TRONG:</strong> Sẵn sàng đón khách mới xem và đặt cọc.</li>
+                            <li><strong>DA_DAT:</strong> Khách đã đặt giữ chỗ tạm thời (có thời hạn).</li>
+                            <li><strong>DA_THUE:</strong> Đã ký hợp đồng thuê có hiệu lực.</li>
+                            <li><strong>BAO_TRI:</strong> Đang sửa chữa trang thiết bị.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{layout/fragments :: footer}"></footer>
+
+    <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+    <script>
+        const imageFileInput = document.getElementById('imageFile');
+        const imagePreview = document.getElementById('imagePreview');
+        if (imageFileInput && imagePreview) {
+            imageFileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        imagePreview.src = evt.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

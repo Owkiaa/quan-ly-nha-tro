@@ -17,6 +17,10 @@ public interface HopDongRepository extends JpaRepository<HopDong, Integer> {
 
     boolean existsByMaHopDong(String maHopDong);
 
+    boolean existsByPhongTroId(Integer phongId);
+
+    boolean existsByKhachThueId(Integer khachId);
+
     boolean existsByPhongTroIdAndTrangThai(Integer phongId, String trangThai);
 
     boolean existsByKhachThueIdAndTrangThai(Integer khachId, String trangThai);
