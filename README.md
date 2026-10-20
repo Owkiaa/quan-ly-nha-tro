@@ -60,7 +60,7 @@ Mật khẩu trong bảng `tai_khoan` được lưu dưới dạng chuỗi băm 
    [http://localhost:8080](http://localhost:8080)
 
 ## 7. Cách chạy Desktop Client
-*Đang cập nhật (Module của Đoàn Văn Mẩn trong Tuần 4).*
+*Đang cập nhật (Module Mạng Socket của Đoàn Văn Mẩn).*
 
 ## 8. Danh sách thành viên nhóm (5 thành viên)
 | STT | Họ và Tên | MSSV | Vai trò & Mảng phụ trách chính |
