@@ -13,11 +13,11 @@ Nhóm gồm **5 thành viên**. Trách nhiệm được phân bổ đồng đề
 
 | STT | Họ và Tên | MSSV | Mảng phụ trách chính | Phạm vi trách nhiệm & Vấn đáp |
 |:---:|:---|:---:|:---|:---|
-| **1** | **Nguyễn Minh Tâm** *(Trưởng nhóm)* | 2001240423 | **Cơ sở dữ liệu, Kiến trúc tổng thể, Phòng trọ, Khách thuê, Tài khoản & Xác thực** | - Thiết kế ERD, Schema CSDL SQL Server (`NhaTroDB`), viết script SQL tạo database và dữ liệu mẫu.<br>- Hoàn thành và đẩy các Entity & Repository thủ công lên nhánh `dev` trong 2–3 ngày đầu của Tuần 1 để unblock nhóm.<br>- Tái sử dụng bộ Thymeleaf Fragment của TV3 để hiện thực trọn gói (Controller, Service, View) cho CRUD Phòng trọ (kèm ảnh), Khách thuê.<br>- Quản lý tài khoản, Đăng nhập và Phân quyền bằng `HttpSession` & `HandlerInterceptor` (không dùng Spring Security).<br>- Mã hóa mật khẩu bằng SHA-256 kèm salt (`java.security.MessageDigest`).<br>- Ràng buộc chặn xóa phòng và khách thuê đang có hợp đồng hoặc đang giữ chỗ (`dat_cho` còn `DANG_GIU`).<br>- Quản lý cấu trúc dự án và điều phối Git. |
-| **2** | **[Họ tên Thành viên 2]** | [MSSV TV2] | **Nghiệp vụ Hợp đồng, Đặt chỗ, Xử lý ĐỒNG THỜI & Tác vụ nền @Scheduled** | - Tái sử dụng bộ Thymeleaf Fragment của TV3 để hiện thực trọn gói (Controller, Service, View) cho Hợp đồng thuê phòng, Đặt chỗ (`dat_cho`).<br>- Ràng buộc toàn vẹn khi lập/thanh lý hợp đồng.<br>- **Thiết kế và hiện thực cơ chế XỬ LÝ ĐỒNG THỜI (Concurrency Lock)** bằng `findByIdForUpdate` (Pessimistic Write Lock) chống thuê/đặt trùng phòng. Lệnh đặt phòng khóa phòng trước, tìm/tạo khách sau trong cùng 1 Transaction.<br>- **Hiện thực tác vụ nền `@Scheduled`** định kỳ quét đặt chỗ quá hạn (tách `DatChoService` và `DatChoScheduler` để Spring AOP proxy quản lý `@Transactional` và lock chuẩn xác) để tự động hủy và trả phòng về `TRONG`; ghi log `Thread.currentThread().getName()`.<br>- Giải thích cơ chế Transaction, Isolation Level, Lock và Background Task khi vấn đáp. |
-| **3** | **[Họ tên Thành viên 3]** | [MSSV TV3] | **Kiến trúc Giao diện, Bộ Fragment dùng lại (Reusable Components) & Cổng Khách thuê (Tenant Portal)** | - Xây dựng khung giao diện chuẩn (Sidebar, Navbar, Footer) bằng Thymeleaf Layout Fragments.<br>- Tích hợp Bootstrap 5.3 CDN và CSS Responsive (Desktop/Mobile), màu sắc hài hòa, hiện đại.<br>- **Xây dựng bộ Thymeleaf Fragment dùng lại cho toàn nhóm**: thanh tìm kiếm, phân trang, sắp xếp cột dữ liệu, modal xác nhận xóa, flash alert (`RedirectAttributes`), và thông báo lỗi cạnh ô nhập liệu.<br>- Bàn giao bộ fragment cho TV1, TV2 và TV5 tích hợp vào các trang chức năng.<br>- **Hiện thực trọn gói Cổng Khách thuê (Tenant Portal)**: viết Controller, Service và View cho các tính năng: tra cứu phòng trống, xem chi tiết phòng, xem hợp đồng của mình, tra cứu hóa đơn các tháng, gửi phiếu phản ánh sự cố thiết bị. |
-| **4** | **[Họ tên Thành viên 4]** | [MSSV TV4] | **Mạng Socket (Đa Client), Quản lý Sự cố & Bộ Kiểm thử Độc lập** | - Hiện thực Socket Server đa luồng (`ServerSocket`, `ExecutorService`) phục vụ tối thiểu **3 Client kết nối cùng lúc**.<br>- Cấu hình Socket Server khởi động cùng ứng dụng qua `CommandLineRunner`; tiêm Service vào `ClientHandler` qua Dependency Injection (không dùng `new`) để đảm bảo `@Transactional` và `findByIdForUpdate` hoạt động.<br>- Hỗ trợ đầy đủ các lệnh giao thức Socket: `LIST_ROOM`, `BOOK`, `EXIT`; ghi log tên luồng `Thread.currentThread().getName()` trong `ClientHandler`.<br>- Xây dựng ứng dụng Desktop Client độc lập (`SocketClientApp.java`) dùng try-with-resources.<br>- Hiện thực trọn gói module Quản lý sự cố / Yêu cầu sửa chữa (phân công thợ, cập nhật chi phí).<br>- Viết chương trình kiểm thử đồng thời độc lập `ConcurrencyBookingTest.java` (mở 10 luồng dùng 10 CCCD khác nhau gửi `BOOK P201` qua Socket, dùng `CountDownLatch`, đúng 1 luồng OK và 9 luồng bị từ chối). |
-| **5** | **[Họ tên Thành viên 5]** | [MSSV TV5] | **Chỉ số Điện Nước, Hóa đơn hàng tháng, Thu ngân, In hóa đơn & Dashboard Thống kê** | - Tái sử dụng bộ Thymeleaf Fragment của TV3 để hiện thực trọn gói (Controller, Service, View) cho Chỉ số Điện - Nước đầu kỳ/cuối kỳ và Lập hóa đơn tiền phòng hàng tháng.<br>- Ràng buộc duy nhất hóa đơn: `UNIQUE(hop_dong_id, thang_nam)`.<br>- Hiện thực trọn gói màn hình thu ngân, xác nhận thanh toán (gạch nợ) và in hóa đơn tiền phòng.<br>- Hiện thực trọn gói (Backend Service truy vấn số liệu, Controller, View Thymeleaf, Biểu đồ) cho Dashboard thống kê doanh thu theo tháng và công suất phòng.<br>- Giải thích quy trình chốt số điện nước, lập hóa đơn, thuật toán gạch nợ và truy vấn số liệu thống kê khi vấn đáp. |
+| **1** | **Nguyễn Minh Tâm** | 2001240423 | **Cơ sở dữ liệu, Kiến trúc tổng thể, Phòng trọ, Khách thuê, Tài khoản & Xác thực** | - Thiết kế ERD, Schema CSDL SQL Server (`NhaTroDB`), viết script SQL tạo database và dữ liệu mẫu.<br>- Hoàn thành và đẩy các Entity & Repository thủ công lên nhánh `dev` trong 2–3 ngày đầu của Tuần 1 để unblock nhóm.<br>- Tái sử dụng bộ Thymeleaf Fragment của TV3 để hiện thực trọn gói (Controller, Service, View) cho CRUD Phòng trọ (kèm ảnh), Khách thuê.<br>- Quản lý tài khoản, Đăng nhập và Phân quyền bằng `HttpSession` & `HandlerInterceptor` (không dùng Spring Security).<br>- Mã hóa mật khẩu bằng SHA-256 kèm salt (`java.security.MessageDigest`).<br>- Ràng buộc chặn xóa phòng và khách thuê đang có hợp đồng hoặc đang giữ chỗ (`dat_cho` còn `DANG_GIU`).<br>- Quản lý cấu trúc dự án và điều phối Git. |
+| **2** | **Bùi Trần Tấn Tài** | 2001240413 | **Nghiệp vụ Hợp đồng, Đặt chỗ, Xử lý ĐỒNG THỜI & Tác vụ nền @Scheduled** | - Tái sử dụng bộ Thymeleaf Fragment của TV3 để hiện thực trọn gói (Controller, Service, View) cho Hợp đồng thuê phòng, Đặt chỗ (`dat_cho`).<br>- Ràng buộc toàn vẹn khi lập/thanh lý hợp đồng.<br>- **Thiết kế và hiện thực cơ chế XỬ LÝ ĐỒNG THỜI (Concurrency Lock)** bằng `findByIdForUpdate` (Pessimistic Write Lock) chống thuê/đặt trùng phòng. Lệnh đặt phòng khóa phòng trước, tìm/tạo khách sau trong cùng 1 Transaction.<br>- **Hiện thực tác vụ nền `@Scheduled`** định kỳ quét đặt chỗ quá hạn (tách `DatChoService` và `DatChoScheduler` để Spring AOP proxy quản lý `@Transactional` và lock chuẩn xác) để tự động hủy và trả phòng về `TRONG`; ghi log `Thread.currentThread().getName()`.<br>- Giải thích cơ chế Transaction, Isolation Level, Lock và Background Task khi vấn đáp. |
+| **3** | **Lưu Quốc Trụ** | 2001240521 | **Kiến trúc Giao diện, Bộ Fragment dùng lại (Reusable Components) & Cổng Khách thuê (Tenant Portal)** | - Xây dựng khung giao diện chuẩn (Sidebar, Navbar, Footer) bằng Thymeleaf Layout Fragments.<br>- Tích hợp Bootstrap 5.3 CDN và CSS Responsive (Desktop/Mobile), màu sắc hài hòa, hiện đại.<br>- **Xây dựng bộ Thymeleaf Fragment dùng lại cho toàn nhóm**: thanh tìm kiếm, phân trang, sắp xếp cột dữ liệu, modal xác nhận xóa, flash alert (`RedirectAttributes`), và thông báo lỗi cạnh ô nhập liệu.<br>- Bàn giao bộ fragment cho TV1, TV2 và TV5 tích hợp vào các trang chức năng.<br>- **Hiện thực trọn gói Cổng Khách thuê (Tenant Portal)**: viết Controller, Service và View cho các tính năng: tra cứu phòng trống, xem chi tiết phòng, xem hợp đồng của mình, tra cứu hóa đơn các tháng, gửi phiếu phản ánh sự cố thiết bị. |
+| **4** | **Đoàn Văn Mẩn** | 2001240270 | **Mạng Socket (Đa Client), Quản lý Sự cố & Bộ Kiểm thử Độc lập** | - Hiện thực Socket Server đa luồng (`ServerSocket`, `ExecutorService`) phục vụ tối thiểu **3 Client kết nối cùng lúc**.<br>- Cấu hình Socket Server khởi động cùng ứng dụng qua `CommandLineRunner`; tiêm Service vào `ClientHandler` qua Dependency Injection (không dùng `new`) để đảm bảo `@Transactional` và `findByIdForUpdate` hoạt động.<br>- Hỗ trợ đầy đủ các lệnh giao thức Socket: `LIST_ROOM`, `BOOK`, `EXIT`; ghi log tên luồng `Thread.currentThread().getName()` trong `ClientHandler`.<br>- Xây dựng ứng dụng Desktop Client độc lập (`SocketClientApp.java`) dùng try-with-resources.<br>- Hiện thực trọn gói module Quản lý sự cố / Yêu cầu sửa chữa (phân công thợ, cập nhật chi phí).<br>- Viết chương trình kiểm thử đồng thời độc lập `ConcurrencyBookingTest.java` (mở 10 luồng dùng 10 CCCD khác nhau gửi `BOOK P201` qua Socket, dùng `CountDownLatch`, đúng 1 luồng OK và 9 luồng bị từ chối). |
+| **5** | **Trương Đỗ Minh Quân** | 2001240390 | **Chỉ số Điện Nước, Hóa đơn hàng tháng, Thu ngân, In hóa đơn & Dashboard Thống kê** | - Tái sử dụng bộ Thymeleaf Fragment của TV3 để hiện thực trọn gói (Controller, Service, View) cho Chỉ số Điện - Nước đầu kỳ/cuối kỳ và Lập hóa đơn tiền phòng hàng tháng.<br>- Ràng buộc duy nhất hóa đơn: `UNIQUE(hop_dong_id, thang_nam)`.<br>- Hiện thực trọn gói màn hình thu ngân, xác nhận thanh toán (gạch nợ) và in hóa đơn tiền phòng.<br>- Hiện thực trọn gói (Backend Service truy vấn số liệu, Controller, View Thymeleaf, Biểu đồ) cho Dashboard thống kê doanh thu theo tháng và công suất phòng.<br>- Giải thích quy trình chốt số điện nước, lập hóa đơn, thuật toán gạch nợ và truy vấn số liệu thống kê khi vấn đáp. |
 
 ---
 
@@ -46,45 +46,45 @@ Nhóm gồm **5 thành viên**. Trách nhiệm được phân bổ đồng đề
 4. **Mã hóa và xác thực mật khẩu:** Sử dụng thuật toán SHA-256 kèm chuỗi muối (salt) thông qua thư viện chuẩn `java.security.MessageDigest`, không dùng Spring Security hay BCrypt. Dữ liệu mẫu lưu mật khẩu đã băm.  
    *👉 Người phụ trách chính: Nguyễn Minh Tâm*
 
-#### Phân hệ 2: Hợp đồng, Đặt chỗ & Xử lý Đồng thời (Thành viên 2 phụ trách chính)
+#### Phân hệ 2: Hợp đồng, Đặt chỗ & Xử lý Đồng thời (Bùi Trần Tấn Tài phụ trách chính)
 5. **Quản lý đặt giữ chỗ phòng (`dat_cho`):** Khách đặt giữ chỗ phòng qua Web hoặc Socket; ghi nhận thời hạn giữ chỗ (`han_giu_cho`). Khi đặt giữ chỗ thành công, chuyển phòng sang trạng thái `DA_DAT`.  
-   *👉 Người phụ trách chính: [Thành viên 2]*
+   *👉 Người phụ trách chính: Bùi Trần Tấn Tài*
 6. **Quản lý hợp đồng thuê phòng:** Tạo hợp đồng thuê, quy định tiền cọc, ngày bắt đầu - kết thúc, chu kỳ đóng tiền, gia hạn hoặc thanh lý hợp đồng. Chỉ cho phép tạo hợp đồng với phòng đang `TRONG`, hoặc phòng đang `DA_DAT` nếu người ký hợp đồng đúng là khách đã giữ chỗ trong `dat_cho` (trạng thái `DANG_GIU`). Khi tạo xong, chuyển đặt chỗ sang `DA_CHUYEN_HOP_DONG` và phòng sang `DA_THUE`.  
-   *👉 Người phụ trách chính: [Thành viên 2]*
+   *👉 Người phụ trách chính: Bùi Trần Tấn Tài*
 7. **Cơ chế khóa đồng thời chống thuê/đặt trùng phòng:** Hiện thực hàm `findByIdForUpdate` trong Repository kết hợp `@Transactional` để khóa dòng dữ liệu phòng trọ, dùng chung cho cả luồng Web và luồng Socket. Lệnh đặt phòng thực hiện khóa phòng trước, tìm/tạo khách sau trong cùng 1 transaction.  
-   *👉 Người phụ trách chính: [Thành viên 2]*
+   *👉 Người phụ trách chính: Bùi Trần Tấn Tài*
 8. **Tác vụ nền tự động giải phóng chỗ quá hạn (@Scheduled):** Tác vụ nền quét định kỳ bảng `dat_cho`; tách `DatChoScheduler` gọi qua `DatChoService` để đảm bảo Spring Proxy kích hoạt `@Transactional` và `findByIdForUpdate`; kiểm tra lại `dat_cho` còn `DANG_GIU` trong Transaction rồi mới hủy và trả phòng về `TRONG`; ghi log rõ `Thread.currentThread().getName()`.  
-   *👉 Người phụ trách chính: [Thành viên 2]*
+   *👉 Người phụ trách chính: Bùi Trần Tấn Tài*
 
-#### Phân hệ 3: Giao diện nền tảng, Bộ Fragment chung & Cổng Khách thuê (Thành viên 3 phụ trách chính)
+#### Phân hệ 3: Giao diện nền tảng, Bộ Fragment chung & Cổng Khách thuê (Lưu Quốc Trụ phụ trách chính)
 9. **Khung giao diện dùng chung & Điều hướng phân quyền:** Xây dựng Sidebar, Navbar, Footer, Header responsive bằng Bootstrap 5.3 CDN và Thymeleaf Layout Fragments; hiển thị menu tương ứng theo Session vai trò.  
-   *👉 Người phụ trách chính: [Thành viên 3]*
+   *👉 Người phụ trách chính: Lưu Quốc Trụ*
 10. **Xây dựng bộ Thymeleaf Fragment dùng lại (Reusable Components):** Xây dựng các component chuẩn gồm: thanh tìm kiếm, thanh phân trang, tiêu đề cột sắp xếp, modal xác nhận trước khi xóa, flash alert và thông báo lỗi cạnh ô nhập liệu để bàn giao cho TV1, TV2, TV5.  
-    *👉 Người phụ trách chính: [Thành viên 3]*
+    *👉 Người phụ trách chính: Lưu Quốc Trụ*
 11. **Cổng tra cứu phòng trống & Xem chi tiết phòng trực tuyến:** Hiện thực trọn gói (Controller, Service, View) cho khách xem danh sách phòng trống, lọc theo giá, diện tích, xem ảnh phòng trực quan.  
-    *👉 Người phụ trách chính: [Thành viên 3]*
+    *👉 Người phụ trách chính: Lưu Quốc Trụ*
 12. **Cổng thông tin khách thuê trực tuyến (Hợp đồng & Hóa đơn):** Hiện thực trọn gói (Controller, Service, View) cho khách thuê đăng nhập xem thông tin hợp đồng hiện tại và tra cứu chi tiết lịch sử hóa đơn các tháng.  
-    *👉 Người phụ trách chính: [Thành viên 3]*
+    *👉 Người phụ trách chính: Lưu Quốc Trụ*
 13. **Giao diện gửi phản ánh / yêu cầu sửa chữa:** Hiện thực trọn gói form trực tuyến để khách thuê gửi yêu cầu hỏng hóc thiết bị, chọn mức độ khẩn cấp kèm mô tả chi tiết.  
-    *👉 Người phụ trách chính: [Thành viên 3]*
+    *👉 Người phụ trách chính: Lưu Quốc Trụ*
 
-#### Phân hệ 4: Socket Đa Client, Sự cố & Kiểm thử (Thành viên 4 phụ trách chính)
+#### Phân hệ 4: Socket Đa Client, Sự cố & Kiểm thử (Đoàn Văn Mẩn phụ trách chính)
 14. **Quản lý và điều phối yêu cầu sửa chữa cơ sở vật chất:** Tiếp nhận phiếu phản ánh từ khách thuê, phân công thợ sửa chữa (`tho_sua_chua`), cập nhật chi phí khắc phục (`chi_phi`) và tiến độ xử lý.  
-    *👉 Người phụ trách chính: [Thành viên 4]*
+    *👉 Người phụ trách chính: Đoàn Văn Mẩn*
 15. **Máy chủ Socket Server đa luồng (Multi-client Socket Server):** Lắng nghe cổng riêng (Port 9999), quản lý kết nối bằng Thread Pool (`ExecutorService`), phục vụ tối thiểu 3 Client kết nối cùng lúc; khởi động qua `CommandLineRunner`, nhận Service qua Dependency Injection; hỗ trợ lệnh `LIST_ROOM`, `BOOK`, `EXIT`; ghi log tên luồng `Thread.currentThread().getName()` trong `ClientHandler`.  
-    *👉 Người phụ trách chính: [Thành viên 4]*
+    *👉 Người phụ trách chính: Đoàn Văn Mẩn*
 16. **Ứng dụng Desktop Client độc lập:** Ứng dụng Client console/Swing độc lập trong `client/` dùng cú pháp try-with-resources để kết nối và tương tác với Socket Server.  
-    *👉 Người phụ trách chính: [Thành viên 4]*
+    *👉 Người phụ trách chính: Đoàn Văn Mẩn*
 17. **Chương trình kiểm thử đồng thời độc lập (Concurrency Test):** Viết chương trình kiểm thử đồng thời độc lập `ConcurrencyBookingTest.java` (mở 10 luồng dùng 10 CCCD khác nhau gửi `BOOK P201` qua Socket, dùng `CountDownLatch`, đúng 1 luồng OK và 9 luồng bị từ chối).  
-    *👉 Người phụ trách chính: [Thành viên 4]*
+    *👉 Người phụ trách chính: Đoàn Văn Mẩn*
 
-#### Phân hệ 5: Chỉ số Điện Nước, Hóa đơn, Thu ngân & Dashboard Thống kê (Thành viên 5 phụ trách chính)
+#### Phân hệ 5: Chỉ số Điện Nước, Hóa đơn, Thu ngân & Dashboard Thống kê (Trương Đỗ Minh Quân phụ trách chính)
 18. **Quản lý chỉ số điện - nước:** Chốt chỉ số điện nước đầu kỳ và cuối kỳ cho từng phòng theo tháng; tự động tính lượng tiêu thụ thực tế; tích hợp bộ fragment của TV3.  
-    *👉 Người phụ trách chính: [Thành viên 5]*
+    *👉 Người phụ trách chính: Trương Đỗ Minh Quân*
 19. **Lập và quản lý hóa đơn tiền phòng hàng tháng, Thu ngân & In hóa đơn:** Tự động tổng hợp tiền phòng, tiền điện, tiền nước, phí dịch vụ; kiểm soát ràng buộc duy nhất `UNIQUE(hop_dong_id, thang_nam)`; hiện thực màn hình thu ngân xác nhận thanh toán (gạch nợ) và xuất mẫu in hóa đơn chi tiết.  
-    *👉 Người phụ trách chính: [Thành viên 5]*
+    *👉 Người phụ trách chính: Trương Đỗ Minh Quân*
 20. **Dashboard thống kê doanh thu & Báo cáo tổng quan (Backend + View):** Tự viết tầng Service truy vấn số liệu tổng hợp và giao diện Thymeleaf hiển thị biểu đồ doanh thu theo tháng, tỷ lệ phòng trống/đang thuê, nợ đọng tiền phòng.  
-    *👉 Người phụ trách chính: [Thành viên 5]*
+    *👉 Người phụ trách chính: Trương Đỗ Minh Quân*
 
 ---
 
@@ -211,7 +211,7 @@ Hệ thống lưu trữ trên **Microsoft SQL Server**, cơ sở dữ liệu `Nh
 - **Dữ liệu mẫu:** Tối thiểu 20 bản ghi (1 tài khoản Admin, 2 tài khoản Nhân viên, 17+ tài khoản Khách thuê). Toàn bộ mật khẩu mẫu được lưu dưới dạng băm SHA-256 + salt đã tạo sẵn.
 
 #### Bảng 4: `dat_cho` (Quản lý đặt giữ chỗ phòng trọ)
-- **Người phụ trách:** [Thành viên 2]
+- **Người phụ trách:** Bùi Trần Tấn Tài
 - **Cấu trúc:**
   - `id` (INT, IDENTITY(1,1), PK)
   - `phong_id` (INT, FK -> `phong_tro.id`, NOT NULL)
@@ -223,7 +223,7 @@ Hệ thống lưu trữ trên **Microsoft SQL Server**, cơ sở dữ liệu `Nh
 - **Dữ liệu mẫu:** Tối thiểu 10 bản ghi đặt chỗ mẫu (bao gồm các bản ghi đang giữ chỗ, hết hạn và đã chuyển thành hợp đồng).
 
 #### Bảng 5: `hop_dong` (Quản lý hợp đồng thuê phòng)
-- **Người phụ trách:** [Thành viên 2]
+- **Người phụ trách:** Bùi Trần Tấn Tài
 - **Cấu trúc:**
   - `id` (INT, IDENTITY(1,1), PK)
   - `ma_hop_dong` (VARCHAR(30), UNIQUE, NOT NULL)
@@ -238,7 +238,7 @@ Hệ thống lưu trữ trên **Microsoft SQL Server**, cơ sở dữ liệu `Nh
 - **Dữ liệu mẫu:** Tối thiểu 20 bản ghi hợp đồng gắn kết phòng và khách thuê.
 
 #### Bảng 6: `hoa_don` (Quản lý hóa đơn thu tiền)
-- **Người phụ trách:** [Thành viên 5]
+- **Người phụ trách:** Trương Đỗ Minh Quân
 - **Cấu trúc:**
   - `id` (INT, IDENTITY(1,1), PK)
   - `ma_hoa_don` (VARCHAR(30), UNIQUE, NOT NULL)
@@ -262,7 +262,7 @@ Hệ thống lưu trữ trên **Microsoft SQL Server**, cơ sở dữ liệu `Nh
 - **Dữ liệu mẫu:** Tối thiểu 20 bản ghi hóa đơn hàng tháng.
 
 #### Bảng 7: `yeu_cau_sua_chua` (Quản lý sự cố & sửa chữa cơ sở vật chất)
-- **Người phụ trách:** [Thành viên 4]
+- **Người phụ trách:** Đoàn Văn Mẩn
 - **Cấu trúc:**
   - `id` (INT, IDENTITY(1,1), PK)
   - `phong_id` (INT, FK -> `phong_tro.id`, NOT NULL)
@@ -297,7 +297,7 @@ Trong đề tài này, nhóm hiện thực **hai cơ chế đa luồng & đồng
 ---
 
 ### 1. Cơ chế 1: Chống đặt/thuê trùng phòng bằng Pessimistic Lock
-- **Người phụ trách chính:** **[Thành viên 2]**
+- **Người phụ trách chính:** **Bùi Trần Tấn Tài**
 - **Nghiệp vụ:** Khi có hai hoặc nhiều yêu cầu đặt giữ chỗ / tạo hợp đồng cho cùng một phòng trọ (ví dụ phòng `P201`) gửi đến đồng thời từ Web hoặc Socket Server, hệ thống chỉ cho phép một yêu cầu thành công, các yêu cầu còn lại bị từ chối và nhận thông báo lỗi thích hợp.
 - **Giải pháp kỹ thuật:** Cả phương thức xử lý tạo hợp đồng trên Web và lệnh `BOOK` của Socket Server đều gọi chung qua tầng Service, sử dụng phương thức truy vấn khóa bi quan (**Pessimistic Write Lock**) trong `PhongTroRepository`:
 
@@ -318,7 +318,7 @@ Optional<PhongTro> findByIdForUpdate(@Param("id") Integer id);
 ---
 
 ### 2. Bộ kiểm thử đồng thời độc lập (`ConcurrencyBookingTest.java`) và Script Reset
-- **Người phụ trách:** **[Thành viên 4]**
+- **Người phụ trách:** **Đoàn Văn Mẩn**
 - **Yêu cầu kỹ thuật:** Viết thành một ứng dụng Client độc lập chạy bằng hàm `main()`, thuần chuẩn Java Core (`java.util.concurrent`, `Socket`), **hoàn toàn không sử dụng thêm bất kỳ thư viện ngoài nào khác**.
 - **Cơ chế kiểm thử:**
   - Khởi tạo Thread Pool gồm 10 luồng: `ExecutorService pool = Executors.newFixedThreadPool(10);`
@@ -336,7 +336,7 @@ Optional<PhongTro> findByIdForUpdate(@Param("id") Integer id);
 ---
 
 ### 3. Cơ chế 2: Tác vụ nền tự động giải phóng đặt chỗ quá hạn (@Scheduled)
-- **Người phụ trách chính:** **[Thành viên 2]**
+- **Người phụ trách chính:** **Bùi Trần Tấn Tài**
 - **Nghiệp vụ:** Khách hàng giữ chỗ phòng chỉ được giữ tối đa trong một khoảng thời gian (ví dụ: 24 giờ kể từ thời điểm đặt). Nếu quá thời hạn này mà khách không đến làm hợp đồng thuê chính thức, phòng phải được tự động thu hồi về trạng thái `TRONG` để khách khác có thể đặt.
 - **Giải pháp kỹ thuật chi tiết:**
   - Bật tính năng lập lịch chạy nền của Spring bằng `@EnableScheduling`.
@@ -403,7 +403,7 @@ public class DatChoService {
 
 ## V. ĐỀ XUẤT VÀ HIỆN THỰC MẠNG SOCKET (MULTI-CLIENT SOCKET)
 
-- **Người phụ trách chính:** **[Thành viên 4]**
+- **Người phụ trách chính:** **Đoàn Văn Mẩn**
 - **Kiến trúc Server:**
   - `SocketServer` lắng nghe trên cổng riêng biệt `Port 9999` (độc lập với cổng Web `8080`).
   - Khởi động tự động trong vòng đời ứng dụng Spring Boot thông qua việc hiện thực interface `CommandLineRunner` (chạy trên một background thread riêng để không block luồng khởi động Spring).
@@ -434,13 +434,13 @@ public class DatChoService {
 
 | Tuần | Công việc của 5 thành viên | Báo cáo & Tài liệu thiết kế | Kết quả bàn giao (Deliverables) |
 |:---:|:---|:---|:---|
-| **Tuần 1** | - **TV1 (Trưởng nhóm):** Trong 2–3 ngày đầu, hoàn thành Sơ đồ thực thể quan hệ (**ERD** trên draw.io), viết script SQL (`01_create_database.sql`, `02_schema_and_sample_data.sql`, `reset_p201.sql`), viết toàn bộ các lớp JPA Entity thủ công (không dùng Lombok) và đẩy lên nhánh `dev` để unblock các thành viên khác.<br>- **TV2:** Khảo sát quy trình nghiệp vụ Hợp đồng - Đặt giữ chỗ, vẽ biểu đồ **Use Case** tổng thể.<br>- **TV3:** Thiết kế Wireframe giao diện, vẽ **Sơ đồ kiến trúc phân lớp** Controller - Service - Repository - View.<br>- **TV4:** Thiết kế đặc tả giao thức mạng Socket (Protocol Specification gồm `LIST_ROOM`, `BOOK`, `EXIT`), xây dựng khung `SocketServer` đa luồng bằng try-with-resources.<br>- **TV5:** Khảo sát quy trình nghiệp vụ Hóa đơn - Điện Nước, vẽ **Sơ đồ tuần tự (Sequence Diagram) "Lập hóa đơn tiền phòng"**. | **Soạn thảo Chương 1 của Báo cáo đồ án:**<br>- Lý do chọn đề tài, khảo sát thực tế.<br>- Mục tiêu và phạm vi nghiệp vụ.<br>- Phân việc cho cả 5 thành viên từ tuần đầu. | - Script SQL chuẩn chạy trên SSMS.<br>- JPA Entities sẵn sàng trên nhánh `dev`.<br>- Bản nháp Chương 1 Báo cáo.<br>- Sơ đồ ERD (draw.io), Use Case, Kiến trúc phân lớp, Sơ đồ tuần tự lập hóa đơn. |
+| **Tuần 1** | - **TV1:** Trong 2–3 ngày đầu, hoàn thành Sơ đồ thực thể quan hệ (**ERD** trên draw.io), viết script SQL (`01_create_database.sql`, `02_schema_and_sample_data.sql`, `reset_p201.sql`), viết toàn bộ các lớp JPA Entity thủ công (không dùng Lombok) và đẩy lên nhánh `dev` để unblock các thành viên khác.<br>- **TV2:** Khảo sát quy trình nghiệp vụ Hợp đồng - Đặt giữ chỗ, vẽ biểu đồ **Use Case** tổng thể.<br>- **TV3:** Thiết kế Wireframe giao diện, vẽ **Sơ đồ kiến trúc phân lớp** Controller - Service - Repository - View.<br>- **TV4:** Thiết kế đặc tả giao thức mạng Socket (Protocol Specification gồm `LIST_ROOM`, `BOOK`, `EXIT`), xây dựng khung `SocketServer` đa luồng bằng try-with-resources.<br>- **TV5:** Khảo sát quy trình nghiệp vụ Hóa đơn - Điện Nước, vẽ **Sơ đồ tuần tự (Sequence Diagram) "Lập hóa đơn tiền phòng"**. | **Soạn thảo Chương 1 của Báo cáo đồ án:**<br>- Lý do chọn đề tài, khảo sát thực tế.<br>- Mục tiêu và phạm vi nghiệp vụ.<br>- Phân việc cho cả 5 thành viên từ tuần đầu. | - Script SQL chuẩn chạy trên SSMS.<br>- JPA Entities sẵn sàng trên nhánh `dev`.<br>- Bản nháp Chương 1 Báo cáo.<br>- Sơ đồ ERD (draw.io), Use Case, Kiến trúc phân lớp, Sơ đồ tuần tự lập hóa đơn. |
 | **Tuần 2** | - **TV1:** Viết tầng JPA Repository, tích hợp bộ fragment của TV3 vào CRUD danh mục Phòng trọ (kèm ảnh) và Khách thuê.<br>- **TV2:** Xây dựng CRUD Hợp đồng thuê phòng (tích hợp bộ fragment của TV3), vẽ **Sơ đồ tuần tự luồng "Tạo hợp đồng"**.<br>- **TV3:** Thiết lập Layout Thymeleaf + Bootstrap 5.3 CDN; **xây dựng hoàn chỉnh bộ Thymeleaf Fragment dùng lại** (thanh tìm kiếm, phân trang, sắp xếp, modal xác nhận xóa, lỗi cạnh ô nhập, flash message) và bàn giao cho TV1, TV2, TV5; bắt đầu dựng giao diện Cổng Khách thuê.<br>- **TV4:** Thiết kế chi tiết luồng xử lý `ClientHandler` đa luồng cho Socket Server (cài đặt in log tên luồng `Thread.currentThread().getName()`).<br>- **TV5:** Chờ Entity `hop_dong` và dữ liệu mẫu hợp đồng của TV1/TV2, sau đó bắt đầu xây dựng module nhập chỉ số Điện - Nước (tích hợp bộ fragment của TV3). | **Soạn thảo Chương 2 của Báo cáo đồ án:**<br>- Phân tích yêu cầu chức năng, phi chức năng.<br>- Thiết kế CSDL chi tiết.<br>- Biểu đồ tuần tự các luồng nghiệp vụ. | - Bộ Thymeleaf Fragment dùng lại hoàn chỉnh.<br>- CRUD Phòng trọ & Khách thuê chạy mượt.<br>- Module Chỉ số Điện Nước bắt đầu hoạt động.<br>- Bản nháp Chương 2 Báo cáo. |
 | **Tuần 3** | - **TV1:** Xây dựng hệ thống Tài khoản (`tai_khoan`), mã hóa mật khẩu SHA-256 kèm salt bằng `MessageDigest`, form đăng nhập và bộ chặn phân quyền `HandlerInterceptor`.<br>- **TV2:** **Hiện thực cơ chế XỬ LÝ ĐỒNG THỜI** (`findByIdForUpdate` - Pessimistic Lock) và nghiệp vụ Đặt chỗ (`dat_cho`) chống đặt trùng phòng trên Web (khóa phòng trước, tạo khách sau trong 1 transaction).<br>- **TV3:** Xây dựng giao diện Khách thuê tra cứu phòng trực tuyến, xem chi tiết phòng, form gửi yêu cầu sửa chữa.<br>- **TV4:** Xây dựng trọn gói Backend và Giao diện cho Module Quản lý sự cố / Sửa chữa cơ sở vật chất (phân công thợ, cập nhật chi phí).<br>- **TV5:** Xây dựng module tự động tính toán hóa đơn hàng tháng (`UNIQUE(hop_dong_id, thang_nam)`), xây dựng màn hình thu ngân xác nhận thanh toán (gạch nợ) và xuất in hóa đơn. | **Cập nhật Báo cáo:**<br>- Bổ sung tài liệu phân tích cơ chế Concurrency Locking.<br>- Thiết kế các luồng bảo mật qua Session.<br>- Tài liệu quy trình tính toán hóa đơn và gạch nợ. | - Chức năng Đăng nhập & Phân quyền hoàn tất.<br>- Chống thuê/đặt trùng phòng hoạt động chuẩn xác.<br>- Hóa đơn điện nước tính toán chính xác, in hóa đơn và gạch nợ hoạt động. |
 | **Tuần 4** | - **TV1:** Hoàn thiện bảng dữ liệu mẫu 20 bản ghi mỗi bảng trong SQL Server, bảo đảm tính nhất quán (phòng có hợp đồng hiệu lực thì `DA_THUE`, hợp đồng hết hạn/thanh lý, mật khẩu đã băm, `dat_cho` dùng `DATEADD(day, 7, GETDATE())`).<br>- **TV2:** Cài đặt **tác vụ nền `@Scheduled` quét giải phóng phòng đặt chỗ quá hạn** (tách `DatChoScheduler` và `DatChoService`, gọi `findByIdForUpdate`, kiểm tra lại trong transaction, in log tên luồng).<br>- **TV3:** **Hiện thực trọn gói Cổng thông tin khách thuê (Controller, Service, View)**: tra cứu phòng trống, xem chi tiết phòng, tra cứu hợp đồng, tra cứu hóa đơn, gửi phiếu phản ánh sự cố.<br>- **TV4:** **Hoàn thiện Mạng Socket đa Client:** Khởi động qua `CommandLineRunner`, `ClientHandler` nhận Service qua Dependency Injection, tích hợp lệnh `BOOK` (khóa phòng trước, tìm/tạo khách sau), lệnh `EXIT`, in log tên luồng.<br>- **TV5:** Xây dựng tầng Service truy vấn số liệu thống kê doanh thu, tỷ lệ phòng và cấu trúc dữ liệu cho Dashboard. | **Soạn thảo Chương 3 của Báo cáo đồ án:**<br>- **Quy tắc phân công:** Mỗi thành viên tự viết chi tiết phần mình phụ trách trong Chương 3 (Hiện thực hệ thống).<br>- Chi tiết cài đặt Socket, Tác vụ nền `@Scheduled`, Cơ chế đồng thời, Lập hóa đơn và Dashboard. | - Hệ thống Socket phục vụ >= 3 Client cùng lúc.<br>- Tác vụ `@Scheduled` chạy nền ổn định qua Proxy.<br>- Cổng khách thuê hoạt động trọn gói.<br>- Tầng số liệu thống kê sẵn sàng.<br>- Bản nháp Chương 3 Báo cáo. |
 | **Tuần 5** | - **TV1:** Rà soát toàn bộ ràng buộc khóa ngoại, chặn xóa phòng/khách đang có hợp đồng hoặc đang giữ chỗ (`dat_cho` còn `DANG_GIU`), chặn xóa hợp đồng đã có hóa đơn, báo lỗi thân thiện.<br>- **TV2:** Tinh chỉnh xử lý ngoại lệ nghiệp vụ và thông báo lỗi thân thiện trên Web cho phân hệ Hợp đồng & Giữ chỗ.<br>- **TV3:** Rà soát tối ưu UI/UX toàn bộ Cổng khách thuê, kiểm tra độ phản hồi Responsive của bộ fragment chung trên các thiết bị.<br>- **TV4:** **Viết chương trình kiểm thử đồng thời độc lập** (`ConcurrencyBookingTest.java` dùng 10 CCCD khác nhau, Socket và `CountDownLatch`) và hoàn thiện module sự cố.<br>- **TV5:** **Hoàn thiện trọn gói Dashboard thống kê** (Controller và trang Thymeleaf hiển thị biểu đồ doanh thu, tỷ lệ phòng trống/đang thuê bằng CSS/Bootstrap). | **Tiến hành đo đạc & Viết Chương 4:**<br>- Chạy kiểm thử đa luồng với `sql/reset_p201.sql`, chụp log kết quả (có tên luồng).<br>- Đánh giá hiệu năng và tính toàn vẹn dữ liệu.<br>- Hoàn thiện các biểu đồ thống kê của Dashboard. | - Chương trình kiểm thử Concurrency độc lập chạy đạt kết quả (1 OK, 9 REJECT).<br>- Dashboard thống kê hoàn chỉnh đẹp mắt.<br>- Báo cáo Chương 4 hoàn thành. |
 | **Tuần 6** | - **Cả 5 thành viên cùng phối hợp:**<br>+ Kiểm thử tích hợp toàn diện hệ thống (Integration Test).<br>+ Chạy đồng thời 3 Desktop Socket Client + nhiều phiên duyệt web.<br>+ Rà soát kiểm tra mã nguồn, chuẩn hóa chú thích (comment), xóa mã rác.<br>+ Định dạng tài liệu báo cáo đồ án hoàn chỉnh (**25 đến 40 trang**). | **Nghiệm thu toàn bộ tài liệu:**<br>- **Hoàn chỉnh cuốn Báo cáo Đồ án** đầy đủ: Chương 1 đến Chương 4, **Chương 5: Kết luận và Hướng phát triển**, **Tài liệu tham khảo**, và **Bảng phân công nhiệm vụ có xác nhận của cả 5 thành viên**.<br>- Thiết kế Slide thuyết trình (**tối đa 20 trang**). | - Cuốn Báo cáo Word/PDF hoàn chỉnh.<br>- Bản Slide thuyết trình chuyên nghiệp. |
-| **Tuần 7** | - **Cả 5 thành viên cùng phối hợp:**<br>+ **Tập dượt thuyết trình nhóm (khống chế đúng 15 phút, chia đều cho 5 người, mỗi người khoảng 3 phút):**<br>  * **TV1 (Trưởng nhóm ~3 phút):** Giới thiệu tổng quan đề tài, kiến trúc phân lớp tổng thể, thiết kế CSDL (ERD) và hệ thống Tài khoản / Phân quyền.<br>  * **TV2 (~3 phút):** Demo nghiệp vụ Hợp đồng, Đặt giữ chỗ phòng, giải thích cơ chế Xử lý đồng thời (Pessimistic Lock) và tác vụ nền `@Scheduled`.<br>  * **TV3 (~3 phút):** Trình bày kiến trúc giao diện, bộ fragment dùng lại và demo trải nghiệm người dùng trên Cổng Khách thuê (Tenant Portal).<br>  * **TV4 (~3 phút):** Demo Socket Server đa client (kết nối đồng thời 3 client), chạy kiểm thử `ConcurrencyBookingTest` và demo Quản lý sự cố.<br>  * **TV5 (~3 phút):** Demo quy trình chốt điện nước, lập hóa đơn, thu ngân gạch nợ / in hóa đơn và biểu đồ trực quan trên Dashboard thống kê.<br>+ Tập trả lời các câu hỏi phản biện, vấn đáp lý thuyết & mã nguồn của giảng viên. | **Nghiệm thu nội bộ sản phẩm:**<br>- Đóng gói mã nguồn sạch.<br>- Video demo dự phòng. | - Cả nhóm nắm vững và giải thích cặn kẽ toàn bộ mã nguồn khi vấn đáp. |
+| **Tuần 7** | - **Cả 5 thành viên cùng phối hợp:**<br>+ **Tập dượt thuyết trình nhóm (khống chế đúng 15 phút, chia đều cho 5 người, mỗi người khoảng 3 phút):**<br>  * **TV1 - Nguyễn Minh Tâm (~3 phút):** Giới thiệu tổng quan đề tài, kiến trúc phân lớp tổng thể, thiết kế CSDL (ERD) và hệ thống Tài khoản / Phân quyền.<br>  * **TV2 - Bùi Trần Tấn Tài (~3 phút):** Demo nghiệp vụ Hợp đồng, Đặt giữ chỗ phòng, giải thích cơ chế Xử lý đồng thời (Pessimistic Lock) và tác vụ nền `@Scheduled`.<br>  * **TV3 - Lưu Quốc Trụ (~3 phút):** Trình bày kiến trúc giao diện, bộ fragment dùng lại và demo trải nghiệm người dùng trên Cổng Khách thuê (Tenant Portal).<br>  * **TV4 - Đoàn Văn Mẩn (~3 phút):** Demo Socket Server đa client (kết nối đồng thời 3 client), chạy kiểm thử `ConcurrencyBookingTest` và demo Quản lý sự cố.<br>  * **TV5 - Trương Đỗ Minh Quân (~3 phút):** Demo quy trình chốt điện nước, lập hóa đơn, thu ngân gạch nợ / in hóa đơn và biểu đồ trực quan trên Dashboard thống kê.<br>+ Tập trả lời các câu hỏi phản biện, vấn đáp lý thuyết & mã nguồn của giảng viên. | **Nghiệm thu nội bộ sản phẩm:**<br>- Đóng gói mã nguồn sạch.<br>- Video demo dự phòng. | - Cả nhóm nắm vững và giải thích cặn kẽ toàn bộ mã nguồn khi vấn đáp. |
 | **Tuần 8** | - Rà soát lần cuối toàn bộ tài liệu và mã nguồn.<br>- **Chừa ít nhất 2 ngày dự phòng** trước hạn nộp chính thức.<br>- Nộp báo cáo và mã nguồn lên hệ thống của trường đúng quy định. | **Hoàn tất thủ tục nộp bài:**<br>- Báo cáo, Slide, Mã nguồn Git. | - Đồ án nộp thành công đúng hạn. |
 
 ---
@@ -452,18 +452,18 @@ public class DatChoService {
    - Nhánh `main`: Nhánh ổn định cao nhất, tuyệt đối **không ai được push trực tiếp vào `main`**.
    - Nhánh `dev`: Nhánh phát triển chung để tích hợp mã nguồn của cả nhóm.
    - Nhánh tính năng cá nhân của 5 thành viên:
-     - Trưởng nhóm Tâm: `feature/db-entity-tam`
-     - Thành viên 2: `feature/contract-booking`
-     - Thành viên 3: `feature/ui-thymeleaf`
-     - Thành viên 4: `feature/socket-network`
-     - Thành viên 5: `feature/billing-dashboard`
+     - Nguyễn Minh Tâm (TV1): `feature/db-entity-tam`
+     - Bùi Trần Tấn Tài (TV2): `feature/contract-booking`
+     - Lưu Quốc Trụ (TV3): `feature/ui-thymeleaf`
+     - Đoàn Văn Mẩn (TV4): `feature/socket-network`
+     - Trương Đỗ Minh Quân (TV5): `feature/billing-dashboard`
 2. **Cam kết đóng góp (Commit Rules):**
    - Mỗi thành viên bắt buộc sử dụng **tài khoản GitHub cá nhân** của mình để commit đều đặn từ tuần 1 đến tuần 8.
    - Nội dung commit phải rõ ràng theo chuẩn Conventional Commits (Ví dụ: `feat: tao bang dat cho va scheduled task`, `test: viet chuong trinh kiem thu concurrency`).
 3. **Quy trình gộp mã nguồn (Pull Request & Code Review):**
    - Trước khi code: Kéo code mới nhất từ `dev` về (`git pull origin dev`).
    - Sau khi hoàn thành và tự test trên máy: Đẩy nhánh tính năng lên GitHub và mở **Pull Request (PR)** gộp vào `dev`.
-   - Phải có ít nhất Trưởng nhóm hoặc một thành viên khác xem xét (Code Review) và phê duyệt trước khi merge vào `dev`.
+   - Phải có ít nhất một thành viên khác xem xét (Code Review) và phê duyệt trước khi merge vào `dev`.
 
 ---
 

@@ -60,13 +60,13 @@ Mật khẩu trong bảng `tai_khoan` được lưu dưới dạng chuỗi băm 
    [http://localhost:8080](http://localhost:8080)
 
 ## 7. Cách chạy Desktop Client
-*Đang cập nhật (Module của Thành viên 4 trong Tuần 4).*
+*Đang cập nhật (Module của Đoàn Văn Mẩn trong Tuần 4).*
 
 ## 8. Danh sách thành viên nhóm (5 thành viên)
 | STT | Họ và Tên | MSSV | Vai trò & Mảng phụ trách chính |
 |:---:|:---|:---:|:---|
-| 1 | **Nguyễn Minh Tâm** *(Trưởng nhóm)* | 2001240423 | CSDL, Kiến trúc tổng thể, CRUD Phòng trọ, Khách thuê, Tài khoản & Xác thực |
-| 2 | *[Họ tên Thành viên 2]* | *[MSSV TV2]* | Nghiệp vụ Hợp đồng, Đặt chỗ (`dat_cho`), Khóa đồng thời `findByIdForUpdate`, Tác vụ nền `@Scheduled` |
-| 3 | *[Họ tên Thành viên 3]* | *[MSSV TV3]* | Khung Layout, Bộ Thymeleaf Fragment dùng lại (Reusable Components), Cổng Khách thuê (Tenant Portal) |
-| 4 | *[Họ tên Thành viên 4]* | *[MSSV TV4]* | Mạng Socket (Multi-client), Desktop Client độc lập, Quản lý sự cố, Kiểm thử `ConcurrencyBookingTest` |
-| 5 | *[Họ tên Thành viên 5]* | *[MSSV TV5]* | Chỉ số Điện - Nước, Lập hóa đơn định kỳ, Màn hình thu ngân, In hóa đơn & Dashboard thống kê |
+| 1 | **Nguyễn Minh Tâm** | 2001240423 | CSDL, Kiến trúc tổng thể, CRUD Phòng trọ, Khách thuê, Tài khoản & Xác thực |
+| 2 | **Bùi Trần Tấn Tài** | 2001240413 | Nghiệp vụ Hợp đồng, Đặt chỗ (`dat_cho`), Khóa đồng thời `findByIdForUpdate`, Tác vụ nền `@Scheduled` |
+| 3 | **Lưu Quốc Trụ** | 2001240521 | Khung Layout, Bộ Thymeleaf Fragment dùng lại (Reusable Components), Cổng Khách thuê (Tenant Portal) |
+| 4 | **Đoàn Văn Mẩn** | 2001240270 | Mạng Socket (Multi-client), Desktop Client độc lập, Quản lý sự cố, Kiểm thử `ConcurrencyBookingTest` |
+| 5 | **Trương Đỗ Minh Quân** | 2001240390 | Chỉ số Điện - Nước, Lập hóa đơn định kỳ, Màn hình thu ngân, In hóa đơn & Dashboard thống kê |
