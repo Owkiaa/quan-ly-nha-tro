@@ -1,4 +1,4 @@
-package com.nhatro.socket; // Đổi theo đúng package của bạn
+package com.nhatro.socket;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -21,7 +21,17 @@ public class TestClient {
                 String command = scanner.nextLine();
                 out.println(command); // Gửi lệnh lên Server
 
-                System.out.println("Server phản hồi: " + in.readLine());
+                // 1. Chờ và đọc dòng phản hồi đầu tiên
+                String response = in.readLine();
+                if (response == null) break;
+                System.out.println("Server phản hồi:\n" + response);
+
+                // 2. Đọc vét các dòng còn lại trong bộ đệm (dành cho kết quả nhiều dòng như LIST_ROOM)
+                Thread.sleep(20); // Dừng một chút để TCP truyền đủ gói tin
+                while (in.ready()) {
+                    System.out.println(in.readLine());
+                }
+
                 if ("EXIT".equalsIgnoreCase(command)) break;
             }
         } catch (Exception e) {
