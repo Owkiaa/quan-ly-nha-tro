@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/fragments :: head('Quản Lý Sự Cố & Sửa Chữa')}"></head>
+<body>
+
+<!-- Top Navbar Ngang -->
+<nav th:replace="~{layout/fragments :: navbar('yeu-cau-sua-chua')}"></nav>
+
+<main class="main-container">
+    <div class="container-xl">
+        <!-- Khu vực hiển thị thông báo chung -->
+        <div th:replace="~{layout/fragments :: alerts}"></div>
+
+        <!-- Tiêu đề trang -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div>
+                <h3 class="fw-bold mb-1">Quản Lý Sự Cố &amp; Sửa Chữa</h3>
+                <p class="text-muted small mb-0">Theo dõi, phân công thợ và cập nhật chi phí bảo trì cơ sở vật chất</p>
+            </div>
+        </div>
+
+        <!-- Toolbar Tìm kiếm & Lọc (Style chuẩn của TV3) -->
+        <div class="card card-custom mb-4">
+            <div class="card-body p-3">
+                <form th:action="@{/yeu-cau-sua-chua}" method="GET" class="row g-2 align-items-center">
+                    <div class="col-md-5 col-sm-6">
+                        <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white text-muted border-end-0">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </span>
+                            <input type="text" class="form-control border-start-0" name="keyword" th:value="${keyword}"
+                                   placeholder="Tìm theo mã phòng hoặc nội dung sự cố...">
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-4">
+                        <select class="form-select form-select-sm" name="trangThai">
+                            <option value="" th:selected="${trangThai == null or trangThai == ''}">-- Tất cả trạng thái --</option>
+                            <option value="CHO_TIEP_NHAN" th:selected="${trangThai == 'CHO_TIEP_NHAN'}">Chờ tiếp nhận</option>
+                            <option value="DANG_SUA" th:selected="${trangThai == 'DANG_SUA'}">Đang sửa chữa</option>
+                            <option value="HOAN_THANH" th:selected="${trangThai == 'HOAN_THANH'}">Đã hoàn thành</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 col-sm-12 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm px-3">
+                            <i class="fa-solid fa-filter me-1"></i> Lọc
+                        </button>
+                        <a th:href="@{/yeu-cau-sua-chua}" class="btn btn-outline-secondary btn-sm px-3">
+                            <i class="fa-solid fa-arrow-rotate-left me-1"></i> Đặt lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Bảng Dữ Liệu Sự Cố -->
+        <div class="card card-custom overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-custom align-middle">
+                    <thead>
+                    <tr>
+                        <th>Mã Phòng</th>
+                        <th>Nội Dung Sự Cố</th>
+                        <th>Mức Độ</th>
+                        <th>Thợ Phụ Trách</th>
+                        <th>Chi Phí (VNĐ)</th>
+                        <th>Trạng Thái</th>
+                        <th class="text-end" style="width: 150px;">Thao Tác</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${yeuCauPage.empty}">
+                        <td colspan="7" class="text-center py-5">
+                            <div class="text-muted mb-2">
+                                <i class="fa-solid fa-clipboard-check fs-1 text-secondary opacity-50"></i>
+                            </div>
+                            <h6 class="fw-bold text-dark">Chưa có yêu cầu sửa chữa nào</h6>
+                            <p class="text-muted small mb-0">Hệ thống đang hoạt động ổn định</p>
+                        </td>
+                    </tr>
+                    <tr th:each="yc : ${yeuCauPage.content}">
+                        <td>
+                            <a th:href="@{/phong-tro/chi-tiet/{id}(id=${yc.phongTro.id})}" class="fw-bold text-warning-emphasis font-mono text-decoration-none" th:text="${yc.phongTro.maPhong}">P101</a>
+                        </td>
+                        <td>
+                            <span class="text-dark small fw-medium" th:text="${yc.noiDung}">Nội dung</span>
+                        </td>
+                        <td>
+                            <span th:if="${yc.mucDo == 'CAP_BACH'}" class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 font-mono">CẤP BÁCH</span>
+                            <span th:if="${yc.mucDo == 'BINH_THUONG'}" class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1 font-mono">B.THƯỜNG</span>
+                        </td>
+                        <td>
+                            <span class="small text-muted" th:text="${yc.thoSuaChua != null ? yc.thoSuaChua : 'Chưa phân công'}"></span>
+                        </td>
+                        <td>
+                            <span class="fw-bold text-dark font-mono" th:text="${yc.chiPhi != null ? #numbers.formatDecimal(yc.chiPhi, 0, 'POINT', 0, 'COMMA') + ' đ' : '0 đ'}">0 đ</span>
+                        </td>
+                        <td>
+                            <span th:if="${yc.trangThai == 'CHO_TIEP_NHAN'}" class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2 py-1">Chờ tiếp nhận</span>
+                            <span th:if="${yc.trangThai == 'DANG_SUA'}" class="badge bg-info-subtle text-info-emphasis border border-info px-2 py-1"><i class="fa-solid fa-wrench me-1"></i>Đang sửa</span>
+                            <span th:if="${yc.trangThai == 'HOAN_THANH'}" class="badge-status badge-trong"><i class="fa-solid fa-check me-1"></i>Hoàn thành</span>
+                        </td>
+                        <td class="text-end">
+                            <!-- Nút Phân công thợ -->
+                            <button th:if="${yc.trangThai != 'HOAN_THANH'}" type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 w-100 mb-1" data-bs-toggle="modal" th:data-bs-target="'#phanCongModal' + ${yc.id}">
+                                <i class="fa-solid fa-user-gear"></i> <span style="font-size: 0.75rem;">Phân công</span>
+                            </button>
+
+                            <!-- Nút Hoàn thành -->
+                            <button th:if="${yc.trangThai == 'DANG_SUA'}" type="button" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 w-100" data-bs-toggle="modal" th:data-bs-target="'#hoanThanhModal' + ${yc.id}">
+                                <i class="fa-solid fa-check-double"></i> <span style="font-size: 0.75rem;">Nghiệm thu</span>
+                            </button>
+
+                            <!-- ================= MODAL PHÂN CÔNG ================= -->
+                            <div th:if="${yc.trangThai != 'HOAN_THANH'}" class="modal fade text-start" th:id="'phanCongModal' + ${yc.id}" tabindex="-1">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content border-0 shadow rounded-4">
+                                        <form th:action="@{/yeu-cau-sua-chua/phan-cong/{id}(id=${yc.id})}" method="post">
+                                            <div class="modal-header bg-light border-0">
+                                                <h6 class="modal-title fw-bold text-dark">Phân Công Thợ - Phòng [[${yc.phongTro.maPhong}]]</h6>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body p-4">
+                                                <p class="small text-muted mb-3">Sự cố: <strong class="text-dark">[[${yc.noiDung}]]</strong></p>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-bold">Tên thợ phụ trách <span class="text-danger">*</span></label>
+                                                    <input type="text" name="thoSuaChua" class="form-control" th:value="${yc.thoSuaChua}" required placeholder="Nhập tên thợ/đơn vị sửa chữa...">
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-0">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Đóng</button>
+                                                <button type="submit" class="btn btn-sm btn-primary px-3"><i class="fa-solid fa-floppy-disk me-1"></i> Lưu phân công</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ================= MODAL HOÀN THÀNH ================= -->
+                            <div th:if="${yc.trangThai == 'DANG_SUA'}" class="modal fade text-start" th:id="'hoanThanhModal' + ${yc.id}" tabindex="-1">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content border-0 shadow rounded-4">
+                                        <form th:action="@{/yeu-cau-sua-chua/hoan-thanh/{id}(id=${yc.id})}" method="post">
+                                            <div class="modal-header bg-light border-0">
+                                                <h6 class="modal-title fw-bold text-dark">Nghiệm Thu Cố - Phòng [[${yc.phongTro.maPhong}]]</h6>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body p-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-bold">Tổng chi phí sửa chữa (VNĐ) <span class="text-danger">*</span></label>
+                                                    <input type="number" name="chiPhi" class="form-control font-mono" min="0" required placeholder="Ví dụ: 150000">
+                                                </div>
+                                                <div class="alert alert-warning py-2 px-3 small border-0 mb-0">
+                                                    <i class="fa-solid fa-circle-exclamation me-1"></i> Hành động này sẽ khóa phiếu và chuyển trạng thái sang <strong>Hoàn thành</strong>.
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-0">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Đóng</button>
+                                                <button type="submit" class="btn btn-sm btn-success px-3"><i class="fa-solid fa-check me-1"></i> Chốt nghiệm thu</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+
+            <div class="px-3 pb-3" th:replace="~{layout/fragments :: pagination(${yeuCauPage}, '/yeu-cau-sua-chua', ${keyword}, ${trangThai}, '')}"></div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer và Scripts chung -->
+<footer th:replace="~{layout/fragments :: footer}"></footer>
+<th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+</body>
+</html>
