@@ -18,20 +18,21 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         String threadName = Thread.currentThread().getName();
-        System.out.println("Client mới kết nối. Luồng xử lý: " + threadName);
+        System.out.println("[INFO] [" + threadName + "] Client mới đã kết nối thành công.");
 
         try (
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true)
         ) {
-            String command;
             out.println("Kết nối thành công! Các lệnh hỗ trợ: LIST_ROOM, BOOK <mã_phòng>, EXIT");
+            String command;
 
             while ((command = in.readLine()) != null) {
-                System.out.println("[" + threadName + "] Nhận lệnh: " + command);
+                System.out.println("[DEBUG] [" + threadName + "] Nhận lệnh từ client: " + command);
 
                 if ("EXIT".equalsIgnoreCase(command)) {
                     out.println("Đóng kết nối. Tạm biệt!");
+                    System.out.println("[INFO] [" + threadName + "] Client yêu cầu ngắt kết nối.");
                     break;
                 } else if ("LIST_ROOM".equalsIgnoreCase(command)) {
                     try {
@@ -51,8 +52,10 @@ public class ClientHandler implements Runnable {
                             }
                             out.println(sb.toString().trim());
                         }
+                        System.out.println("[INFO] [" + threadName + "] Đã xử lý xong lệnh LIST_ROOM.");
                     } catch (Exception dbEx) {
                         out.println("Lỗi truy xuất CSDL: " + dbEx.getMessage());
+                        System.err.println("[ERROR] [" + threadName + "] Lỗi CSDL khi lấy danh sách phòng: " + dbEx.getMessage());
                     }
                 } else if (command.toUpperCase().startsWith("BOOK ")) {
                     String roomCode = command.substring(5).trim();
@@ -68,18 +71,20 @@ public class ClientHandler implements Runnable {
                             phong.setTrangThai("DA_DAT");
                             phongTroService.update(phong.getId(), phong, null);
                             out.println("Thành công! Đã đặt giữ chỗ cho phòng: " + roomCode);
+                            System.out.println("[INFO] [" + threadName + "] Đặt phòng thành công cho mã: " + roomCode);
                         }
                     } catch (Exception dbEx) {
                         out.println("Lỗi khi xử lý đặt phòng: " + dbEx.getMessage());
+                        System.err.println("[ERROR] [" + threadName + "] Lỗi khi BOOK phòng: " + dbEx.getMessage());
                     }
                 } else {
                     out.println("Lệnh không hợp lệ.");
                 }
             }
         } catch (Exception e) {
-            System.err.println("Lỗi kết nối client: " + e.getMessage());
+            System.err.println("[ERROR] [" + threadName + "] Lỗi kết nối client: " + e.getMessage());
         } finally {
-            System.out.println("Client đã ngắt kết nối. Giải phóng luồng: " + threadName);
+            System.out.println("[INFO] [" + threadName + "] Đã đóng socket và giải phóng luồng hoàn toàn.");
         }
     }
 }
