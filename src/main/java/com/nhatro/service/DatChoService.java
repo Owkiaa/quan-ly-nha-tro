@@ -198,6 +198,63 @@ public class DatChoService {
     }
 
     /**
+     * Giải phóng một bản ghi đặt giữ chỗ quá hạn trong một Transaction độc lập.
+     * Phương thức này được gọi qua Bean Proxy của DatChoService từ DatChoScheduler
+     * để đảm bảo @Transactional và findByIdForUpdate (Pessimistic Lock) hoạt động chính xác.
+     */
+    @Transactional
+    public void releaseSingleBooking(Integer datChoId, Integer phongId) {
+        String threadName = Thread.currentThread().getName();
+        log.info("[{}] Đang kiểm tra và giải phóng phòng ID: {} (Đặt chỗ ID: {})", threadName, phongId, datChoId);
+
+        // 1. Khóa phòng trọ cần giải phóng bằng Pessimistic Lock
+        PhongTro phong = phongTroRepository.findByIdForUpdate(phongId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy phòng trọ ID: " + phongId));
+
+        // 2. Kiểm tra lại trong transaction: đảm bảo bản ghi dat_cho vẫn còn ở trạng thái DANG_GIU
+        DatCho datCho = datChoRepository.findById(datChoId).orElse(null);
+        if (datCho != null && TRANG_THAI_DANG_GIU.equals(datCho.getTrangThai())) {
+            datCho.setTrangThai(TRANG_THAI_HET_HAN);
+            String oldGhiChu = datCho.getGhiChu() != null ? datCho.getGhiChu() + " | " : "";
+            datCho.setGhiChu(oldGhiChu + "Tự động hủy do hết hạn giữ chỗ");
+            datChoRepository.save(datCho);
+
+            // 3. Đưa phòng trở về trạng thái TRONG nếu phòng đang ở DA_DAT
+            if (PHONG_DA_DAT.equals(phong.getTrangThai())) {
+                phong.setTrangThai(PHONG_TRONG);
+                phongTroRepository.save(phong);
+                log.info("[{}] ĐÃ GIẢI PHÓNG PHÒNG {} (ID: {}) VỀ TRẠNG THÁI TRONG THÀNH CÔNG",
+                        threadName, phong.getMaPhong(), phongId);
+            } else {
+                log.info("[{}] Đặt chỗ ID: {} đã hết hạn, phòng {} hiện ở trạng thái: {}",
+                        threadName, datChoId, phong.getMaPhong(), phong.getTrangThai());
+            }
+        } else {
+            log.info("[{}] Bỏ qua giải phóng đặt chỗ ID {}: không tồn tại hoặc không còn là DANG_GIU",
+                    threadName, datChoId);
+        }
+    }
+
+    /**
+     * Quét và giải phóng thủ công toàn bộ đặt chỗ quá hạn.
+     */
+    public int quetVaGiaiPhongDatChoQuaHan() {
+        String threadName = Thread.currentThread().getName();
+        List<DatCho> expiredList = datChoRepository.findExpiredBookings(LocalDateTime.now());
+        log.info("[{}] Bắt đầu quét đặt chỗ quá hạn, tìm thấy {} bản ghi", threadName, expiredList.size());
+        int count = 0;
+        for (DatCho dc : expiredList) {
+            try {
+                releaseSingleBooking(dc.getId(), dc.getPhongTro().getId());
+                count++;
+            } catch (Exception e) {
+                log.error("[{}] Lỗi khi giải phóng đặt chỗ ID {}: {}", threadName, dc.getId(), e.getMessage());
+            }
+        }
+        return count;
+    }
+
+    /**
      * Tìm kiếm và phân trang danh sách đặt chỗ.
      */
     public Page<DatCho> timKiem(String keyword, String trangThai, Pageable pageable) {
