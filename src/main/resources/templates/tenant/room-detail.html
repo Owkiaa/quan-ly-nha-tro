@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Chi tiết phòng')}"></head>
+<body>
+<th:block th:replace="~{components :: styles}"></th:block>
+<nav th:replace="~{fragments :: navbar('tenant')}"></nav>
+
+<main class="main-container">
+    <div class="container-xl">
+        <div th:replace="~{fragments :: alerts}"></div>
+        <div th:replace="~{components :: tenantTabs('rooms')}"></div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1" th:text="${room.tenPhong}">Phòng 101</h1>
+                <p class="text-muted small mb-0">Mã phòng <span class="font-mono" th:text="${room.maPhong}">P101</span></p>
+            </div>
+            <a class="btn btn-outline-secondary btn-sm rounded-3 px-3" th:href="@{/tenant/rooms}">
+                <i class="fa-solid fa-arrow-left me-1"></i> Quay lại danh sách
+            </a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="room-photo">
+                    <img th:if="${room.hinhAnh != null and !#strings.isEmpty(room.hinhAnh)}"
+                         th:src="@{${room.hinhAnh}}" th:alt="${'Ảnh ' + room.tenPhong}"
+                         onerror="this.classList.add('is-hidden');this.nextElementSibling.classList.remove('is-hidden')">
+                    <div class="room-photo-empty"
+                         th:classappend="${room.hinhAnh != null and !#strings.isEmpty(room.hinhAnh)} ? 'is-hidden'">
+                        <i class="fa-regular fa-image"></i><span>Chưa có ảnh phòng</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card-custom p-4">
+                    <div class="text-muted small">Giá thuê</div>
+                    <div class="mb-3">
+                        <span class="fs-3 fw-bold font-mono" th:text="${#numbers.formatDecimal(room.giaThue, 0, 'POINT', 0, 'COMMA')}">2.200.000</span>
+                        <span class="text-muted">đ/tháng</span>
+                    </div>
+                    <dl class="detail-list">
+                        <dt>Trạng thái</dt>
+                        <dd><th:block th:replace="~{components :: statusBadge(${room.trangThai})}"></th:block></dd>
+                        <dt>Loại phòng</dt>
+                        <dd th:text="${room.loaiPhong != null} ? ${room.loaiPhong} : '—'">Đơn</dd>
+                        <dt>Diện tích</dt>
+                        <dd th:text="${room.dienTich != null} ? ${#numbers.formatDecimal(room.dienTich, 0, 'POINT', 1, 'COMMA') + ' m²'} : '—'">20,0 m²</dd>
+                        <dt>Mô tả</dt>
+                        <dd th:text="${room.moTa != null and !#strings.isEmpty(room.moTa)} ? ${room.moTa} : '—'">Mô tả phòng</dd>
+                    </dl>
+                    <div class="alert alert-warning py-2 px-3 small border-0 rounded-3 mt-4 mb-0" th:if="${room.trangThai == 'TRONG'}">
+                        <i class="fa-solid fa-circle-info me-1"></i>
+                        Phòng đang trống. Hãy liên hệ quản lý nhà trọ để đặt giữ chỗ hoặc xem phòng trực tiếp.
+                    </div>
+                    <div class="text-muted small mt-4 mb-0" th:unless="${room.trangThai == 'TRONG'}">
+                        Phòng này hiện chưa nhận thêm người thuê.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+<th:block th:replace="~{fragments :: scripts}"></th:block>
+</body>
+</html>
