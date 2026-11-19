@@ -274,4 +274,23 @@ public class DatChoService {
     public List<DatCho> layTatCa() {
         return datChoRepository.findAll();
     }
+
+    /**
+     * Lấy danh sách phòng trống sẵn sàng cho đặt giữ chỗ.
+     */
+    public List<PhongTro> layDanhSachPhongTrong() {
+        return phongTroRepository.findByTrangThaiOrderByMaPhongAsc(PHONG_TRONG);
+    }
+
+    public long demDangGiu() {
+        return datChoRepository.countByTrangThai(TRANG_THAI_DANG_GIU);
+    }
+
+    public long demHetHan() {
+        return datChoRepository.countByTrangThai(TRANG_THAI_HET_HAN);
+    }
+
+    public long demDaChuyenHopDong() {
+        return datChoRepository.countByTrangThai(TRANG_THAI_DA_CHUYEN_HOP_DONG);
+    }
 }

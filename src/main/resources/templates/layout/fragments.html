@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' • Nhà Trọ Thông Minh'">Hệ Thống Quản Lý Nhà Trọ</title>
+
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5.3 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6.5.1 CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            /* Tông màu ấm cúng: Cam đất / Amber / Nâu gỗ */
+            --primary: #d97706;
+            --primary-hover: #b45309;
+            --primary-light: #fef3c7;
+            --primary-border: #fde68a;
+            --bg-body: #faf7f2;
+            --card-border: #ede8df;
+            --text-heading: #1c1917;
+            --text-body: #44403c;
+            --text-muted: #78716c;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-body);
+            color: var(--text-body);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Typography */
+        h1, h2, h3, h4, h5, h6, .fw-bold {
+            color: var(--text-heading);
+            letter-spacing: -0.02em;
+        }
+        .font-mono {
+            font-family: var(--font-mono);
+        }
+
+        /* Top Navbar (Thanh điều hướng ngang sáng sủa, thoáng đãng) */
+        .top-navbar {
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--card-border);
+            padding: 0.75rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+        }
+        .navbar-brand-custom {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--text-heading);
+            font-weight: 800;
+            font-size: 1.15rem;
+        }
+        .brand-icon-box {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 10px rgba(217, 119, 6, 0.25);
+        }
+
+        /* Nav Links */
+        .nav-link-custom {
+            color: var(--text-body);
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.55rem 0.95rem;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.15s ease;
+        }
+        .nav-link-custom:hover {
+            color: var(--primary);
+            background-color: var(--primary-light);
+        }
+        .nav-link-custom.active {
+            color: var(--primary);
+            background-color: var(--primary-light);
+            box-shadow: inset 0 0 0 1px var(--primary-border);
+        }
+        .nav-link-custom i {
+            font-size: 1rem;
+        }
+
+        /* Main Container */
+        .main-container {
+            flex-grow: 1;
+            padding: 2rem 0;
+        }
+
+        /* Cards & Containers (Tối giản, viền mỏng, sáng sủa) */
+        .card-custom {
+            background-color: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            transition: all 0.2s ease;
+        }
+        .stat-card {
+            background-color: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 1.25rem 1.35rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
+            border-color: #d6cfc4;
+        }
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        /* Status Badges */
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.3rem 0.65rem;
+            border-radius: 6px;
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+        .badge-trong {
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+        .badge-dadat {
+            background-color: #fffbeb;
+            color: #b45309;
+            border: 1px solid #fde68a;
+        }
+        .badge-dathue {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        .badge-baotri {
+            background-color: #fff1f2;
+            color: #be123c;
+            border: 1px solid #fecdd3;
+        }
+        .badge-dangthue {
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+        .badge-datraphong {
+            background-color: #f5f5f4;
+            color: #57534e;
+            border: 1px solid #e7e5e4;
+        }
+
+        /* Pulse green dot */
+        .pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: #10b981;
+            display: inline-block;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
+            animation: pulse-green 2s infinite;
+        }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+            70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Table Styling */
+        .table-custom th {
+            background-color: #fbf9f5;
+            color: #78716c;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            border-bottom: 1px solid var(--card-border);
+            padding: 0.85rem 1.15rem;
+            white-space: nowrap;
+        }
+        .table-custom td {
+            padding: 0.95rem 1.15rem;
+            vertical-align: middle;
+            color: #292524;
+            border-bottom: 1px solid #f5f1eb;
+            font-size: 0.88rem;
+        }
+        .table-custom tbody tr:hover {
+            background-color: #fdfbf7;
+        }
+        .room-img-thumb {
+            width: 52px;
+            height: 38px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--card-border);
+            background-color: #f5f1eb;
+        }
+
+        /* Action Buttons */
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            background-color: #ffffff;
+            color: #57534e;
+            transition: all 0.15s ease;
+        }
+        .btn-action:hover {
+            border-color: #d6cfc4;
+            transform: translateY(-1px);
+        }
+        .btn-action.action-view:hover { background-color: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+        .btn-action.action-edit:hover { background-color: #fffbeb; color: #b45309; border-color: #fde68a; }
+        .btn-action.action-delete:hover { background-color: #fff1f2; color: #e11d48; border-color: #fecdd3; }
+
+        /* Buttons & Forms with Warm Theme */
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+            color: #ffffff;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
+            color: #ffffff;
+        }
+        .form-control, .form-select {
+            border: 1px solid #d6cfc4;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            padding: 0.55rem 0.85rem;
+            transition: all 0.15s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+        }
+        .form-label {
+            color: #292524;
+            font-weight: 600;
+            font-size: 0.825rem;
+            margin-bottom: 0.35rem;
+        }
+
+        /* Footer */
+        .footer-custom {
+            border-top: 1px solid var(--card-border);
+            background-color: #ffffff;
+            padding: 1.25rem 0;
+            margin-top: auto;
+            color: var(--text-muted);
+            font-size: 0.825rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- TOP NAVBAR FRAGMENT (Thanh điều hướng ngang toàn trang) -->
+    <nav th:fragment="navbar(activeMenu)" class="top-navbar">
+        <div class="container-xl">
+            <div class="d-flex align-items-center justify-content-between">
+                <!-- Brand / Logo -->
+                <a th:href="@{/phong-tro}" class="navbar-brand-custom">
+                    <div class="brand-icon-box">
+                        <i class="fa-solid fa-house-chimney"></i>
+                    </div>
+                    <div>
+                        <div style="line-height: 1.15;">QUẢN LÝ NHÀ TRỌ</div>
+                        <small style="font-size: 0.68rem; color: #78716c; font-weight: 500;">Phân hệ Nguyễn Minh Tâm</small>
+                    </div>
+                </a>
+
+                <!-- Main Navigation Menu (Top Bar) -->
+                <div class="d-none d-md-flex align-items-center gap-1">
+                    <a th:href="@{/phong-tro}" th:classappend="${activeMenu == 'phong-tro'} ? 'active' : ''" class="nav-link-custom">
+                        <i class="fa-solid fa-door-open"></i>
+                        <span>Phòng Trọ</span>
+                    </a>
+                    <a th:href="@{/khach-thue}" th:classappend="${activeMenu == 'khach-thue'} ? 'active' : ''" class="nav-link-custom">
+                        <i class="fa-solid fa-users"></i>
+                        <span>Khách Thuê</span>
+                    </a>
+                    <a th:href="@{/dat-cho}" th:classappend="${activeMenu == 'dat-cho'} ? 'active' : ''" class="nav-link-custom">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span>Đặt Chỗ</span>
+                    </a>
+                    <a th:href="@{/hop-dong}" th:classappend="${activeMenu == 'hop-dong'} ? 'active' : ''" class="nav-link-custom">
+                        <i class="fa-solid fa-file-contract"></i>
+                        <span>Hợp Đồng</span>
+                    </a>
+                    <a th:if="${session.SESSION_ROLE == 'ADMIN'}" th:href="@{/tai-khoan}" th:classappend="${activeMenu == 'tai-khoan'} ? 'active' : ''" class="nav-link-custom">
+                        <i class="fa-solid fa-user-shield"></i>
+                        <span>Tài Khoản</span>
+                    </a>
+
+                    <!-- Dropdown Các Phân Hệ Khác -->
+                    <div class="dropdown ms-1">
+                        <button class="nav-link-custom btn btn-link text-secondary border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-shapes"></i>
+                            <span>Phân Hệ Khác</span>
+                            <i class="fa-solid fa-chevron-down small" style="font-size: 0.7rem;"></i>
+                        </button>
+                        <ul class="dropdown-menu shadow-sm border p-2 rounded-3" style="font-size: 0.85rem;">
+                            <li><span class="dropdown-header text-muted text-uppercase" style="font-size: 0.68rem;">Đang phát triển:</span></li>
+                            <li><a class="dropdown-item text-muted disabled py-1" href="#"><i class="fa-solid fa-file-contract me-2"></i>Hợp Đồng (TV2 - Tài)</a></li>
+                            <li><a class="dropdown-item text-muted disabled py-1" href="#"><i class="fa-solid fa-calendar-check me-2"></i>Đặt Chỗ (TV2 - Tài)</a></li>
+                            <li><a class="dropdown-item text-muted disabled py-1" href="#"><i class="fa-solid fa-house-chimney-window me-2"></i>Cổng Khách Thuê (TV3 - Trụ)</a></li>
+                            <li><a class="dropdown-item text-muted disabled py-1" href="#"><i class="fa-solid fa-screwdriver-wrench me-2"></i>Sự Cố &amp; Socket (TV4 - Mẩn)</a></li>
+                            <li><a class="dropdown-item text-muted disabled py-1" href="#"><i class="fa-solid fa-file-invoice-dollar me-2"></i>Hóa Đơn &amp; Điện Nước (TV5 - Quân)</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Right: User Profile & Actions -->
+                <div class="d-flex align-items-center gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light border dropdown-toggle d-flex align-items-center gap-2 px-3 py-1 rounded-pill" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="rounded-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center" style="width: 26px; height: 26px; font-size: 0.75rem;">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <span class="fw-semibold text-dark small" th:text="${session.SESSION_FULLNAME != null ? session.SESSION_FULLNAME : 'Nguyễn Minh Tâm'}">Tâm</span>
+                            <span class="badge bg-warning-subtle text-warning-emphasis ms-1" style="font-size: 0.65rem;" th:text="${session.SESSION_ROLE != null ? session.SESSION_ROLE : 'ADMIN'}">ADMIN</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border rounded-3 p-2">
+                            <li class="px-3 py-2 border-bottom mb-1">
+                                <div class="fw-bold text-dark small" th:text="${session.SESSION_FULLNAME != null ? session.SESSION_FULLNAME : 'Nguyễn Minh Tâm'}">Nguyễn Minh Tâm</div>
+                                <div class="text-muted" style="font-size: 0.72rem;" th:text="'Quyền: ' + ${session.SESSION_ROLE != null ? session.SESSION_ROLE : 'ADMIN'}">Quyền: ADMIN</div>
+                            </li>
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2 small d-flex align-items-center gap-2" th:href="@{/profile}">
+                                    <i class="fa-solid fa-shield-halved text-warning"></i>
+                                    <span>Hồ sơ &amp; Đổi mật khẩu</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li>
+                                <a class="dropdown-item text-danger rounded-2 py-2 small d-flex align-items-center gap-2" th:href="@{/logout}">
+                                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                                    <span>Đăng xuất</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- FLASH ALERTS FRAGMENT -->
+    <div th:fragment="alerts">
+        <div th:if="${successMessage != null}" class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-3 shadow-sm border-0 border-start border-success border-4 rounded-3" role="alert">
+            <i class="fa-solid fa-circle-check fs-5 text-success"></i>
+            <div class="flex-grow-1 fw-medium" th:text="${successMessage}">Thao tác thành công!</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${errorMessage != null}" class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2 mb-3 shadow-sm border-0 border-start border-danger border-4 rounded-3" role="alert">
+            <i class="fa-solid fa-circle-exclamation fs-5 text-danger"></i>
+            <div class="flex-grow-1 fw-medium" th:text="${errorMessage}">Đã xảy ra lỗi!</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${infoMessage != null}" class="alert alert-info alert-dismissible fade show d-flex align-items-center gap-2 mb-3 shadow-sm border-0 border-start border-info border-4 rounded-3" role="alert">
+            <i class="fa-solid fa-circle-info fs-5 text-info"></i>
+            <div class="flex-grow-1 fw-medium" th:text="${infoMessage}">Thông báo hệ thống</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+
+    <!-- PAGINATION FRAGMENT -->
+    <nav th:fragment="pagination(pageData, baseUrl, keyword, trangThai, sort)" th:if="${pageData != null and pageData.totalPages > 1}" class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-3 border-top">
+        <div class="text-muted small">
+            Hiển thị <span class="fw-bold text-dark font-mono" th:text="${pageData.numberOfElements}">10</span> /
+            <span class="fw-bold text-dark font-mono" th:text="${pageData.totalElements}">20</span> bản ghi
+            (Trang <span class="fw-bold text-warning-emphasis font-mono" th:text="${pageData.number + 1}">1</span> / <span class="font-mono" th:text="${pageData.totalPages}">2</span>)
+        </div>
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" th:classappend="${pageData.first} ? 'disabled' : ''">
+                <a class="page-link rounded-start-2" th:href="@{${baseUrl}(page=0, size=${pageData.size}, keyword=${keyword}, trangThai=${trangThai}, sort=${sort})}">
+                    <i class="fa-solid fa-angles-left"></i>
+                </a>
+            </li>
+            <li class="page-item" th:classappend="${pageData.first} ? 'disabled' : ''">
+                <a class="page-link" th:href="@{${baseUrl}(page=${pageData.number - 1}, size=${pageData.size}, keyword=${keyword}, trangThai=${trangThai}, sort=${sort})}">
+                    <i class="fa-solid fa-angle-left"></i>
+                </a>
+            </li>
+
+            <li th:each="i : ${#numbers.sequence(0, pageData.totalPages - 1)}"
+                th:if="${i >= pageData.number - 2 and i <= pageData.number + 2}"
+                class="page-item" th:classappend="${i == pageData.number} ? 'active' : ''">
+                <a class="page-link font-mono" th:text="${i + 1}"
+                   th:href="@{${baseUrl}(page=${i}, size=${pageData.size}, keyword=${keyword}, trangThai=${trangThai}, sort=${sort})}">1</a>
+            </li>
+
+            <li class="page-item" th:classappend="${pageData.last} ? 'disabled' : ''">
+                <a class="page-link" th:href="@{${baseUrl}(page=${pageData.number + 1}, size=${pageData.size}, keyword=${keyword}, trangThai=${trangThai}, sort=${sort})}">
+                    <i class="fa-solid fa-angle-right"></i>
+                </a>
+            </li>
+            <li class="page-item" th:classappend="${pageData.last} ? 'disabled' : ''">
+                <a class="page-link rounded-end-2" th:href="@{${baseUrl}(page=${pageData.totalPages - 1}, size=${pageData.size}, keyword=${keyword}, trangThai=${trangThai}, sort=${sort})}">
+                    <i class="fa-solid fa-angles-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- CONFIRM DELETE MODAL FRAGMENT -->
+    <div th:fragment="deleteModal" class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-body p-4 text-center">
+                    <div class="rounded-circle bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px; font-size: 1.75rem;">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Xác Nhận Xóa Dữ Liệu</h5>
+                    <p class="text-secondary small mb-3" id="deleteModalMessage">Bạn có chắc chắn muốn xóa bản ghi này khỏi hệ thống?</p>
+                    <div class="alert alert-warning py-2 px-3 small text-start border-0 rounded-3 mb-0">
+                        <i class="fa-solid fa-triangle-exclamation text-warning me-1"></i>
+                        Hệ thống sẽ tự động chặn xóa nếu đối tượng đang có hợp đồng hoặc đang đặt giữ chỗ theo quy tắc bảo toàn dữ liệu.
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3 d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-3" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <form id="deleteForm" method="POST" action="">
+                        <button type="submit" class="btn btn-danger btn-sm px-4 rounded-3">
+                            <i class="fa-solid fa-trash-can me-1"></i> Xác Nhận Xóa
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER FRAGMENT -->
+    <footer th:fragment="footer" class="footer-custom">
+        <div class="container-xl d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                © 2026 Đồ Án Môn Công Nghệ Java • <strong>Hệ Thống Quản Lý Nhà Trọ</strong>
+            </div>
+            <div class="text-muted small">
+                Kiến trúc: Spring Boot 3.3.5 &amp; MS SQL Server
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS FRAGMENT -->
+    <th:block th:fragment="scripts">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            function confirmDelete(actionUrl, itemName) {
+                const deleteForm = document.getElementById('deleteForm');
+                const deleteMessage = document.getElementById('deleteModalMessage');
+                if (deleteForm && deleteMessage) {
+                    deleteForm.action = actionUrl;
+                    deleteMessage.innerHTML = 'Bạn có chắc chắn muốn xóa: <strong>"' + itemName + '"</strong>?';
+                    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+                    modal.show();
+                }
+            }
+
+            setTimeout(() => {
+                const alerts = document.querySelectorAll('.alert-dismissible');
+                alerts.forEach(alert => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 6000);
+        </script>
+    </th:block>
+</body>
+</html>
