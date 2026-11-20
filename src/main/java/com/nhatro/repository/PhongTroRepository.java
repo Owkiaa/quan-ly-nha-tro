@@ -26,6 +26,8 @@ public interface PhongTroRepository extends JpaRepository<PhongTro, Integer> {
 
     List<PhongTro> findByTrangThaiOrderByMaPhongAsc(String trangThai);
 
+    List<PhongTro> findByTrangThaiInOrderByMaPhongAsc(List<String> trangThais);
+
     @Query("SELECT p FROM PhongTro p WHERE " +
            "(:keyword IS NULL OR :keyword = '' OR LOWER(p.maPhong) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.tenPhong) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:trangThai IS NULL OR :trangThai = '' OR p.trangThai = :trangThai)")

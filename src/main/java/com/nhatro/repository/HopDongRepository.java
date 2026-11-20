@@ -26,6 +26,8 @@ public interface HopDongRepository extends JpaRepository<HopDong, Integer> {
 
     List<HopDong> findByPhongTroId(Integer phongId);
 
+    long countByTrangThai(String trangThai);
+
     @Query(value = "SELECT h FROM HopDong h JOIN FETCH h.phongTro JOIN FETCH h.khachThue WHERE " +
            "(:keyword IS NULL OR :keyword = '' OR LOWER(h.maHopDong) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(h.phongTro.maPhong) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(h.khachThue.hoTen) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:trangThai IS NULL OR :trangThai = '' OR h.trangThai = :trangThai)",

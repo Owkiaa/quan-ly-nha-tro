@@ -346,4 +346,37 @@ public class HopDongService {
 
         return maSinh;
     }
+
+    /**
+     * Lấy danh sách các phòng có thể lập hợp đồng (trạng thái TRONG hoặc DA_DAT).
+     */
+    public List<PhongTro> layDanhSachPhongCoTheLapHopDong() {
+        return phongTroRepository.findByTrangThaiInOrderByMaPhongAsc(List.of(PHONG_TRONG, PHONG_DA_DAT));
+    }
+
+    /**
+     * Lấy toàn bộ danh sách khách thuê sắp xếp theo tên.
+     */
+    public List<KhachThue> layDanhSachKhachThue() {
+        return khachThueRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "hoTen"));
+    }
+
+    /**
+     * Tìm phiếu đặt giữ chỗ đang có hiệu lực của phòng (nếu có).
+     */
+    public Optional<DatCho> timDatChoDangGiuCuaPhong(Integer phongId) {
+        return datChoRepository.findFirstByPhongTroIdAndTrangThai(phongId, DAT_CHO_DANG_GIU);
+    }
+
+    public long demHieuLuc() {
+        return hopDongRepository.countByTrangThai(TRANG_THAI_HIEU_LUC);
+    }
+
+    public long demHetHan() {
+        return hopDongRepository.countByTrangThai(TRANG_THAI_HET_HAN);
+    }
+
+    public long demDaThanhLy() {
+        return hopDongRepository.countByTrangThai(TRANG_THAI_DA_THANH_LY);
+    }
 }
