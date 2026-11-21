@@ -26,8 +26,12 @@ public class AuthController {
                                 @RequestParam(value = "logout", required = false) String logout,
                                 HttpSession session,
                                 Model model) {
-        // Nếu đã đăng nhập, chuyển hướng luôn vào trang chính
+        // Nếu đã đăng nhập, chuyển hướng luôn vào trang chính theo vai trò
         if (session != null && session.getAttribute(AuthInterceptor.SESSION_USER) != null) {
+            Object role = session.getAttribute(AuthInterceptor.SESSION_ROLE);
+            if ("TENANT".equalsIgnoreCase(String.valueOf(role))) {
+                return "redirect:/tenant/rooms";
+            }
             return "redirect:/phong-tro";
         }
 
@@ -56,8 +60,13 @@ public class AuthController {
             session.setAttribute(AuthInterceptor.SESSION_ROLE, taiKhoan.getVaiTro());
 
             String fullName = taiKhoan.getTenDangNhap();
-            if (taiKhoan.getKhachThue() != null && taiKhoan.getKhachThue().getHoTen() != null) {
-                fullName = taiKhoan.getKhachThue().getHoTen();
+            if (taiKhoan.getKhachThue() != null) {
+                session.setAttribute(AuthInterceptor.SESSION_KHACH_ID, taiKhoan.getKhachThue().getId());
+                if (taiKhoan.getKhachThue().getHoTen() != null) {
+                    fullName = taiKhoan.getKhachThue().getHoTen();
+                }
+            } else {
+                session.removeAttribute(AuthInterceptor.SESSION_KHACH_ID);
             }
             session.setAttribute(AuthInterceptor.SESSION_FULLNAME, fullName);
 
@@ -67,6 +76,9 @@ public class AuthController {
                 return "redirect:" + redirect;
             }
 
+            if ("TENANT".equalsIgnoreCase(taiKhoan.getVaiTro())) {
+                return "redirect:/tenant/rooms";
+            }
             return "redirect:/phong-tro";
         } catch (BusinessException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments :: head('Hợp đồng của tôi')}"></head>
+<head th:replace="~{layout/fragments :: head('Hợp đồng của tôi')}"></head>
 <body>
 <th:block th:replace="~{components :: styles}"></th:block>
-<nav th:replace="~{fragments :: navbar('tenant')}"></nav>
+<nav th:replace="~{layout/fragments :: navbar('tenant')}"></nav>
 
 <main class="main-container">
     <div class="container-xl">
-        <div th:replace="~{fragments :: alerts}"></div>
+        <div th:replace="~{layout/fragments :: alerts}"></div>
         <div th:replace="~{components :: tenantTabs('contracts')}"></div>
 
         <div class="mb-3">
@@ -57,7 +57,7 @@
     </div>
 </main>
 
-<footer th:replace="~{fragments :: footer}"></footer>
-<th:block th:replace="~{fragments :: scripts}"></th:block>
+<footer th:replace="~{layout/fragments :: footer}"></footer>
+<th:block th:replace="~{layout/fragments :: scripts}"></th:block>
 </body>
 </html>

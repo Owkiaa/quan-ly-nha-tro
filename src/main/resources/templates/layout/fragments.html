@@ -306,59 +306,66 @@
         <div class="container-xl">
             <div class="d-flex align-items-center justify-content-between">
                 <!-- Brand / Logo -->
-                <a th:href="@{/phong-tro}" class="navbar-brand-custom">
+                <a th:href="${session.SESSION_ROLE == 'TENANT'} ? @{/tenant/rooms} : @{/phong-tro}" class="navbar-brand-custom">
                     <div class="brand-icon-box">
                         <i class="fa-solid fa-house-chimney"></i>
                     </div>
                     <div>
                         <div style="line-height: 1.15;">QUẢN LÝ NHÀ TRỌ</div>
-                        <small style="font-size: 0.68rem; color: #78716c; font-weight: 500;">Phân hệ Nguyễn Minh Tâm</small>
+                        <small style="font-size: 0.68rem; color: #78716c; font-weight: 500;">Hệ thống quản lý phòng trọ</small>
                     </div>
                 </a>
 
                 <!-- Main Navigation Menu (Top Bar) -->
                 <div class="d-none d-md-flex align-items-center gap-1">
-                    <a th:href="@{/phong-tro}" th:classappend="${activeMenu == 'phong-tro'} ? 'active' : ''" class="nav-link-custom">
-                        <i class="fa-solid fa-door-open"></i>
-                        <span>Phòng Trọ</span>
-                    </a>
-                    <a th:href="@{/khach-thue}" th:classappend="${activeMenu == 'khach-thue'} ? 'active' : ''" class="nav-link-custom">
-                        <i class="fa-solid fa-users"></i>
-                        <span>Khách Thuê</span>
-                    </a>
-                    <a th:href="@{/dat-cho}" th:classappend="${activeMenu == 'dat-cho'} ? 'active' : ''" class="nav-link-custom">
-                        <i class="fa-solid fa-calendar-check"></i>
-                        <span>Đặt Chỗ</span>
-                    </a>
-                    <a th:href="@{/hop-dong}" th:classappend="${activeMenu == 'hop-dong'} ? 'active' : ''" class="nav-link-custom">
-                        <i class="fa-solid fa-file-contract"></i>
-                        <span>Hợp Đồng</span>
-                    </a>
-                    <a th:href="@{/yeu-cau-sua-chua}" th:classappend="${activeMenu == 'yeu-cau-sua-chua'} ? 'active' : ''" class="nav-link-custom">
-                        <i class="fa-solid fa-screwdriver-wrench"></i>
-                        <span>Sự Cố</span>
-                    </a>
-                    <a th:if="${session.SESSION_ROLE == 'ADMIN'}" th:href="@{/tai-khoan}" th:classappend="${activeMenu == 'tai-khoan'} ? 'active' : ''" class="nav-link-custom">
-                        <i class="fa-solid fa-user-shield"></i>
-                        <span>Tài Khoản</span>
-                    </a>
+                    <th:block th:if="${session.SESSION_ROLE != 'TENANT'}">
+                        <a th:href="@{/phong-tro}" th:classappend="${activeMenu == 'phong-tro'} ? 'active' : ''" class="nav-link-custom">
+                            <i class="fa-solid fa-door-open"></i>
+                            <span>Phòng Trọ</span>
+                        </a>
+                        <a th:href="@{/khach-thue}" th:classappend="${activeMenu == 'khach-thue'} ? 'active' : ''" class="nav-link-custom">
+                            <i class="fa-solid fa-users"></i>
+                            <span>Khách Thuê</span>
+                        </a>
+                        <a th:href="@{/dat-cho}" th:classappend="${activeMenu == 'dat-cho'} ? 'active' : ''" class="nav-link-custom">
+                            <i class="fa-solid fa-calendar-check"></i>
+                            <span>Đặt Chỗ</span>
+                        </a>
+                        <a th:href="@{/hop-dong}" th:classappend="${activeMenu == 'hop-dong'} ? 'active' : ''" class="nav-link-custom">
+                            <i class="fa-solid fa-file-contract"></i>
+                            <span>Hợp Đồng</span>
+                        </a>
+                        <a th:href="@{/yeu-cau-sua-chua}" th:classappend="${activeMenu == 'yeu-cau-sua-chua'} ? 'active' : ''" class="nav-link-custom">
+                            <i class="fa-solid fa-screwdriver-wrench"></i>
+                            <span>Sự Cố</span>
+                        </a>
+                        <a th:if="${session.SESSION_ROLE == 'ADMIN'}" th:href="@{/tai-khoan}" th:classappend="${activeMenu == 'tai-khoan'} ? 'active' : ''" class="nav-link-custom">
+                            <i class="fa-solid fa-user-shield"></i>
+                            <span>Tài Khoản</span>
+                        </a>
 
-                    <!-- Dropdown Các Phân Hệ Khác -->
-                    <div class="dropdown ms-1">
-                        <button class="nav-link-custom btn btn-link text-secondary border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fa-solid fa-shapes"></i>
-                            <span>Phân Hệ Khác</span>
-                            <i class="fa-solid fa-chevron-down small" style="font-size: 0.7rem;"></i>
-                        </button>
-                        <ul class="dropdown-menu shadow-sm border p-2 rounded-3" style="font-size: 0.85rem;">
-                            <li><span class="dropdown-header text-muted text-uppercase" style="font-size: 0.68rem;">Đang phát triển:</span></li>
-                            <li><a class="dropdown-item text-muted disabled py-1" href="#"><i class="fa-solid fa-file-contract me-2"></i>Hợp Đồng (TV2 - Tài)</a></li>
-                            <li><a class="dropdown-item text-muted disabled py-1" href="#"><i class="fa-solid fa-calendar-check me-2"></i>Đặt Chỗ (TV2 - Tài)</a></li>
-                            <li><a class="dropdown-item text-muted disabled py-1" href="#"><i class="fa-solid fa-house-chimney-window me-2"></i>Cổng Khách Thuê (TV3 - Trụ)</a></li>
-                            <li><a class="dropdown-item py-1 text-dark" th:href="@{/yeu-cau-sua-chua}"><i class="fa-solid fa-screwdriver-wrench me-2 text-primary"></i>Sự Cố &amp; Sửa Chữa (TV4)</a></li>
-                            <li><a class="dropdown-item text-muted disabled py-1" href="#"><i class="fa-solid fa-file-invoice-dollar me-2"></i>Hóa Đơn &amp; Điện Nước (TV5 - Quân)</a></li>
-                        </ul>
-                    </div>
+                        <!-- Dropdown Các Phân Hệ Khác -->
+                        <div class="dropdown ms-1">
+                            <button class="nav-link-custom btn btn-link text-secondary border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-shapes"></i>
+                                <span>Phân Hệ Khác</span>
+                                <i class="fa-solid fa-chevron-down small" style="font-size: 0.7rem;"></i>
+                            </button>
+                            <ul class="dropdown-menu shadow-sm border p-2 rounded-3" style="font-size: 0.85rem;">
+                                <li><span class="dropdown-header text-muted text-uppercase" style="font-size: 0.68rem;">Các phân hệ:</span></li>
+                                <li><a class="dropdown-item py-1 text-dark" th:href="@{/hop-dong}"><i class="fa-solid fa-file-contract me-2 text-warning"></i>Hợp Đồng (TV2 - Tài)</a></li>
+                                <li><a class="dropdown-item py-1 text-dark" th:href="@{/dat-cho}"><i class="fa-solid fa-calendar-check me-2 text-warning"></i>Đặt Chỗ (TV2 - Tài)</a></li>
+                                <li><a class="dropdown-item py-1 text-dark" th:href="@{/tenant/rooms}"><i class="fa-solid fa-house-chimney-window me-2 text-warning"></i>Cổng Khách Thuê (TV3 - Trụ)</a></li>
+                                <li><a class="dropdown-item py-1 text-dark" th:href="@{/yeu-cau-sua-chua}"><i class="fa-solid fa-screwdriver-wrench me-2 text-primary"></i>Sự Cố &amp; Sửa Chữa (TV4)</a></li>
+                                <li><a class="dropdown-item text-muted disabled py-1" href="#"><i class="fa-solid fa-file-invoice-dollar me-2"></i>Hóa Đơn &amp; Điện Nước (TV5 - Quân)</a></li>
+                            </ul>
+                        </div>
+                    </th:block>
+
+                    <a th:if="${session.SESSION_ROLE == 'TENANT'}" th:href="@{/tenant/rooms}" th:classappend="${activeMenu == 'tenant'} ? 'active' : ''" class="nav-link-custom">
+                        <i class="fa-solid fa-house-chimney-window"></i>
+                        <span>Cổng Khách Thuê</span>
+                    </a>
                 </div>
 
                 <!-- Right: User Profile & Actions -->

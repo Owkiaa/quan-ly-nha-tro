@@ -16,6 +16,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     public static final String SESSION_USERNAME = "SESSION_USERNAME";
     public static final String SESSION_ROLE = "SESSION_ROLE";
     public static final String SESSION_FULLNAME = "SESSION_FULLNAME";
+    public static final String SESSION_KHACH_ID = "SESSION_KHACH_ID";
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -54,7 +55,7 @@ public class AuthInterceptor implements HandlerInterceptor {
                 || path.startsWith("/dat-cho") || path.startsWith("/hop-dong")
                 || path.startsWith("/yeu-cau-sua-chua"))
                 && "TENANT".equalsIgnoreCase(role)) {
-            response.sendRedirect(contextPath + "/tenant/phong?error=access_denied");
+            response.sendRedirect(contextPath + "/tenant/rooms?error=access_denied");
             return false;
         }
 

@@ -1,5 +1,6 @@
 package com.nhatro.controller;
 
+import com.nhatro.config.AuthInterceptor;
 import com.nhatro.dto.IncidentForm;
 import com.nhatro.entity.HoaDon;
 import com.nhatro.entity.HopDong;
@@ -35,7 +36,7 @@ public class TenantPortalController {
      * (đặt theo kiểu SESSION_FULLNAME, SESSION_ROLE của fragments.html).
      * Nếu TV1 đặt tên khác, chỉ cần sửa hằng số này.
      */
-    private static final String SESSION_KHACH_ID = "SESSION_KHACH_ID";
+    private static final String SESSION_KHACH_ID = AuthInterceptor.SESSION_KHACH_ID;
 
     private final TenantPortalService service;
 
@@ -44,8 +45,25 @@ public class TenantPortalController {
     }
 
     private Integer currentKhachId(HttpSession session) {
+        if (session == null) {
+            return null;
+        }
         Object value = session.getAttribute(SESSION_KHACH_ID);
         return (value instanceof Number) ? ((Number) value).intValue() : null;
+    }
+
+    private boolean isLoggedIn(HttpSession session) {
+        return session != null && (session.getAttribute(AuthInterceptor.SESSION_USER) != null
+                || currentKhachId(session) != null);
+    }
+
+    private String redirectMissingKhachProfile(HttpSession session, RedirectAttributes redirect) {
+        if (!isLoggedIn(session)) {
+            return "redirect:/login";
+        }
+        redirect.addFlashAttribute("infoMessage",
+                "Tài khoản hiện tại chưa liên kết hồ sơ khách thuê nên chỉ xem được danh sách phòng trống.");
+        return "redirect:/tenant/rooms";
     }
 
     /** Fragment pagination của TV1 nhận keyword, trangThai, sort: đổi null thành chuỗi rỗng cho link sạch. */
@@ -60,7 +78,7 @@ public class TenantPortalController {
                         @RequestParam(required = false) String sort,
                         @PageableDefault(size = 8, sort = "giaThue") Pageable pageable,
                         HttpSession session, Model model) {
-        if (currentKhachId(session) == null) {
+        if (!isLoggedIn(session)) {
             return "redirect:/login";
         }
         Page<PhongTro> page = service.searchAvailableRooms(keyword, pageable);
@@ -74,7 +92,7 @@ public class TenantPortalController {
     @GetMapping("/rooms/{id}")
     public String roomDetail(@PathVariable Integer id, HttpSession session,
                              Model model, RedirectAttributes redirect) {
-        if (currentKhachId(session) == null) {
+        if (!isLoggedIn(session)) {
             return "redirect:/login";
         }
         Optional<PhongTro> room = service.findRoom(id);
@@ -89,10 +107,10 @@ public class TenantPortalController {
     // ------------------------------------------------------------ Hợp đồng
 
     @GetMapping("/contracts")
-    public String contracts(HttpSession session, Model model) {
+    public String contracts(HttpSession session, Model model, RedirectAttributes redirect) {
         Integer khachId = currentKhachId(session);
         if (khachId == null) {
-            return "redirect:/login";
+            return redirectMissingKhachProfile(session, redirect);
         }
         model.addAttribute("contracts", service.getContracts(khachId));
         return "tenant/my-contracts";
@@ -104,10 +122,10 @@ public class TenantPortalController {
     public String invoices(@RequestParam(required = false) String trangThai,
                            @RequestParam(required = false) String sort,
                            @PageableDefault(size = 10, sort = "ngayLap", direction = Sort.Direction.DESC) Pageable pageable,
-                           HttpSession session, Model model) {
+                           HttpSession session, Model model, RedirectAttributes redirect) {
         Integer khachId = currentKhachId(session);
         if (khachId == null) {
-            return "redirect:/login";
+            return redirectMissingKhachProfile(session, redirect);
         }
         Page<HoaDon> page = service.getInvoices(khachId, trangThai, pageable);
         model.addAttribute("page", page);
@@ -124,7 +142,7 @@ public class TenantPortalController {
                                 Model model, RedirectAttributes redirect) {
         Integer khachId = currentKhachId(session);
         if (khachId == null) {
-            return "redirect:/login";
+            return redirectMissingKhachProfile(session, redirect);
         }
         Optional<HoaDon> invoice = service.findInvoice(khachId, id);
         if (invoice.isEmpty()) {
@@ -138,10 +156,10 @@ public class TenantPortalController {
     // ------------------------------------------------------------ Sự cố
 
     @GetMapping("/incidents/new")
-    public String incidentForm(HttpSession session, Model model) {
+    public String incidentForm(HttpSession session, Model model, RedirectAttributes redirect) {
         Integer khachId = currentKhachId(session);
         if (khachId == null) {
-            return "redirect:/login";
+            return redirectMissingKhachProfile(session, redirect);
         }
         IncidentForm form = new IncidentForm();
         List<HopDong> active = fillIncidentPage(model, khachId);
@@ -157,7 +175,7 @@ public class TenantPortalController {
                                  HttpSession session, RedirectAttributes redirect, Model model) {
         Integer khachId = currentKhachId(session);
         if (khachId == null) {
-            return "redirect:/login";
+            return redirectMissingKhachProfile(session, redirect);
         }
 
         if (form.getPhongId() == null) {
