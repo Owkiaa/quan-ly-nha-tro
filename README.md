@@ -59,8 +59,30 @@ Mật khẩu trong bảng `tai_khoan` được lưu dưới dạng chuỗi băm 
 3. Truy cập hệ thống trên trình duyệt:
    [http://localhost:8080](http://localhost:8080)
 
-## 7. Cách chạy Desktop Client
-*Đang cập nhật (Module Mạng Socket của Đoàn Văn Mẩn).*
+## 7. Cách chạy Desktop Client & Kiểm thử đồng thời
+1. **Khởi động Server trước:**
+   Chạy ứng dụng Spring Boot theo mục 6 (`.\mvnw.cmd spring-boot:run`). Hệ thống sẽ tự động mở đồng thời **Web Server (cổng `8080`)** và **Socket Server đa luồng (cổng `9999`)** thông qua `SocketRunner`.
+
+2. **Cách chạy ứng dụng Desktop Client độc lập ([SocketClientApp.java](client/src/com/nhatro/client/SocketClientApp.java)):**
+   Mở 1 hoặc nhiều cửa sổ Terminal (có thể mở **3 cửa sổ Terminal cùng lúc** để demo đa client) và chạy trực tiếp:
+   ```powershell
+   java "-Dfile.encoding=UTF-8" client\src\com\nhatro\client\SocketClientApp.java
+   ```
+   Các lệnh giao thức hỗ trợ trên Client:
+   - `LIST_ROOM`: Xem danh sách phòng trọ đang trống (`TRONG`) từ CSDL SQL Server.
+   - `BOOK <ma_phong>#<ho_ten>#<cccd>#<sdt>` *(ví dụ: `BOOK P201#Nguyen Van A#079204009999#0901234567`)* hoặc `BOOK <ma_phong>`: Đặt giữ chỗ phòng trọ.
+   - `EXIT`: Ngắt kết nối an toàn.
+
+3. **Cách chạy chương trình Kiểm thử Đồng thời & Đa luồng ([ConcurrencyBookingTest.java](src/test/java/com/nhatro/util/ConcurrencyBookingTest.java)):**
+   - Trước khi test, đảm bảo phòng `P201` đang ở trạng thái `TRONG` (chạy script [sql/reset_p201.sql](sql/reset_p201.sql) trong SSMS).
+   - Chạy hàm `main()` của `ConcurrencyBookingTest` (minh họa đồng bộ `synchronized` Chương 4 và mở 10 luồng Socket Client với 10 CCCD khác nhau đồng loạt gửi `BOOK P201` tới cổng `9999`):
+     ```powershell
+     .\mvnw.cmd test-compile exec:java "-Dexec.mainClass=com.nhatro.util.ConcurrencyBookingTest" "-Dexec.classpathScope=test"
+     ```
+   - Hoặc chạy bộ JUnit Test tích hợp trực tiếp với SQL Server:
+     ```powershell
+     .\mvnw.cmd test
+     ```
 
 ## 8. Danh sách thành viên nhóm (5 thành viên)
 | STT | Họ và Tên | MSSV | Vai trò & Mảng phụ trách chính |
