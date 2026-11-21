@@ -39,4 +39,7 @@ public interface HopDongRepository extends JpaRepository<HopDong, Integer> {
            "(:keyword IS NULL OR :keyword = '' OR LOWER(h.maHopDong) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(h.phongTro.maPhong) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(h.khachThue.hoTen) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:trangThai IS NULL OR :trangThai = '' OR h.trangThai = :trangThai)")
     Page<HopDong> search(@Param("keyword") String keyword, @Param("trangThai") String trangThai, Pageable pageable);
+
+    @Query("SELECT h FROM HopDong h JOIN FETCH h.phongTro JOIN FETCH h.khachThue WHERE h.trangThai = :trangThai ORDER BY h.phongTro.maPhong ASC")
+    java.util.List<HopDong> findByTrangThaiWithDetails(@Param("trangThai") String trangThai);
 }
