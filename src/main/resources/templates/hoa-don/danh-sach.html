@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/fragments :: head('Quản Lý Hóa Đơn & Thu Ngân')}"></head>
+<body>
+<th:block th:replace="~{components :: styles}"></th:block>
+
+    <!-- Top Navbar Ngang -->
+    <nav th:replace="~{layout/fragments :: navbar('hoa-don')}"></nav>
+
+    <!-- Main Content Area -->
+    <main class="main-container">
+        <div class="container-xl">
+            <div th:replace="~{layout/fragments :: alerts}"></div>
+
+            <!-- Page Title & Header Actions -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1">Quản Lý Hóa Đơn</h3>
+                </div>
+                <div class="d-flex gap-2">
+                    <a th:href="@{/hoa-don/tao-moi}" class="btn btn-primary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Lập Hóa Đơn Mới</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Stat KPI Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-xl-3 col-md-6 col-6">
+                    <div class="stat-card" style="border-top: 3px solid #78716c;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">TỔNG HÓA ĐƠN</div>
+                                <h3 class="fw-bold mb-0 text-dark font-mono mt-1" th:text="${pageData.totalElements}">20</h3>
+                            </div>
+                            <div class="stat-icon bg-light text-secondary">
+                                <i class="fa-solid fa-receipt"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 col-6">
+                    <div class="stat-card" style="border-top: 3px solid #10b981;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">ĐÃ THANH TOÁN</div>
+                                <h3 class="fw-bold mb-0 text-success font-mono mt-1" th:text="${countDaThanhToan != null ? countDaThanhToan : '-'}">-</h3>
+                            </div>
+                            <div class="stat-icon bg-success-subtle text-success">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 col-6">
+                    <div class="stat-card" style="border-top: 3px solid #ef4444;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">CHƯA THANH TOÁN (NỢ)</div>
+                                <h3 class="fw-bold mb-0 text-danger font-mono mt-1" th:text="${countChuaThanhToan != null ? countChuaThanhToan : '-'}">-</h3>
+                            </div>
+                            <div class="stat-icon bg-danger-subtle text-danger">
+                                <i class="fa-solid fa-xmark"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 col-6">
+                    <div class="stat-card" style="border-top: 3px solid #d97706;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">DOANH THU ĐÃ THU</div>
+                                <h3 class="fw-bold mb-0 text-warning-emphasis font-mono mt-1" th:text="${tongDaThu != null ? #numbers.formatDecimal(tongDaThu, 0, 'POINT', 0, 'COMMA') + ' đ' : '-'}">-</h3>
+                            </div>
+                            <div class="stat-icon bg-warning-subtle text-warning-emphasis">
+                                <i class="fa-solid fa-coins"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toolbar Tìm kiếm & Lọc -->
+            <div class="card card-custom mb-4">
+                <div class="card-body p-3">
+                    <form th:action="@{/hoa-don}" method="GET" class="row g-2 align-items-center">
+                        <div class="col-md-5 col-sm-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white text-muted border-end-0">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0" name="keyword" th:value="${keyword}"
+                                       placeholder="Tìm theo mã HĐ, mã phòng, mã hợp đồng...">
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-3">
+                            <input type="text" class="form-control form-control-sm" name="thangNam" th:value="${thangNam}"
+                                   placeholder="Tháng/Năm (vd: 10/2026)">
+                        </div>
+                        <div class="col-md-3 col-sm-3">
+                            <select class="form-select form-select-sm" name="trangThai">
+                                <option value="" th:selected="${trangThai == null or trangThai == ''}">-- Tất cả trạng thái --</option>
+                                <option value="CHUA_THANH_TOAN" th:selected="${trangThai == 'CHUA_THANH_TOAN'}">Chưa thanh toán</option>
+                                <option value="DA_THANH_TOAN" th:selected="${trangThai == 'DA_THANH_TOAN'}">Đã thanh toán</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 col-sm-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm px-3 w-100">
+                                <i class="fa-solid fa-filter me-1"></i> Lọc
+                            </button>
+                            <a th:href="@{/hoa-don}" class="btn btn-outline-secondary btn-sm px-3" title="Đặt lại bộ lọc">
+                                <i class="fa-solid fa-arrow-rotate-left"></i>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Bảng Dữ Liệu Hóa Đơn -->
+            <div class="card card-custom overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle">
+                        <thead>
+                            <tr>
+                                <th th:replace="~{components :: sortTh('Mã Hóa Đơn', 'maHoaDon', '/hoa-don')}"></th>
+                                <th>Phòng &amp; Khách Thuê</th>
+                                <th th:replace="~{components :: sortTh('Kỳ HĐ', 'thangNam', '/hoa-don')}"></th>
+                                <th>Điện (cũ &rarr; mới)</th>
+                                <th>Nước (cũ &rarr; mới)</th>
+                                <th th:replace="~{components :: sortTh('Tổng Tiền', 'tongTien', '/hoa-don')}"></th>
+                                <th th:replace="~{components :: sortTh('Trạng Thái', 'trangThai', '/hoa-don')}"></th>
+                                <th>Ngày Lập</th>
+                                <th class="text-end" style="width: 170px;">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${pageData.empty}">
+                                <td colspan="9" class="text-center py-5">
+                                    <div class="text-muted mb-2">
+                                        <i class="fa-solid fa-folder-open fs-1 text-secondary opacity-50"></i>
+                                    </div>
+                                    <h6 class="fw-bold text-dark">Không tìm thấy hóa đơn nào phù hợp</h6>
+                                    <p class="text-muted small mb-3">Vui lòng điều chỉnh lại bộ lọc hoặc tạo hóa đơn mới</p>
+                                    <a th:href="@{/hoa-don/tao-moi}" class="btn btn-primary btn-sm px-3">
+                                        <i class="fa-solid fa-plus me-1"></i> Chốt Điện Nước &amp; Lập Hóa Đơn Mới
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:each="hd : ${pageData.content}">
+                                <td>
+                                    <a th:href="@{/hoa-don/{id}(id=${hd.id})}" class="fw-bold text-warning-emphasis font-mono text-decoration-none" th:text="${hd.maHoaDon}">HD001</a>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-dark font-mono" th:text="${hd.hopDong != null and hd.hopDong.phongTro != null ? hd.hopDong.phongTro.maPhong : '-'}">P101</span>
+                                    <span class="text-muted small d-block" th:text="${hd.hopDong != null and hd.hopDong.khachThue != null ? hd.hopDong.khachThue.hoTen : '-'}">Nguyễn Văn An</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border font-mono fw-semibold" th:text="${hd.thangNam}">10/2026</span>
+                                </td>
+                                <td>
+                                    <span class="font-mono small" th:text="${hd.chiSoDienCu} + ' &rarr; ' + ${hd.chiSoDienMoi}">0 &rarr; 50</span>
+                                    <span class="text-muted small d-block" th:text="'(' + ${T(java.lang.Math).abs(hd.chiSoDienMoi - hd.chiSoDienCu)} + ' kWh)'"></span>
+                                </td>
+                                <td>
+                                    <span class="font-mono small" th:text="${hd.chiSoNuocCu} + ' &rarr; ' + ${hd.chiSoNuocMoi}">0 &rarr; 5</span>
+                                    <span class="text-muted small d-block" th:text="'(' + ${T(java.lang.Math).abs(hd.chiSoNuocMoi - hd.chiSoNuocCu)} + ' m³)'"></span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-dark font-mono" th:text="${#numbers.formatDecimal(hd.tongTien, 0, 'POINT', 0, 'COMMA')} + ' đ'">3,375,000 đ</span>
+                                </td>
+                                <td>
+                                    <span th:if="${hd.trangThai == 'DA_THANH_TOAN'}" class="badge-status badge-trong">
+                                        <i class="fa-solid fa-check me-1"></i>Đã thu
+                                    </span>
+                                    <span th:if="${hd.trangThai == 'CHUA_THANH_TOAN'}" class="badge-status badge-baotri">
+                                        <i class="fa-solid fa-xmark me-1"></i>Chưa thu
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="text-muted small font-mono" th:text="${#temporals.format(hd.ngayLap, 'dd/MM/yyyy')}">01/10/2026</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-1 align-items-center">
+                                        <a th:href="@{/hoa-don/{id}(id=${hd.id})}" class="btn-action action-view" title="Xem chi tiết">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                        <a th:href="@{/hoa-don/{id}/in(id=${hd.id})}" target="_blank" class="btn-action action-edit" title="In phiếu thu">
+                                            <i class="fa-solid fa-print"></i>
+                                        </a>
+                                        <!-- Gạch nợ nhanh -->
+                                        <form th:if="${hd.trangThai == 'CHUA_THANH_TOAN'}" th:action="@{/hoa-don/{id}/thanh-toan(id=${hd.id})}" method="post" class="d-inline"
+                                              onsubmit="return confirm('Xác nhận thu tiền và gạch nợ cho hóa đơn này?');">
+                                            <button type="submit" class="btn btn-sm btn-success px-2 py-1 rounded-2" style="font-size: 0.75rem;" title="Xác nhận thanh toán">
+                                                <i class="fa-solid fa-hand-holding-dollar me-1"></i>Thu tiền
+                                            </button>
+                                        </form>
+                                        <form th:if="${hd.trangThai == 'DA_THANH_TOAN'}" th:action="@{/hoa-don/{id}/huy-thanh-toan(id=${hd.id})}" method="post" class="d-inline"
+                                              onsubmit="return confirm('Bạn có chắc muốn hoàn tác trạng thái về Chưa thanh toán?');">
+                                            <button type="submit" class="btn-action text-secondary" title="Hoàn tác thanh toán">
+                                                <i class="fa-solid fa-rotate-left"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Phân trang dùng fragment chuẩn của TV3 -->
+                <div class="px-3 pb-3" th:replace="~{layout/fragments :: pagination(${pageData}, '/hoa-don', ${keyword}, ${trangThai}, ${sort})}"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal xác nhận xóa -->
+    <div th:replace="~{layout/fragments :: deleteModal}"></div>
+
+    <!-- Footer -->
+    <footer th:replace="~{layout/fragments :: footer}"></footer>
+
+    <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+</body>
+</html>
