@@ -26,7 +26,7 @@
                 <p class="text-muted small mb-0">Hệ thống tự động gợi ý số cũ từ kỳ trước và bảo đảm ràng buộc duy nhất không lập trùng</p>
             </div>
 
-            <form th:action="@{/hoa-don/tao-moi}" th:object="${hoaDonDTO}" method="post">
+            <form th:action="@{/hoa-don/tao-moi}" th:object="${hoaDonDTO}" method="post" novalidate>
                 <div class="row g-4">
                     
                     <!-- Form bên trái -->
@@ -42,7 +42,8 @@
                             <div class="row g-3 mb-4">
                                 <div class="col-md-8">
                                     <label class="form-label small fw-semibold text-dark">Chọn Hợp Đồng / Phòng Thuê <span class="text-danger">*</span></label>
-                                    <select id="selectHopDong" th:field="*{hopDongId}" class="form-select form-select-sm" required>
+                                    <select id="selectHopDong" th:field="*{hopDongId}" class="form-select form-select-sm"
+                                            th:classappend="${#fields.hasErrors('hopDongId')} ? 'is-invalid'" required>
                                         <option value="">-- Chọn hợp đồng đang có hiệu lực --</option>
                                         <option th:each="hd : ${danhSachHopDong}" 
                                                 th:value="${hd.id}" 
@@ -50,11 +51,14 @@
                                             P101 - Nguyễn Văn An (HĐ: HD-202610-01)
                                         </option>
                                     </select>
+                                    <div th:replace="~{components :: fieldError('hopDongId')}"></div>
                                     <div class="form-text small" id="infoKhachThue">Chọn hợp đồng để tự động tải giá thuê và chỉ số cũ.</div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label small fw-semibold text-dark">Tháng / Năm (MM/yyyy) <span class="text-danger">*</span></label>
-                                    <input type="text" th:field="*{thangNam}" id="inputThangNam" class="form-control form-control-sm font-mono" placeholder="11/2026" required>
+                                    <input type="text" th:field="*{thangNam}" id="inputThangNam" class="form-control form-control-sm font-mono"
+                                           th:classappend="${#fields.hasErrors('thangNam')} ? 'is-invalid'" placeholder="11/2026" required>
+                                    <div th:replace="~{components :: fieldError('thangNam')}"></div>
                                     <div class="form-text small">Ví dụ: 11/2026</div>
                                 </div>
                             </div>
@@ -68,15 +72,21 @@
                             <div class="row g-3 mb-4">
                                 <div class="col-md-4">
                                     <label class="form-label small text-muted">Chỉ số cũ</label>
-                                    <input type="number" th:field="*{chiSoDienCu}" id="chiSoDienCu" class="form-control form-control-sm font-mono bg-light" min="0" required>
+                                    <input type="number" th:field="*{chiSoDienCu}" id="chiSoDienCu" class="form-control form-control-sm font-mono bg-light"
+                                           th:classappend="${#fields.hasErrors('chiSoDienCu')} ? 'is-invalid'" min="0" required>
+                                    <div th:replace="~{components :: fieldError('chiSoDienCu')}"></div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label small fw-semibold text-warning-emphasis">Chỉ số mới <span class="text-danger">*</span></label>
-                                    <input type="number" th:field="*{chiSoDienMoi}" id="chiSoDienMoi" class="form-control form-control-sm font-mono" min="0" required>
+                                    <input type="number" th:field="*{chiSoDienMoi}" id="chiSoDienMoi" class="form-control form-control-sm font-mono"
+                                           th:classappend="${#fields.hasErrors('chiSoDienMoi')} ? 'is-invalid'" min="0" required>
+                                    <div th:replace="~{components :: fieldError('chiSoDienMoi')}"></div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label small text-muted">Đơn giá điện (đ/kWh)</label>
-                                    <input type="number" th:field="*{donGiaDien}" id="donGiaDien" class="form-control form-control-sm font-mono" min="0" step="100" required>
+                                    <input type="number" th:field="*{donGiaDien}" id="donGiaDien" class="form-control form-control-sm font-mono"
+                                           th:classappend="${#fields.hasErrors('donGiaDien')} ? 'is-invalid'" min="0" step="100" required>
+                                    <div th:replace="~{components :: fieldError('donGiaDien')}"></div>
                                 </div>
                                 <div class="col-12">
                                     <div class="p-2 rounded bg-light small d-flex justify-content-between align-items-center font-mono">
@@ -95,15 +105,21 @@
                             <div class="row g-3 mb-4">
                                 <div class="col-md-4">
                                     <label class="form-label small text-muted">Chỉ số cũ</label>
-                                    <input type="number" th:field="*{chiSoNuocCu}" id="chiSoNuocCu" class="form-control form-control-sm font-mono bg-light" min="0" required>
+                                    <input type="number" th:field="*{chiSoNuocCu}" id="chiSoNuocCu" class="form-control form-control-sm font-mono bg-light"
+                                           th:classappend="${#fields.hasErrors('chiSoNuocCu')} ? 'is-invalid'" min="0" required>
+                                    <div th:replace="~{components :: fieldError('chiSoNuocCu')}"></div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label small fw-semibold text-warning-emphasis">Chỉ số mới <span class="text-danger">*</span></label>
-                                    <input type="number" th:field="*{chiSoNuocMoi}" id="chiSoNuocMoi" class="form-control form-control-sm font-mono" min="0" required>
+                                    <input type="number" th:field="*{chiSoNuocMoi}" id="chiSoNuocMoi" class="form-control form-control-sm font-mono"
+                                           th:classappend="${#fields.hasErrors('chiSoNuocMoi')} ? 'is-invalid'" min="0" required>
+                                    <div th:replace="~{components :: fieldError('chiSoNuocMoi')}"></div>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label small text-muted">Đơn giá nước (đ/m³)</label>
-                                    <input type="number" th:field="*{donGiaNuoc}" id="donGiaNuoc" class="form-control form-control-sm font-mono" min="0" step="500" required>
+                                    <input type="number" th:field="*{donGiaNuoc}" id="donGiaNuoc" class="form-control form-control-sm font-mono"
+                                           th:classappend="${#fields.hasErrors('donGiaNuoc')} ? 'is-invalid'" min="0" step="500" required>
+                                    <div th:replace="~{components :: fieldError('donGiaNuoc')}"></div>
                                 </div>
                                 <div class="col-12">
                                     <div class="p-2 rounded bg-light small d-flex justify-content-between align-items-center font-mono">
@@ -122,11 +138,15 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold text-dark">Tiền thuê phòng (VNĐ)</label>
-                                    <input type="number" th:field="*{tienPhong}" id="tienPhong" class="form-control form-control-sm font-mono" min="0" step="1000" required>
+                                    <input type="number" th:field="*{tienPhong}" id="tienPhong" class="form-control form-control-sm font-mono"
+                                           th:classappend="${#fields.hasErrors('tienPhong')} ? 'is-invalid'" min="0" step="1000" required>
+                                    <div th:replace="~{components :: fieldError('tienPhong')}"></div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold text-dark">Phí dịch vụ chung / rác / wifi (VNĐ)</label>
-                                    <input type="number" th:field="*{tienDichVu}" id="tienDichVu" class="form-control form-control-sm font-mono" min="0" step="1000" required>
+                                    <input type="number" th:field="*{tienDichVu}" id="tienDichVu" class="form-control form-control-sm font-mono"
+                                           th:classappend="${#fields.hasErrors('tienDichVu')} ? 'is-invalid'" min="0" step="1000" required>
+                                    <div th:replace="~{components :: fieldError('tienDichVu')}"></div>
                                 </div>
                             </div>
 
@@ -155,7 +175,7 @@
                             </div>
                             <div class="d-flex justify-content-between small mb-4">
                                 <span class="text-muted">Phí dịch vụ:</span>
-                                <span id="previewTienDichVu" class="fw-semibold font-mono text-dark">50,000 đ</span>
+                                <span id="previewTienDichVu" class="fw-semibold font-mono text-dark">100,000 đ</span>
                             </div>
 
                             <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold d-inline-flex align-items-center justify-content-center gap-2 shadow-sm">
@@ -208,13 +228,13 @@
             const dienCu = parseInt(chiSoDienCu.value) || 0;
             const dienMoi = parseInt(chiSoDienMoi.value) || 0;
             const giaDien = parseFloat(donGiaDien.value) || 0;
-            const soDien = Math.abs(dienMoi - dienCu);
+            const soDien = Math.max(0, dienMoi - dienCu);
             const totalDien = soDien * giaDien;
 
             const nuocCu = parseInt(chiSoNuocCu.value) || 0;
             const nuocMoi = parseInt(chiSoNuocMoi.value) || 0;
             const giaNuoc = parseFloat(donGiaNuoc.value) || 0;
-            const soNuoc = Math.abs(nuocMoi - nuocCu);
+            const soNuoc = Math.max(0, nuocMoi - nuocCu);
             const totalNuoc = soNuoc * giaNuoc;
 
             const totalPhong = parseFloat(tienPhong.value) || 0;

@@ -12,12 +12,12 @@ public class HoaDonCreateDTO {
     private String thangNam; // Định dạng MM/yyyy
     private Integer chiSoDienCu = 0;
     private Integer chiSoDienMoi = 0;
-    private BigDecimal donGiaDien = new BigDecimal("2200");
+    private BigDecimal donGiaDien = new BigDecimal("3500");
     private Integer chiSoNuocCu = 0;
     private Integer chiSoNuocMoi = 0;
-    private BigDecimal donGiaNuoc = new BigDecimal("12900");
+    private BigDecimal donGiaNuoc = new BigDecimal("20000");
     private BigDecimal tienPhong = BigDecimal.ZERO;
-    private BigDecimal tienDichVu = new BigDecimal("50000");
+    private BigDecimal tienDichVu = new BigDecimal("100000");
 
     public HoaDonCreateDTO() {
     }

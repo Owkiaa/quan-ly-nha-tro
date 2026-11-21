@@ -39,10 +39,11 @@
              isAsc=${param.sort != null and param.sort[0] == field + ',asc'},
              kw=${param.keyword != null ? param.keyword[0] : ''},
              size=${param.size != null ? param.size[0] : ''},
-             tt=${param.trangThai != null ? param.trangThai[0] : ''}"
+             tt=${param.trangThai != null ? param.trangThai[0] : ''},
+             tn=${param.thangNam != null ? param.thangNam[0] : null}"
     th:attr="aria-sort=${isCur ? (isAsc ? 'ascending' : 'descending') : 'none'}">
     <a class="sort-link"
-       th:href="@{${baseUrl}(sort=${field + ',' + (isAsc ? 'desc' : 'asc')}, keyword=${kw}, size=${size}, trangThai=${tt})}">
+       th:href="@{${baseUrl}(sort=${field + ',' + (isAsc ? 'desc' : 'asc')}, keyword=${kw}, size=${size}, trangThai=${tt}, thangNam=${tn})}">
         <span th:text="${label}">Cột</span>
         <i class="fa-solid"
            th:classappend="${isCur ? (isAsc ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort sort-idle'}"></i>

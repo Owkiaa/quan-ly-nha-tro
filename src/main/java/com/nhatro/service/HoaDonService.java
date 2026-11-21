@@ -118,21 +118,33 @@ public class HoaDonService {
             throw new BusinessException("Hợp đồng " + hopDong.getMaHopDong() + " (Phòng " + tenPhong + ") đã có hóa đơn trong tháng " + thangNamChuan + "! Không thể lập trùng.");
         }
 
-        // 3. Tính lượng tiêu thụ: Hỗ trợ linh hoạt chênh lệch (Math.abs) giữa hai chỉ số
+        // 3. Kiểm tra chỉ số điện - nước hợp lệ (mới >= cũ, không âm) và tính lượng tiêu thụ
         int chiSoDienCu = (dto.getChiSoDienCu() != null) ? dto.getChiSoDienCu() : 0;
         int chiSoDienMoi = (dto.getChiSoDienMoi() != null) ? dto.getChiSoDienMoi() : 0;
-        int soDien = Math.abs(chiSoDienMoi - chiSoDienCu);
+        if (chiSoDienCu < 0 || chiSoDienMoi < 0) {
+            throw new BusinessException("Chỉ số điện không được là số âm!");
+        }
+        if (chiSoDienMoi < chiSoDienCu) {
+            throw new BusinessException("Chỉ số điện mới (" + chiSoDienMoi + ") không được nhỏ hơn chỉ số điện cũ (" + chiSoDienCu + ")!");
+        }
+        int soDien = chiSoDienMoi - chiSoDienCu;
 
         int chiSoNuocCu = (dto.getChiSoNuocCu() != null) ? dto.getChiSoNuocCu() : 0;
         int chiSoNuocMoi = (dto.getChiSoNuocMoi() != null) ? dto.getChiSoNuocMoi() : 0;
-        int soNuoc = Math.abs(chiSoNuocMoi - chiSoNuocCu);
+        if (chiSoNuocCu < 0 || chiSoNuocMoi < 0) {
+            throw new BusinessException("Chỉ số nước không được là số âm!");
+        }
+        if (chiSoNuocMoi < chiSoNuocCu) {
+            throw new BusinessException("Chỉ số nước mới (" + chiSoNuocMoi + ") không được nhỏ hơn chỉ số nước cũ (" + chiSoNuocCu + ")!");
+        }
+        int soNuoc = chiSoNuocMoi - chiSoNuocCu;
 
         BigDecimal donGiaDien = (dto.getDonGiaDien() != null && dto.getDonGiaDien().compareTo(BigDecimal.ZERO) >= 0)
-                ? dto.getDonGiaDien() : new BigDecimal("2200");
+                ? dto.getDonGiaDien() : new BigDecimal("3500");
         BigDecimal donGiaNuoc = (dto.getDonGiaNuoc() != null && dto.getDonGiaNuoc().compareTo(BigDecimal.ZERO) >= 0)
-                ? dto.getDonGiaNuoc() : new BigDecimal("12900");
+                ? dto.getDonGiaNuoc() : new BigDecimal("20000");
         BigDecimal tienDichVu = (dto.getTienDichVu() != null && dto.getTienDichVu().compareTo(BigDecimal.ZERO) >= 0)
-                ? dto.getTienDichVu() : new BigDecimal("50000");
+                ? dto.getTienDichVu() : new BigDecimal("100000");
         BigDecimal tienPhong = (dto.getTienPhong() != null && dto.getTienPhong().compareTo(BigDecimal.ZERO) > 0)
                 ? dto.getTienPhong() : hopDong.getGiaThueThoaThuan();
 

@@ -120,17 +120,17 @@
                                 <td><strong>Tiền điện</strong></td>
                                 <td class="text-center font-mono" th:text="${hoaDon.chiSoDienCu}">0</td>
                                 <td class="text-center font-mono" th:text="${hoaDon.chiSoDienMoi}">50</td>
-                                <td class="text-center font-mono" th:text="${T(java.lang.Math).abs(hoaDon.chiSoDienMoi - hoaDon.chiSoDienCu)} + ' kWh'">50 kWh</td>
-                                <td class="text-end font-mono" th:text="${#numbers.formatDecimal(hoaDon.donGiaDien, 0, 'POINT', 0, 'COMMA')} + ' đ'">2,200 đ</td>
-                                <td class="text-end fw-bold font-mono text-dark" th:text="${#numbers.formatDecimal(hoaDon.tienDien, 0, 'POINT', 0, 'COMMA')} + ' đ'">110,000 đ</td>
+                                <td class="text-center font-mono" th:text="${hoaDon.chiSoDienMoi - hoaDon.chiSoDienCu} + ' kWh'">50 kWh</td>
+                                <td class="text-end font-mono" th:text="${#numbers.formatDecimal(hoaDon.donGiaDien, 0, 'POINT', 0, 'COMMA')} + ' đ'">3,500 đ</td>
+                                <td class="text-end fw-bold font-mono text-dark" th:text="${#numbers.formatDecimal(hoaDon.tienDien, 0, 'POINT', 0, 'COMMA')} + ' đ'">175,000 đ</td>
                             </tr>
                             <tr>
                                 <td><strong>Tiền nước</strong></td>
                                 <td class="text-center font-mono" th:text="${hoaDon.chiSoNuocCu}">0</td>
                                 <td class="text-center font-mono" th:text="${hoaDon.chiSoNuocMoi}">5</td>
-                                <td class="text-center font-mono" th:text="${T(java.lang.Math).abs(hoaDon.chiSoNuocMoi - hoaDon.chiSoNuocCu)} + ' m³'">5 m³</td>
-                                <td class="text-end font-mono" th:text="${#numbers.formatDecimal(hoaDon.donGiaNuoc, 0, 'POINT', 0, 'COMMA')} + ' đ'">12,900 đ</td>
-                                <td class="text-end fw-bold font-mono text-dark" th:text="${#numbers.formatDecimal(hoaDon.tienNuoc, 0, 'POINT', 0, 'COMMA')} + ' đ'">64,500 đ</td>
+                                <td class="text-center font-mono" th:text="${hoaDon.chiSoNuocMoi - hoaDon.chiSoNuocCu} + ' m³'">5 m³</td>
+                                <td class="text-end font-mono" th:text="${#numbers.formatDecimal(hoaDon.donGiaNuoc, 0, 'POINT', 0, 'COMMA')} + ' đ'">20,000 đ</td>
+                                <td class="text-end fw-bold font-mono text-dark" th:text="${#numbers.formatDecimal(hoaDon.tienNuoc, 0, 'POINT', 0, 'COMMA')} + ' đ'">100,000 đ</td>
                             </tr>
                             <tr>
                                 <td><strong>Phí dịch vụ chung</strong></td>

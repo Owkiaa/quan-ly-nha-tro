@@ -34,7 +34,7 @@ public class HoaDon {
     private Integer chiSoDienMoi;
 
     @Column(name = "don_gia_dien", nullable = false, precision = 10, scale = 2)
-    private BigDecimal donGiaDien = new BigDecimal("2200");
+    private BigDecimal donGiaDien = new BigDecimal("3500");
 
     @Column(name = "chi_so_nuoc_cu", nullable = false)
     private Integer chiSoNuocCu;
@@ -43,7 +43,7 @@ public class HoaDon {
     private Integer chiSoNuocMoi;
 
     @Column(name = "don_gia_nuoc", nullable = false, precision = 10, scale = 2)
-    private BigDecimal donGiaNuoc = new BigDecimal("12900");
+    private BigDecimal donGiaNuoc = new BigDecimal("20000");
 
     @Column(name = "tien_phong", nullable = false, precision = 12, scale = 2)
     private BigDecimal tienPhong;
@@ -55,7 +55,7 @@ public class HoaDon {
     private BigDecimal tienNuoc;
 
     @Column(name = "tien_dich_vu", nullable = false, precision = 12, scale = 2)
-    private BigDecimal tienDichVu = new BigDecimal("50000");
+    private BigDecimal tienDichVu = new BigDecimal("100000");
 
     @Column(name = "tong_tien", nullable = false, precision = 12, scale = 2)
     private BigDecimal tongTien;

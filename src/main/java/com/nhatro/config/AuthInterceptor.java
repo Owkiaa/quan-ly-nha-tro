@@ -50,10 +50,11 @@ public class AuthInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        // Module Phòng trọ, Khách thuê, Đặt chỗ, Hợp đồng & Sự cố: ADMIN và STAFF
+        // Module Phòng trọ, Khách thuê, Đặt chỗ, Hợp đồng, Sự cố, Hóa đơn & Thống kê: ADMIN và STAFF
         if ((path.startsWith("/phong-tro") || path.startsWith("/khach-thue")
                 || path.startsWith("/dat-cho") || path.startsWith("/hop-dong")
-                || path.startsWith("/yeu-cau-sua-chua"))
+                || path.startsWith("/yeu-cau-sua-chua") || path.startsWith("/hoa-don")
+                || path.startsWith("/dashboard") || path.startsWith("/thong-ke"))
                 && "TENANT".equalsIgnoreCase(role)) {
             response.sendRedirect(contextPath + "/tenant/rooms?error=access_denied");
             return false;

@@ -163,11 +163,11 @@
                                 </td>
                                 <td>
                                     <span class="font-mono small" th:text="${hd.chiSoDienCu} + ' &rarr; ' + ${hd.chiSoDienMoi}">0 &rarr; 50</span>
-                                    <span class="text-muted small d-block" th:text="'(' + ${T(java.lang.Math).abs(hd.chiSoDienMoi - hd.chiSoDienCu)} + ' kWh)'"></span>
+                                    <span class="text-muted small d-block" th:text="'(' + ${hd.chiSoDienMoi - hd.chiSoDienCu} + ' kWh)'"></span>
                                 </td>
                                 <td>
                                     <span class="font-mono small" th:text="${hd.chiSoNuocCu} + ' &rarr; ' + ${hd.chiSoNuocMoi}">0 &rarr; 5</span>
-                                    <span class="text-muted small d-block" th:text="'(' + ${T(java.lang.Math).abs(hd.chiSoNuocMoi - hd.chiSoNuocCu)} + ' m³)'"></span>
+                                    <span class="text-muted small d-block" th:text="'(' + ${hd.chiSoNuocMoi - hd.chiSoNuocCu} + ' m³)'"></span>
                                 </td>
                                 <td>
                                     <span class="fw-bold text-dark font-mono" th:text="${#numbers.formatDecimal(hd.tongTien, 0, 'POINT', 0, 'COMMA')} + ' đ'">3,375,000 đ</span>
