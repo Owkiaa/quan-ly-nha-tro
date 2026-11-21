@@ -5,6 +5,7 @@ import com.nhatro.entity.DatCho;
 import com.nhatro.entity.PhongTro;
 import com.nhatro.exception.BusinessException;
 import com.nhatro.exception.RoomAlreadyBookedException;
+import com.nhatro.service.DatChoMonitor;
 import com.nhatro.service.DatChoScheduler;
 import com.nhatro.service.DatChoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,9 @@ public class DatChoController {
 
     @Autowired
     private DatChoScheduler datChoScheduler;
+
+    @Autowired
+    private DatChoMonitor datChoMonitor;
 
     /**
      * Hiển thị danh sách đặt giữ chỗ có tìm kiếm, lọc theo trạng thái, sắp xếp và phân trang.
@@ -73,6 +77,13 @@ public class DatChoController {
         model.addAttribute("countDangGiu", datChoService.demDangGiu());
         model.addAttribute("countHetHan", datChoService.demHetHan());
         model.addAttribute("countDaChuyen", datChoService.demDaChuyenHopDong());
+
+        // Thống kê & nhật ký liên kết đa luồng (Web, Socket, @Scheduled) từ Monitor Chương 4
+        model.addAttribute("soClientDangKetNoi", datChoMonitor.getSoClientDangKetNoi());
+        model.addAttribute("soLuotDatThanhCong", datChoMonitor.getSoLuotDatThanhCong());
+        model.addAttribute("soLuotBiTuChoi", datChoMonitor.getSoLuotBiTuChoi());
+        model.addAttribute("soPhongGiaiPhongQuaHan", datChoMonitor.getSoPhongGiaiPhongQuaHan());
+        model.addAttribute("nhatKyDaLuong", datChoMonitor.getNhatKyDaLuong());
 
         return "dat-cho/index";
     }
@@ -229,6 +240,20 @@ public class DatChoController {
             }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi thực hiện quét đặt chỗ quá hạn: " + e.getMessage());
+        }
+        return "redirect:/dat-cho";
+    }
+
+    /**
+     * Chạy trực tiếp mô phỏng đồng bộ Chương 4 (Không đồng bộ Race Condition vs synchronized Monitor Lock).
+     */
+    @PostMapping("/mo-phong-dong-bo")
+    public String moPhongDongBoChuong4(RedirectAttributes redirectAttributes) {
+        try {
+            String ketQua = datChoMonitor.chayMoPhongDongBoChuong4(5);
+            redirectAttributes.addFlashAttribute("successMessage", ketQua);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi chạy mô phỏng đồng bộ Chương 4: " + e.getMessage());
         }
         return "redirect:/dat-cho";
     }

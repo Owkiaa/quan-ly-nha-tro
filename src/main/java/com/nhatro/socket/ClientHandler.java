@@ -5,6 +5,7 @@ import com.nhatro.entity.PhongTro;
 import com.nhatro.exception.BusinessException;
 import com.nhatro.exception.ResourceNotFoundException;
 import com.nhatro.exception.RoomAlreadyBookedException;
+import com.nhatro.service.DatChoMonitor;
 import com.nhatro.service.DatChoService;
 import com.nhatro.service.PhongTroService;
 import org.slf4j.Logger;
@@ -30,15 +31,21 @@ public class ClientHandler implements Runnable {
     private final Socket socket;
     private final DatChoService datChoService;
     private final PhongTroService phongTroService;
+    private final DatChoMonitor datChoMonitor;
 
-    public ClientHandler(Socket socket, DatChoService datChoService, PhongTroService phongTroService) {
+    public ClientHandler(Socket socket, DatChoService datChoService, PhongTroService phongTroService, DatChoMonitor datChoMonitor) {
         this.socket = socket;
         this.datChoService = datChoService;
         this.phongTroService = phongTroService;
+        this.datChoMonitor = datChoMonitor;
+    }
+
+    public ClientHandler(Socket socket, DatChoService datChoService, PhongTroService phongTroService) {
+        this(socket, datChoService, phongTroService, null);
     }
 
     public ClientHandler(Socket socket) {
-        this(socket, null, null);
+        this(socket, null, null, null);
     }
 
     private DatChoService getDatChoService() {
@@ -49,11 +56,27 @@ public class ClientHandler implements Runnable {
         return phongTroService != null ? phongTroService : ApplicationContextProvider.getBean(PhongTroService.class);
     }
 
+    private DatChoMonitor getDatChoMonitor() {
+        if (datChoMonitor != null) {
+            return datChoMonitor;
+        }
+        try {
+            return ApplicationContextProvider.getBean(DatChoMonitor.class);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
     @Override
     public void run() {
         String threadName = Thread.currentThread().getName();
-        log.info("[{}] Client mới đã kết nối từ {}:{}",
-                threadName, socket.getInetAddress().getHostAddress(), socket.getPort());
+        String clientAddress = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
+        log.info("[{}] Client mới đã kết nối từ {}", threadName, clientAddress);
+
+        DatChoMonitor monitor = getDatChoMonitor();
+        if (monitor != null) {
+            monitor.ghiNhanClientKetNoi(clientAddress);
+        }
 
         try (Socket clientSocket = this.socket;
              BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
@@ -84,6 +107,9 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             log.error("[{}] Lỗi kết nối Socket Client: {}", threadName, e.getMessage());
         } finally {
+            if (monitor != null) {
+                monitor.ghiNhanClientNgatKetNoi(clientAddress);
+            }
             log.info("[{}] Đã đóng socket và giải phóng tài nguyên luồng.", threadName);
         }
     }

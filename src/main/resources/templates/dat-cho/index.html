@@ -18,7 +18,14 @@
                     <h3 class="fw-bold mb-1">Quản Lý Đặt Giữ Chỗ Phòng Trọ</h3>
                     <p class="text-muted small mb-0">Theo dõi thông tin đặt chỗ, thời hạn giữ phòng và kích hoạt tác vụ giải phóng phòng quá hạn</p>
                 </div>
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <form th:action="@{/dat-cho/mo-phong-dong-bo}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-outline-warning btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2"
+                                title="Chạy 5 luồng Thread/Runnable so sánh Không đồng bộ vs synchronized Chương 4">
+                            <i class="fa-solid fa-code-branch"></i>
+                            <span>Mô Phỏng Đồng Bộ Chương 4 (synchronized)</span>
+                        </button>
+                    </form>
                     <form th:action="@{/dat-cho/quet-het-han}" method="POST" class="d-inline">
                         <button type="submit" class="btn btn-outline-secondary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2"
                                 title="Kích hoạt quét lập lịch giải phóng ngay lập tức các phòng quá hạn giữ chỗ">
@@ -88,6 +95,57 @@
                                 <i class="fa-solid fa-list-check"></i>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng Điều Khiển & Nhật Ký Liên Kết Đa Luồng (Chương 4 & Chương 5) -->
+            <div class="card-custom p-3 mb-4 border-start border-4 border-warning">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">
+                            <i class="fa-solid fa-microchip text-warning me-2"></i>Giám Sát Liên Kết Đa Luồng &amp; Đồng Bộ Chương 4 (Monitor Lock)
+                        </h6>
+                        <small class="text-muted">Liên kết thời gian thực giữa luồng Web MVC, Socket Server (client-1..N) và Tác vụ nền @Scheduled (scheduling-1)</small>
+                    </div>
+                    <span class="badge bg-dark-subtle text-dark font-mono px-2 py-1">
+                        Socket Port 9999 | Monitor: synchronized
+                    </span>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-3 col-6">
+                        <div class="p-2 rounded-3 bg-light border text-center">
+                            <div class="text-muted" style="font-size: 0.72rem;">SOCKET CLIENT ONLINE</div>
+                            <div class="fw-bold fs-5 text-primary font-mono" th:text="${soClientDangKetNoi}">0</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-2 rounded-3 bg-light border text-center">
+                            <div class="text-muted" style="font-size: 0.72rem;">ĐẶT THÀNH CÔNG (LOCK)</div>
+                            <div class="fw-bold fs-5 text-success font-mono" th:text="${soLuotDatThanhCong}">0</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-2 rounded-3 bg-light border text-center">
+                            <div class="text-muted" style="font-size: 0.72rem;">ĐÃ CHẶN ĐẶT TRÙNG</div>
+                            <div class="fw-bold fs-5 text-danger font-mono" th:text="${soLuotBiTuChoi}">0</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-2 rounded-3 bg-light border text-center">
+                            <div class="text-muted" style="font-size: 0.72rem;">@SCHEDULED GIẢI PHÓNG</div>
+                            <div class="fw-bold fs-5 text-warning-emphasis font-mono" th:text="${soPhongGiaiPhongQuaHan}">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-dark text-light rounded-3 p-3 font-mono" style="font-size: 0.78rem; max-height: 185px; overflow-y: auto;">
+                    <div th:if="${#lists.isEmpty(nhatKyDaLuong)}" class="text-secondary">
+                        Chưa có sự kiện đa luồng nào được ghi nhận. Hãy bấm "Mô Phỏng Đồng Bộ Chương 4", đặt phòng hoặc kết nối Socket Client cổng 9999.
+                    </div>
+                    <div th:each="logLine : ${nhatKyDaLuong}" class="mb-1 text-break" th:text="${logLine}">
+                        12:00:00 [main] Nhật ký mẫu
                     </div>
                 </div>
             </div>

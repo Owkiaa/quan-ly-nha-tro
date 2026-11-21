@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout/fragments :: head('Quản Lý Khách Thuê')}"></head>
 <body>
+<th:block th:replace="~{components :: styles}"></th:block>
 
     <!-- Top Navbar Ngang -->
     <nav th:replace="~{layout/fragments :: navbar('khach-thue')}"></nav>
@@ -107,13 +108,13 @@
                     <table class="table table-custom align-middle">
                         <thead>
                             <tr>
-                                <th>Họ và Tên</th>
-                                <th>Số CCCD / CMND</th>
-                                <th>Số Điện Thoại</th>
+                                <th th:replace="~{components :: sortTh('Họ và Tên', 'hoTen', '/khach-thue')}"></th>
+                                <th th:replace="~{components :: sortTh('Số CCCD / CMND', 'cccd', '/khach-thue')}"></th>
+                                <th th:replace="~{components :: sortTh('Số Điện Thoại', 'soDienThoai', '/khach-thue')}"></th>
                                 <th>Email</th>
                                 <th>Quê Quán</th>
                                 <th>Biển Số Xe</th>
-                                <th>Trạng Thái</th>
+                                <th th:replace="~{components :: sortTh('Trạng Thái', 'trangThai', '/khach-thue')}"></th>
                                 <th class="text-end" style="width: 140px;">Thao Tác</th>
                             </tr>
                         </thead>

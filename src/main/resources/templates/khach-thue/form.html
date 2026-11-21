@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout/fragments :: head(${isEdit} ? 'Chỉnh Sửa Hồ Sơ Khách Thuê' : 'Tiếp Nhận Khách Thuê Mới')}"></head>
 <body>
+<th:block th:replace="~{components :: styles}"></th:block>
 
     <!-- Top Navbar Ngang -->
     <nav th:replace="~{layout/fragments :: navbar('khach-thue')}"></nav>
@@ -25,32 +26,41 @@
                     <div class="card card-custom p-4">
                         <form th:action="${isEdit} ? @{/khach-thue/sua/{id}(id=${khachThue.id})} : @{/khach-thue/them}"
                               method="POST"
-                              th:object="${khachThue}">
+                              th:object="${khachThue}"
+                              novalidate>
 
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label for="hoTen" class="form-label">Họ và tên khách thuê <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="hoTen" th:field="*{hoTen}"
+                                           th:classappend="${#fields.hasErrors('hoTen')} ? 'is-invalid'"
                                            placeholder="Ví dụ: Nguyễn Văn A" required>
+                                    <div th:replace="~{components :: fieldError('hoTen')}"></div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="cccd" class="form-label">Số CCCD / CMND <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control font-mono" id="cccd" th:field="*{cccd}"
+                                           th:classappend="${#fields.hasErrors('cccd')} ? 'is-invalid'"
                                            placeholder="12 chữ số CCCD gắn chip" required>
+                                    <div th:replace="~{components :: fieldError('cccd')}"></div>
                                     <div class="form-text">Mã định danh công dân duy nhất.</div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="soDienThoai" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
                                     <input type="tel" class="form-control font-mono" id="soDienThoai" th:field="*{soDienThoai}"
+                                           th:classappend="${#fields.hasErrors('soDienThoai')} ? 'is-invalid'"
                                            placeholder="Ví dụ: 0901234567" required>
+                                    <div th:replace="~{components :: fieldError('soDienThoai')}"></div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="email" class="form-label">Địa chỉ Email</label>
                                     <input type="email" class="form-control" id="email" th:field="*{email}"
+                                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
                                            placeholder="Ví dụ: nguyenvana@gmail.com">
+                                    <div th:replace="~{components :: fieldError('email')}"></div>
                                 </div>
 
                                 <div class="col-md-4">

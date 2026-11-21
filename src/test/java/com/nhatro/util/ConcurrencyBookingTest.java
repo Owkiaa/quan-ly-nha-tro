@@ -2,6 +2,7 @@ package com.nhatro.util;
 
 import com.nhatro.entity.PhongTro;
 import com.nhatro.repository.PhongTroRepository;
+import com.nhatro.service.DatChoMonitor;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 public class ConcurrencyBookingTest {
@@ -34,21 +36,99 @@ public class ConcurrencyBookingTest {
     @Autowired
     private TransactionTemplate transactionTemplate;
 
+    @Autowired
+    private DatChoMonitor datChoMonitor;
+
     /**
-     * Chương trình kiểm thử đồng thời độc lập chạy hàm main() qua Socket (Port 9999),
-     * sử dụng 10 luồng với 10 số CCCD khác nhau đồng loạt gửi lệnh BOOK P201.
+     * Chương trình kiểm thử độc lập chạy bằng hàm main():
+     * - Phần 1: Minh họa Đồng bộ Chương 4 (Thread, Runnable, start(), join(), synchronized Monitor Lock).
+     * - Phần 2: Kiểm thử Đa luồng qua Socket Server Port 9999 với 10 luồng Thread và 10 số CCCD khác nhau.
      */
     public static void main(String[] args) throws InterruptedException {
+        chayPhan1MinhHoaDongBoChuong4();
+        chayPhan2KiemThuSocket10Luong();
+    }
+
+    /**
+     * Phần 1: Minh họa Race Condition vs synchronized theo đúng mẫu Chương 4 (Cau4.java).
+     */
+    private static void chayPhan1MinhHoaDongBoChuong4() throws InterruptedException {
+        System.out.println("=== PHẦN 1: MINH HỌA ĐỒNG BỘ CHƯƠNG 4 (THREAD + RUNNABLE + SYNCHRONIZED) ===");
+        int soLuongKhach = 5;
+
+        // 1a. Không đồng bộ -> Xảy ra Race Condition
+        DatChoMonitor.PhongTroMoPhong phongKhongDongBo = new DatChoMonitor.PhongTroMoPhong();
+        AtomicInteger okKhongDongBo = new AtomicInteger(0);
+        Thread[] threadsKhongDongBo = new Thread[soLuongKhach];
+
+        for (int i = 0; i < soLuongKhach; i++) {
+            final int khachIdx = i + 1;
+            threadsKhongDongBo[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    boolean ok = phongKhongDongBo.datPhongKhongDongBo();
+                    if (ok) {
+                        okKhongDongBo.incrementAndGet();
+                    }
+                    System.out.println("[" + Thread.currentThread().getName() + "] Không đồng bộ -> "
+                            + (ok ? "THÀNH CÔNG (Bị đặt trùng!)" : "Thất bại"));
+                }
+            }, "Khach-NoSync-" + khachIdx);
+        }
+        for (Thread t : threadsKhongDongBo) {
+            t.start();
+        }
+        for (Thread t : threadsKhongDongBo) {
+            t.join();
+        }
+        System.out.println("-> Kết quả Không đồng bộ: " + okKhongDongBo.get() + "/" + soLuongKhach + " luồng cùng đặt thành công (LỖI Race Condition)");
+
+        // 1b. Có từ khóa synchronized -> Chỉ 1 luồng giữ Monitor Lock và đặt thành công
+        DatChoMonitor.PhongTroMoPhong phongAnToan = new DatChoMonitor.PhongTroMoPhong();
+        AtomicInteger okCoDongBo = new AtomicInteger(0);
+        AtomicInteger failCoDongBo = new AtomicInteger(0);
+        Thread[] threadsCoDongBo = new Thread[soLuongKhach];
+
+        for (int i = 0; i < soLuongKhach; i++) {
+            final int khachIdx = i + 1;
+            threadsCoDongBo[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    boolean ok = phongAnToan.datPhongAnToan();
+                    if (ok) {
+                        okCoDongBo.incrementAndGet();
+                    } else {
+                        failCoDongBo.incrementAndGet();
+                    }
+                    System.out.println("[" + Thread.currentThread().getName() + "] Có synchronized -> "
+                            + (ok ? "THÀNH CÔNG (Giữ Monitor Lock)" : "BỊ TỪ CHỐI (Phòng đã DA_DAT)"));
+                }
+            }, "Khach-Sync-" + khachIdx);
+        }
+        for (Thread t : threadsCoDongBo) {
+            t.start();
+        }
+        for (Thread t : threadsCoDongBo) {
+            t.join();
+        }
+        System.out.println("-> Kết quả Có synchronized: Thành công = " + okCoDongBo.get()
+                + ", Bị từ chối = " + failCoDongBo.get() + " (ĐÚNG)");
+        System.out.println();
+    }
+
+    /**
+     * Phần 2: Khởi tạo 10 luồng Thread[] đồng loạt gửi lệnh BOOK P201 qua Socket Server cổng 9999.
+     */
+    private static void chayPhan2KiemThuSocket10Luong() throws InterruptedException {
         int numberOfThreads = 10;
-        ExecutorService pool = Executors.newFixedThreadPool(numberOfThreads);
+        Thread[] clientThreads = new Thread[numberOfThreads];
         CountDownLatch readyLatch = new CountDownLatch(numberOfThreads);
         CountDownLatch startLatch = new CountDownLatch(1);
-        CountDownLatch doneLatch = new CountDownLatch(numberOfThreads);
 
         AtomicInteger okCount = new AtomicInteger(0);
         AtomicInteger failCount = new AtomicInteger(0);
 
-        System.out.println("=== BẮT ĐẦU KIỂM THỬ ĐỒNG THỜI QUA SOCKET (10 LUỒNG - 10 CCCD) ===");
+        System.out.println("=== PHẦN 2: KIỂM THỬ ĐỒNG THỜI QUA SOCKET SERVER (10 LUỒNG - 10 CCCD) ===");
 
         for (int i = 0; i < numberOfThreads; i++) {
             final int clientIdx = i + 1;
@@ -56,53 +136,66 @@ public class ConcurrencyBookingTest {
             final String cccd = String.format("0792040000%02d", clientIdx);
             final String sdt = String.format("09012345%02d", clientIdx);
 
-            pool.execute(() -> {
-                String threadName = Thread.currentThread().getName();
-                try (Socket socket = new Socket(SOCKET_HOST, SOCKET_PORT);
-                     PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
-                     BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))) {
+            clientThreads[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String threadName = Thread.currentThread().getName();
+                    try (Socket socket = new Socket(SOCKET_HOST, SOCKET_PORT);
+                         PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
+                         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))) {
 
-                    // Đọc dòng chào trước khi sẵn sàng xuất phát
-                    in.readLine();
+                        // Đọc dòng chào trước khi sẵn sàng xuất phát
+                        in.readLine();
 
-                    readyLatch.countDown();
-                    startLatch.await();
-
-                    String command = "BOOK " + TEST_ROOM_CODE + "#" + hoTen + "#" + cccd + "#" + sdt;
-                    out.println(command);
-                    String response = in.readLine();
-                    System.out.println("[" + threadName + "] Client #" + clientIdx + " (CCCD: " + cccd + ") -> " + response);
-
-                    if (response != null && response.startsWith("OK#")) {
-                        okCount.incrementAndGet();
-                    } else {
-                        failCount.incrementAndGet();
-                    }
-
-                    out.println("EXIT");
-                    in.readLine();
-                } catch (Exception e) {
-                    System.err.println("[" + threadName + "] Client #" + clientIdx + " lỗi: " + e.getMessage());
-                    failCount.incrementAndGet();
-                } finally {
-                    if (readyLatch.getCount() > 0 && startLatch.getCount() > 0) {
                         readyLatch.countDown();
+                        startLatch.await();
+
+                        String command = "BOOK " + TEST_ROOM_CODE + "#" + hoTen + "#" + cccd + "#" + sdt;
+                        out.println(command);
+                        String response = in.readLine();
+                        System.out.println("[" + threadName + "] Client #" + clientIdx + " (CCCD: " + cccd + ") -> " + response);
+
+                        if (response != null && response.startsWith("OK#")) {
+                            okCount.incrementAndGet();
+                        } else {
+                            failCount.incrementAndGet();
+                        }
+
+                        out.println("EXIT");
+                        in.readLine();
+                    } catch (Exception e) {
+                        System.err.println("[" + threadName + "] Client #" + clientIdx + " lỗi: " + e.getMessage());
+                        failCount.incrementAndGet();
+                    } finally {
+                        if (readyLatch.getCount() > 0 && startLatch.getCount() > 0) {
+                            readyLatch.countDown();
+                        }
                     }
-                    doneLatch.countDown();
                 }
-            });
+            }, "client-test-" + clientIdx);
+
+            clientThreads[i].start();
         }
 
         readyLatch.await();
         System.out.println("Tất cả 10 luồng đã kết nối Socket, đồng loạt gửi lệnh BOOK " + TEST_ROOM_CODE + "...");
         startLatch.countDown();
 
-        doneLatch.await();
-        pool.shutdown();
+        for (Thread t : clientThreads) {
+            t.join();
+        }
 
         System.out.println("====================================================");
         System.out.println("Kết quả đặt thành công (OK): " + okCount.get() + " (Kỳ vọng: 1)");
         System.out.println("Kết quả bị từ chối (FAIL):   " + failCount.get() + " (Kỳ vọng: 9)");
+    }
+
+    @Test
+    public void testMoPhongDongBoChuong4() {
+        String ketQua = datChoMonitor.chayMoPhongDongBoChuong4(5);
+        System.out.println(ketQua);
+        assertTrue(ketQua.contains("Đúng 1/5 luồng đặt thành công, 4/5 luồng bị từ chối"),
+                "Cơ chế synchronized Chương 4 phải đảm bảo đúng 1/5 luồng thành công");
     }
 
     @Test

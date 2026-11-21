@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout/fragments :: head('Quản Lý Phòng Trọ')}"></head>
 <body>
+<th:block th:replace="~{components :: styles}"></th:block>
 
     <!-- Top Navbar Ngang -->
     <nav th:replace="~{layout/fragments :: navbar('phong-tro')}"></nav>
@@ -139,12 +140,12 @@
                         <thead>
                             <tr>
                                 <th style="width: 60px;">Ảnh</th>
-                                <th>Mã Phòng</th>
-                                <th>Tên Phòng</th>
+                                <th th:replace="~{components :: sortTh('Mã Phòng', 'maPhong', '/phong-tro')}"></th>
+                                <th th:replace="~{components :: sortTh('Tên Phòng', 'tenPhong', '/phong-tro')}"></th>
                                 <th>Loại Phòng</th>
-                                <th>Diện Tích</th>
-                                <th>Giá Thuê / Tháng</th>
-                                <th>Trạng Thái</th>
+                                <th th:replace="~{components :: sortTh('Diện Tích', 'dienTich', '/phong-tro')}"></th>
+                                <th th:replace="~{components :: sortTh('Giá Thuê / Tháng', 'giaThue', '/phong-tro')}"></th>
+                                <th th:replace="~{components :: sortTh('Trạng Thái', 'trangThai', '/phong-tro')}"></th>
                                 <th class="text-end" style="width: 140px;">Thao Tác</th>
                             </tr>
                         </thead>

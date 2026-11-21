@@ -3,15 +3,20 @@ package com.nhatro.controller;
 import com.nhatro.entity.PhongTro;
 import com.nhatro.exception.BusinessException;
 import com.nhatro.service.PhongTroService;
+import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.math.BigDecimal;
 
 @Controller
 @RequestMapping("/phong-tro")
@@ -21,6 +26,12 @@ public class PhongTroController {
 
     public PhongTroController(PhongTroService phongTroService) {
         this.phongTroService = phongTroService;
+    }
+
+    @InitBinder
+    public void initBinder(WebDataBinder dataBinder) {
+        StringTrimmerEditor stringTrimmerEditor = new StringTrimmerEditor(true);
+        dataBinder.registerCustomEditor(String.class, stringTrimmerEditor);
     }
 
     @GetMapping
@@ -65,16 +76,24 @@ public class PhongTroController {
 
     @PostMapping("/them")
     public String handleAdd(@ModelAttribute("phongTro") PhongTro phongTro,
+                            BindingResult bindingResult,
                             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
                             RedirectAttributes redirectAttributes,
                             Model model) {
+        validatePhongTro(phongTro, bindingResult);
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("isEdit", false);
+            return "phong-tro/form";
+        }
         try {
             phongTroService.create(phongTro, imageFile);
             redirectAttributes.addFlashAttribute("successMessage", "Thêm phòng trọ mới " + phongTro.getMaPhong() + " thành công!");
             return "redirect:/phong-tro";
         } catch (BusinessException ex) {
+            if (ex.getMessage() != null && ex.getMessage().toLowerCase().contains("mã phòng")) {
+                bindingResult.rejectValue("maPhong", "duplicate", ex.getMessage());
+            }
             model.addAttribute("errorMessage", ex.getMessage());
-            model.addAttribute("phongTro", phongTro);
             model.addAttribute("isEdit", false);
             return "phong-tro/form";
         }
@@ -91,18 +110,62 @@ public class PhongTroController {
     @PostMapping("/sua/{id}")
     public String handleEdit(@PathVariable("id") Integer id,
                              @ModelAttribute("phongTro") PhongTro phongTro,
+                             BindingResult bindingResult,
                              @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
                              RedirectAttributes redirectAttributes,
                              Model model) {
+        validatePhongTro(phongTro, bindingResult);
+        if (bindingResult.hasErrors()) {
+            phongTro.setId(id);
+            model.addAttribute("isEdit", true);
+            return "phong-tro/form";
+        }
         try {
             phongTroService.update(id, phongTro, imageFile);
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật phòng trọ " + phongTro.getMaPhong() + " thành công!");
             return "redirect:/phong-tro";
         } catch (BusinessException ex) {
+            phongTro.setId(id);
+            if (ex.getMessage() != null && ex.getMessage().toLowerCase().contains("mã phòng")) {
+                bindingResult.rejectValue("maPhong", "duplicate", ex.getMessage());
+            }
             model.addAttribute("errorMessage", ex.getMessage());
-            model.addAttribute("phongTro", phongTro);
             model.addAttribute("isEdit", true);
             return "phong-tro/form";
+        }
+    }
+
+    private void validatePhongTro(PhongTro phongTro, BindingResult bindingResult) {
+        if (!bindingResult.hasFieldErrors("maPhong")) {
+            if (phongTro.getMaPhong() == null || phongTro.getMaPhong().trim().isEmpty()) {
+                bindingResult.rejectValue("maPhong", "required", "Mã phòng không được để trống.");
+            } else if (phongTro.getMaPhong().trim().length() > 20) {
+                bindingResult.rejectValue("maPhong", "maxlength", "Mã phòng không được vượt quá 20 ký tự.");
+            }
+        }
+
+        if (!bindingResult.hasFieldErrors("tenPhong")) {
+            if (phongTro.getTenPhong() == null || phongTro.getTenPhong().trim().isEmpty()) {
+                bindingResult.rejectValue("tenPhong", "required", "Tên phòng không được để trống.");
+            } else if (phongTro.getTenPhong().trim().length() > 50) {
+                bindingResult.rejectValue("tenPhong", "maxlength", "Tên phòng không được vượt quá 50 ký tự.");
+            }
+        }
+
+        if (!bindingResult.hasFieldErrors("dienTich") && phongTro.getDienTich() != null && phongTro.getDienTich() <= 0) {
+            bindingResult.rejectValue("dienTich", "min", "Diện tích phải lớn hơn 0 m².");
+        }
+
+        if (!bindingResult.hasFieldErrors("giaThue")) {
+            if (phongTro.getGiaThue() == null || phongTro.getGiaThue().compareTo(BigDecimal.ZERO) <= 0) {
+                bindingResult.rejectValue("giaThue", "min", "Giá thuê phải lớn hơn 0 VNĐ.");
+            }
+        }
+
+        if (!bindingResult.hasFieldErrors("trangThai")) {
+            if (phongTro.getTrangThai() == null || phongTro.getTrangThai().trim().isEmpty()) {
+                bindingResult.rejectValue("trangThai", "required", "Vui lòng chọn trạng thái phòng.");
+            }
         }
     }
 

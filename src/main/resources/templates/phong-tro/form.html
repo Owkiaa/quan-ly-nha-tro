@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout/fragments :: head(${isEdit} ? 'Chỉnh Sửa Phòng Trọ' : 'Thêm Phòng Trọ Mới')}"></head>
 <body>
+<th:block th:replace="~{components :: styles}"></th:block>
 
     <!-- Top Navbar Ngang -->
     <nav th:replace="~{layout/fragments :: navbar('phong-tro')}"></nav>
@@ -26,20 +27,25 @@
                         <form th:action="${isEdit} ? @{/phong-tro/sua/{id}(id=${phongTro.id})} : @{/phong-tro/them}"
                               method="POST"
                               enctype="multipart/form-data"
-                              th:object="${phongTro}">
+                              th:object="${phongTro}"
+                              novalidate>
 
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label for="maPhong" class="form-label">Mã phòng <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control font-mono" id="maPhong" th:field="*{maPhong}"
+                                           th:classappend="${#fields.hasErrors('maPhong')} ? 'is-invalid'"
                                            placeholder="Ví dụ: P101, P201..." required>
+                                    <div th:replace="~{components :: fieldError('maPhong')}"></div>
                                     <div class="form-text">Mã định danh duy nhất của phòng trong hệ thống.</div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="tenPhong" class="form-label">Tên phòng <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="tenPhong" th:field="*{tenPhong}"
+                                           th:classappend="${#fields.hasErrors('tenPhong')} ? 'is-invalid'"
                                            placeholder="Ví dụ: Phòng 101" required>
+                                    <div th:replace="~{components :: fieldError('tenPhong')}"></div>
                                 </div>
 
                                 <div class="col-md-4">
@@ -55,23 +61,29 @@
                                 <div class="col-md-4">
                                     <label for="dienTich" class="form-label">Diện tích (m²)</label>
                                     <input type="number" step="0.5" min="5" class="form-control font-mono" id="dienTich" th:field="*{dienTich}"
+                                           th:classappend="${#fields.hasErrors('dienTich')} ? 'is-invalid'"
                                            placeholder="Ví dụ: 25.5">
+                                    <div th:replace="~{components :: fieldError('dienTich')}"></div>
                                 </div>
 
                                 <div class="col-md-4">
                                     <label for="giaThue" class="form-label">Giá thuê (VNĐ/tháng) <span class="text-danger">*</span></label>
                                     <input type="number" step="10000" min="100000" class="form-control font-mono" id="giaThue" th:field="*{giaThue}"
+                                           th:classappend="${#fields.hasErrors('giaThue')} ? 'is-invalid'"
                                            placeholder="Ví dụ: 2500000" required>
+                                    <div th:replace="~{components :: fieldError('giaThue')}"></div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="trangThai" class="form-label">Trạng thái phòng <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="trangThai" th:field="*{trangThai}" required>
+                                    <select class="form-select" id="trangThai" th:field="*{trangThai}"
+                                            th:classappend="${#fields.hasErrors('trangThai')} ? 'is-invalid'" required>
                                         <option value="TRONG">Phòng trống (TRONG)</option>
                                         <option value="DA_DAT">Đã giữ chỗ (DA_DAT)</option>
                                         <option value="DA_THUE">Đang thuê (DA_THUE)</option>
                                         <option value="BAO_TRI">Bảo trì (BAO_TRI)</option>
                                     </select>
+                                    <div th:replace="~{components :: fieldError('trangThai')}"></div>
                                 </div>
 
                                 <div class="col-md-6">
