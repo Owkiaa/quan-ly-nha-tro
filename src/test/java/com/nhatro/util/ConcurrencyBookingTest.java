@@ -200,16 +200,16 @@ public class ConcurrencyBookingTest {
 
     @Test
     public void testDatPhongDongThoi() throws InterruptedException {
-        Boolean roomReady = transactionTemplate.execute(status -> {
+        Integer roomId = transactionTemplate.execute(status -> {
             PhongTro p = phongTroRepository.findByMaPhong(TEST_ROOM_CODE).orElse(null);
             if (p == null) {
-                return false;
+                return null;
             }
             p.setTrangThai("TRONG");
             phongTroRepository.save(p);
-            return true;
+            return p.getId();
         });
-        Assumptions.assumeTrue(Boolean.TRUE.equals(roomReady),
+        Assumptions.assumeTrue(roomId != null,
                 "Bỏ qua test vì chưa có phòng " + TEST_ROOM_CODE + " trong CSDL");
 
         int numberOfThreads = 10;
@@ -221,54 +221,59 @@ public class ConcurrencyBookingTest {
         AtomicInteger successCount = new AtomicInteger(0);
         AtomicInteger failCount = new AtomicInteger(0);
 
-        for (int i = 0; i < numberOfThreads; i++) {
-            executorService.execute(() -> {
-                try {
-                    startLatch.await();
+        try {
+            for (int i = 0; i < numberOfThreads; i++) {
+                executorService.execute(() -> {
+                    try {
+                        startLatch.await();
 
-                    Boolean result = transactionTemplate.execute(status -> {
-                        PhongTro phongTam = phongTroRepository.findByMaPhong(TEST_ROOM_CODE).orElse(null);
-                        if (phongTam == null) {
-                            return false;
-                        }
+                        Boolean result = transactionTemplate.execute(status -> {
+                            // Khóa bi quan (Pessimistic Lock) là truy vấn đầu tiên trong Transaction để tránh Hibernate L1 Cache cũ
+                            PhongTro phong = phongTroRepository.findByIdForUpdate(roomId).orElse(null);
 
-                        // Khóa bi quan (Pessimistic Lock)
-                        PhongTro phong = phongTroRepository.findByIdForUpdate(phongTam.getId()).orElse(null);
+                            if (phong != null && "TRONG".equals(phong.getTrangThai())) {
+                                try {
+                                    Thread.sleep(50);
+                                } catch (InterruptedException ignored) {
+                                }
 
-                        if (phong != null && "TRONG".equals(phong.getTrangThai())) {
-                            try {
-                                Thread.sleep(50);
-                            } catch (InterruptedException ignored) {
+                                phong.setTrangThai("DA_DAT");
+                                phongTroRepository.save(phong);
+                                return true;
                             }
+                            return false;
+                        });
 
-                            phong.setTrangThai("DA_DAT");
-                            phongTroRepository.save(phong);
-                            return true;
+                        if (Boolean.TRUE.equals(result)) {
+                            successCount.incrementAndGet();
+                        } else {
+                            failCount.incrementAndGet();
                         }
-                        return false;
-                    });
-
-                    if (Boolean.TRUE.equals(result)) {
-                        successCount.incrementAndGet();
-                    } else {
+                    } catch (Exception e) {
                         failCount.incrementAndGet();
+                    } finally {
+                        endLatch.countDown();
                     }
-                } catch (Exception e) {
-                    failCount.incrementAndGet();
-                } finally {
-                    endLatch.countDown();
-                }
+                });
+            }
+
+            startLatch.countDown();
+            endLatch.await();
+            executorService.shutdown();
+
+            System.out.println("Số giao dịch đặt phòng thành công: " + successCount.get());
+            System.out.println("Số giao dịch bị từ chối do trùng lặp: " + failCount.get());
+
+            assertEquals(1, successCount.get(), "Chỉ 1 người được đặt phòng thành công");
+            assertEquals(9, failCount.get(), "9 người còn lại phải nhận thông báo thất bại");
+        } finally {
+            transactionTemplate.execute(status -> {
+                phongTroRepository.findById(roomId).ifPresent(p -> {
+                    p.setTrangThai("TRONG");
+                    phongTroRepository.save(p);
+                });
+                return null;
             });
         }
-
-        startLatch.countDown();
-        endLatch.await();
-        executorService.shutdown();
-
-        System.out.println("Số giao dịch đặt phòng thành công: " + successCount.get());
-        System.out.println("Số giao dịch bị từ chối do trùng lặp: " + failCount.get());
-
-        assertEquals(1, successCount.get(), "Chỉ 1 người được đặt phòng thành công");
-        assertEquals(9, failCount.get(), "9 người còn lại phải nhận thông báo thất bại");
     }
 }

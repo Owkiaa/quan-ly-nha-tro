@@ -120,7 +120,9 @@
 
                             <!-- Nút Xóa -->
                             <button type="button" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 w-100"
-                                    th:onclick="'confirmDelete(\'/yeu-cau-sua-chua/xoa/' + ${yc.id} + '\', \'Yêu cầu sửa chữa phòng ' + ${yc.phongTro.maPhong} + '\')'">
+                                    th:data-url="'/yeu-cau-sua-chua/xoa/' + ${yc.id}"
+                                    th:data-label="'Yêu cầu sửa chữa phòng ' + ${yc.phongTro.maPhong}"
+                                    onclick="confirmDelete(this.dataset.url, this.dataset.label)">
                                 <i class="fa-solid fa-trash-can"></i> <span style="font-size: 0.75rem;">Xóa</span>
                             </button>
 

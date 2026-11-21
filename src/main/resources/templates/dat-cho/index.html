@@ -267,7 +267,10 @@
                                         </a>
                                         <button th:if="${item.trangThai == 'DANG_GIU'}"
                                                 type="button" class="btn btn-light border text-danger"
-                                                th:onclick="'moModalHuy(' + ${item.id} + ', \'' + ${item.phongTro.maPhong} + '\', \'' + ${item.khachThue.hoTen} + '\')'"
+                                                th:data-id="${item.id}"
+                                                th:data-maphong="${item.phongTro.maPhong}"
+                                                th:data-tenkhach="${item.khachThue.hoTen}"
+                                                onclick="moModalHuy(this)"
                                                 title="Hủy đặt chỗ">
                                             <i class="fa-solid fa-ban"></i>
                                         </button>
@@ -326,7 +329,10 @@
     <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
 
     <script>
-        function moModalHuy(id, maPhong, tenKhach) {
+        function moModalHuy(btn) {
+            const id = btn.dataset.id;
+            const maPhong = btn.dataset.maphong;
+            const tenKhach = btn.dataset.tenkhach;
             const form = document.getElementById('formHuyDatCho');
             const noiDung = document.getElementById('noiDungHuy');
             if (form && noiDung) {

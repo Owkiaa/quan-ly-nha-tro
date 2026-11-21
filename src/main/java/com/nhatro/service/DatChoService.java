@@ -161,9 +161,9 @@ public class DatChoService {
         if (maPhong == null || maPhong.trim().isEmpty()) {
             throw new BusinessException("Mã phòng không được để trống.");
         }
-        PhongTro phong = phongTroRepository.findByMaPhong(maPhong.trim())
+        Integer phongId = phongTroRepository.findIdByMaPhong(maPhong.trim())
                 .orElseThrow(() -> new BusinessException("Không tìm thấy phòng trọ với mã: " + maPhong));
-        return datChoPhong(phong.getId(), hoTen, cccd, soDienThoai, null, "Đặt qua Socket Client", 24);
+        return datChoPhong(phongId, hoTen, cccd, soDienThoai, null, "Đặt qua Socket Client", 24);
     }
 
     /**
@@ -176,9 +176,8 @@ public class DatChoService {
         }
         Integer phongId = request.getPhongId();
         if (phongId == null && request.getMaPhong() != null && !request.getMaPhong().trim().isEmpty()) {
-            PhongTro phong = phongTroRepository.findByMaPhong(request.getMaPhong().trim())
+            phongId = phongTroRepository.findIdByMaPhong(request.getMaPhong().trim())
                     .orElseThrow(() -> new BusinessException("Không tìm thấy phòng trọ với mã: " + request.getMaPhong()));
-            phongId = phong.getId();
         }
         return datChoPhong(phongId, request.getHoTen(), request.getCccd(),
                 request.getSoDienThoai(), request.getEmail(), request.getGhiChu(), request.getSoGioGiuCho());

@@ -20,6 +20,9 @@ public interface PhongTroRepository extends JpaRepository<PhongTro, Integer> {
     @Query("SELECT p FROM PhongTro p WHERE p.id = :id")
     Optional<PhongTro> findByIdForUpdate(@Param("id") Integer id);
 
+    @Query("SELECT p.id FROM PhongTro p WHERE p.maPhong = :maPhong")
+    Optional<Integer> findIdByMaPhong(@Param("maPhong") String maPhong);
+
     Optional<PhongTro> findByMaPhong(String maPhong);
 
     boolean existsByMaPhong(String maPhong);
