@@ -326,6 +326,14 @@
                         <i class="fa-solid fa-users"></i>
                         <span>Khách Thuê</span>
                     </a>
+                    <a th:href="@{/dat-cho}" th:classappend="${activeMenu == 'dat-cho'} ? 'active' : ''" class="nav-link-custom">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span>Đặt Chỗ</span>
+                    </a>
+                    <a th:href="@{/hop-dong}" th:classappend="${activeMenu == 'hop-dong'} ? 'active' : ''" class="nav-link-custom">
+                        <i class="fa-solid fa-file-contract"></i>
+                        <span>Hợp Đồng</span>
+                    </a>
                     <a th:if="${session.SESSION_ROLE == 'ADMIN'}" th:href="@{/tai-khoan}" th:classappend="${activeMenu == 'tai-khoan'} ? 'active' : ''" class="nav-link-custom">
                         <i class="fa-solid fa-user-shield"></i>
                         <span>Tài Khoản</span>

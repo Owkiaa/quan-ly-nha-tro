@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -24,6 +25,10 @@ public interface PhongTroRepository extends JpaRepository<PhongTro, Integer> {
     boolean existsByMaPhong(String maPhong);
 
     long countByTrangThai(String trangThai);
+
+    List<PhongTro> findByTrangThaiOrderByMaPhongAsc(String trangThai);
+
+    List<PhongTro> findByTrangThaiInOrderByMaPhongAsc(List<String> trangThais);
 
     @Query("SELECT p FROM PhongTro p WHERE " +
            "(:keyword IS NULL OR :keyword = '' OR LOWER(p.maPhong) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.tenPhong) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +

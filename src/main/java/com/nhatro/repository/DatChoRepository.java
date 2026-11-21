@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DatChoRepository extends JpaRepository<DatCho, Integer> {
@@ -20,6 +21,10 @@ public interface DatChoRepository extends JpaRepository<DatCho, Integer> {
     boolean existsByPhongTroIdAndTrangThai(Integer phongId, String trangThai);
 
     boolean existsByKhachThueIdAndTrangThai(Integer khachId, String trangThai);
+
+    Optional<DatCho> findFirstByPhongTroIdAndTrangThai(Integer phongId, String trangThai);
+
+    long countByTrangThai(String trangThai);
 
     @Query("SELECT d FROM DatCho d JOIN FETCH d.phongTro JOIN FETCH d.khachThue WHERE " +
            "(:keyword IS NULL OR :keyword = '' OR LOWER(d.phongTro.maPhong) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(d.khachThue.hoTen) LIKE LOWER(CONCAT('%', :keyword, '%')) OR d.khachThue.cccd LIKE CONCAT('%', :keyword, '%')) AND " +
