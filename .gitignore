@@ -13,6 +13,7 @@ target/
 .settings/
 *.sublime-project
 *.sublime-workspace
+.agents/
 
 # Logs
 *.log

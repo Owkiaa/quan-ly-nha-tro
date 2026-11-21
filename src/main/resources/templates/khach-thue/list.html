@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/fragments :: head('Quản Lý Khách Thuê')}"></head>
+<body>
+<th:block th:replace="~{components :: styles}"></th:block>
+
+    <!-- Top Navbar Ngang -->
+    <nav th:replace="~{layout/fragments :: navbar('khach-thue')}"></nav>
+
+    <main class="main-container">
+        <div class="container-xl">
+            <div th:replace="~{layout/fragments :: alerts}"></div>
+
+            <!-- Page Title & Header Actions -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1">Quản Lý Hồ Sơ Khách Thuê</h3>
+                    <p class="text-muted small mb-0">Quản lý thông tin định danh CCCD, số điện thoại và tình trạng lưu trú</p>
+                </div>
+                <div>
+                    <a th:href="@{/khach-thue/them}" class="btn btn-primary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>Tiếp Nhận Khách Mới</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Stat KPI Cards (Tông ấm, sáng sủa) -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4 col-sm-6">
+                    <div class="stat-card" style="border-top: 3px solid #78716c;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">TỔNG KHÁCH THUÊ</div>
+                                <h3 class="fw-bold mb-0 text-dark font-mono mt-1" th:text="${totalTenants}">20</h3>
+                            </div>
+                            <div class="stat-icon bg-light text-secondary">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-sm-6">
+                    <div class="stat-card" style="border-top: 3px solid #10b981;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">ĐANG CƯ TRÚ (DANG_THUE)</div>
+                                <h3 class="fw-bold mb-0 text-success font-mono mt-1" th:text="${countDangThue}">17</h3>
+                            </div>
+                            <div class="stat-icon bg-success-subtle text-success">
+                                <i class="fa-solid fa-user-check"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-sm-12">
+                    <div class="stat-card" style="border-top: 3px solid #a8a29e;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">ĐÃ TRẢ PHÒNG (DA_TRA_PHONG)</div>
+                                <h3 class="fw-bold mb-0 text-secondary font-mono mt-1" th:text="${countDaTraPhong}">3</h3>
+                            </div>
+                            <div class="stat-icon bg-secondary-subtle text-secondary">
+                                <i class="fa-solid fa-person-walking-arrow-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toolbar Tìm kiếm & Lọc -->
+            <div class="card card-custom mb-4">
+                <div class="card-body p-3">
+                    <form th:action="@{/khach-thue}" method="GET" class="row g-2 align-items-center">
+                        <div class="col-md-5 col-sm-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white text-muted border-end-0">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0" name="keyword" th:value="${keyword}"
+                                       placeholder="Tìm theo họ tên, số CCCD hoặc số điện thoại...">
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-4">
+                            <select class="form-select form-select-sm" name="trangThai">
+                                <option value="" th:selected="${trangThai == null or trangThai == ''}">-- Tất cả trạng thái --</option>
+                                <option value="DANG_THUE" th:selected="${trangThai == 'DANG_THUE'}">Đang thuê (DANG_THUE)</option>
+                                <option value="DA_TRA_PHONG" th:selected="${trangThai == 'DA_TRA_PHONG'}">Đã trả phòng (DA_TRA_PHONG)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 col-sm-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm px-3">
+                                <i class="fa-solid fa-filter me-1"></i> Lọc
+                            </button>
+                            <a th:href="@{/khach-thue}" class="btn btn-outline-secondary btn-sm px-3">
+                                <i class="fa-solid fa-arrow-rotate-left me-1"></i> Đặt lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Bảng Dữ Liệu Khách Thuê -->
+            <div class="card card-custom overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle">
+                        <thead>
+                            <tr>
+                                <th th:replace="~{components :: sortTh('Họ và Tên', 'hoTen', '/khach-thue')}"></th>
+                                <th th:replace="~{components :: sortTh('Số CCCD / CMND', 'cccd', '/khach-thue')}"></th>
+                                <th th:replace="~{components :: sortTh('Số Điện Thoại', 'soDienThoai', '/khach-thue')}"></th>
+                                <th>Email</th>
+                                <th>Quê Quán</th>
+                                <th>Biển Số Xe</th>
+                                <th th:replace="~{components :: sortTh('Trạng Thái', 'trangThai', '/khach-thue')}"></th>
+                                <th class="text-end" style="width: 140px;">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${pageData.empty}">
+                                <td colspan="8" class="text-center py-5">
+                                    <div class="text-muted mb-2">
+                                        <i class="fa-solid fa-user-slash fs-1 text-secondary opacity-50"></i>
+                                    </div>
+                                    <h6 class="fw-bold text-dark">Không tìm thấy khách thuê phù hợp</h6>
+                                    <p class="text-muted small mb-3">Vui lòng điều chỉnh lại từ khóa hoặc trạng thái tìm kiếm</p>
+                                    <a th:href="@{/khach-thue/them}" class="btn btn-primary btn-sm px-3">
+                                        <i class="fa-solid fa-user-plus me-1"></i> Tiếp Nhận Khách Thuê Mới
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:each="khach : ${pageData.content}">
+                                <td>
+                                    <a th:href="@{/khach-thue/chi-tiet/{id}(id=${khach.id})}" class="fw-bold text-warning-emphasis text-decoration-none" th:text="${khach.hoTen}">Nguyễn Văn A</a>
+                                    <span th:if="${khach.gioiTinh != null}" class="badge bg-light text-muted border ms-1" style="font-size: 0.68rem;" th:text="${khach.gioiTinh}">Nam</span>
+                                </td>
+                                <td>
+                                    <code class="fw-bold text-dark font-mono" th:text="${khach.cccd}">079204000001</code>
+                                </td>
+                                <td>
+                                    <a th:href="'tel:' + ${khach.soDienThoai}" class="text-dark font-mono text-decoration-none">
+                                        <i class="fa-solid fa-phone text-muted me-1 small"></i>
+                                        <span th:text="${khach.soDienThoai}">0901234501</span>
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="text-muted small" th:text="${khach.email != null and !khach.email.isEmpty() ? khach.email : '-'}">email@example.com</span>
+                                </td>
+                                <td>
+                                    <span class="small text-truncate d-inline-block" style="max-width: 140px;" th:text="${khach.queQuan != null ? khach.queQuan : '-'}">Hà Nội</span>
+                                </td>
+                                <td>
+                                    <span th:if="${khach.bienSoXe != null and !khach.bienSoXe.isEmpty()}" class="badge bg-light text-dark border font-mono" th:text="${khach.bienSoXe}">29A-123.45</span>
+                                    <span th:unless="${khach.bienSoXe != null and !khach.bienSoXe.isEmpty()}" class="text-muted">-</span>
+                                </td>
+                                <td>
+                                    <span th:if="${khach.trangThai == 'DANG_THUE'}" class="badge-status badge-dangthue">
+                                        <span class="pulse-dot"></span>Đang thuê
+                                    </span>
+                                    <span th:if="${khach.trangThai == 'DA_TRA_PHONG'}" class="badge-status badge-datraphong">
+                                        <i class="fa-solid fa-person-walking-arrow-right"></i>Đã trả phòng
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-1">
+                                        <a th:href="@{/khach-thue/chi-tiet/{id}(id=${khach.id})}" class="btn-action action-view" title="Xem chi tiết">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                        <a th:href="@{/khach-thue/sua/{id}(id=${khach.id})}" class="btn-action action-edit" title="Chỉnh sửa">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+                                        <button type="button" class="btn-action action-delete" title="Xóa khách"
+                                                th:onclick="confirmDelete('/khach-thue/xoa/' + [[${khach.id}]], [[${khach.hoTen} + ' (' + ${khach.cccd} + ')']])">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Phân trang -->
+                <div class="px-3 pb-3" th:replace="~{layout/fragments :: pagination(${pageData}, '/khach-thue', ${keyword}, ${trangThai}, ${sort})}"></div>
+            </div>
+        </div>
+    </main>
+
+    <div th:replace="~{layout/fragments :: deleteModal}"></div>
+    <footer th:replace="~{layout/fragments :: footer}"></footer>
+
+    <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+</body>
+</html>

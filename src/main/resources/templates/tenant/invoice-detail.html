@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/fragments :: head('Chi tiết hóa đơn')}"></head>
+<body>
+<th:block th:replace="~{components :: styles}"></th:block>
+<nav th:replace="~{layout/fragments :: navbar('tenant')}"></nav>
+
+<main class="main-container">
+    <div class="container-xl">
+        <div th:replace="~{layout/fragments :: alerts}"></div>
+        <div th:replace="~{components :: tenantTabs('invoices')}"></div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1">Hóa đơn <span class="font-mono" th:text="${invoice.maHoaDon}">HDON-202609-01</span></h1>
+                <p class="text-muted small mb-0">
+                    Kỳ <span class="font-mono" th:text="${invoice.thangNam}">09/2026</span> –
+                    <span th:text="${invoice.hopDong.phongTro.tenPhong}">Phòng 102</span>
+                    (hợp đồng <span class="font-mono" th:text="${invoice.hopDong.maHopDong}">HD-P102</span>)
+                </p>
+            </div>
+            <a class="btn btn-outline-secondary btn-sm rounded-3 px-3" th:href="@{/tenant/invoices}">
+                <i class="fa-solid fa-arrow-left me-1"></i> Quay lại danh sách
+            </a>
+        </div>
+
+        <div class="card-custom overflow-hidden" style="max-width: 780px;">
+            <div class="table-responsive">
+                <table class="table table-custom align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th scope="col">Khoản mục</th>
+                        <th scope="col">Chi tiết</th>
+                        <th scope="col" class="text-end">Thành tiền (đ)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td class="fw-semibold">Tiền phòng</td>
+                        <td class="text-muted">Theo hợp đồng</td>
+                        <td class="text-end font-mono" th:text="${#numbers.formatDecimal(invoice.tienPhong, 0, 'POINT', 0, 'COMMA')}">2.800.000</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-semibold">Tiền điện</td>
+                        <td class="text-muted font-mono">
+                            <span th:text="${invoice.chiSoDienCu}">120</span> →
+                            <span th:text="${invoice.chiSoDienMoi}">160</span>
+                            (<span th:text="${invoice.chiSoDienMoi - invoice.chiSoDienCu}">40</span> kWh)
+                            × <span th:text="${#numbers.formatDecimal(invoice.donGiaDien, 0, 'POINT', 0, 'COMMA')}">3.500</span> đ
+                        </td>
+                        <td class="text-end font-mono" th:text="${#numbers.formatDecimal(invoice.tienDien, 0, 'POINT', 0, 'COMMA')}">140.000</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-semibold">Tiền nước</td>
+                        <td class="text-muted font-mono">
+                            <span th:text="${invoice.chiSoNuocCu}">15</span> →
+                            <span th:text="${invoice.chiSoNuocMoi}">20</span>
+                            (<span th:text="${invoice.chiSoNuocMoi - invoice.chiSoNuocCu}">5</span> m³)
+                            × <span th:text="${#numbers.formatDecimal(invoice.donGiaNuoc, 0, 'POINT', 0, 'COMMA')}">20.000</span> đ
+                        </td>
+                        <td class="text-end font-mono" th:text="${#numbers.formatDecimal(invoice.tienNuoc, 0, 'POINT', 0, 'COMMA')}">100.000</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-semibold">Tiền dịch vụ</td>
+                        <td class="text-muted">Rác, vệ sinh, internet</td>
+                        <td class="text-end font-mono" th:text="${#numbers.formatDecimal(invoice.tienDichVu, 0, 'POINT', 0, 'COMMA')}">100.000</td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <th scope="row" colspan="2" class="text-dark">Tổng cộng</th>
+                        <th class="text-end font-mono text-dark fs-6" th:text="${#numbers.formatDecimal(invoice.tongTien, 0, 'POINT', 0, 'COMMA')}">3.140.000</th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="p-4 border-top">
+                <dl class="detail-list mb-0">
+                    <dt>Trạng thái</dt>
+                    <dd><th:block th:replace="~{components :: statusBadge(${invoice.trangThai})}"></th:block></dd>
+                    <dt>Ngày lập</dt>
+                    <dd class="font-mono" th:text="${#temporals.format(invoice.ngayLap, 'dd/MM/yyyy')}">30/09/2026</dd>
+                    <dt>Ngày thanh toán</dt>
+                    <dd class="font-mono" th:text="${invoice.ngayThanhToan != null} ? ${#temporals.format(invoice.ngayThanhToan, 'dd/MM/yyyy')} : 'Chưa thanh toán'">02/10/2026</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{layout/fragments :: footer}"></footer>
+<th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+</body>
+</html>

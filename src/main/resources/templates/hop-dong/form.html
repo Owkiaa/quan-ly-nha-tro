@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/fragments :: head('Lập Hợp Đồng Thuê Phòng')}"></head>
+<body>
+
+    <!-- Top Navbar -->
+    <nav th:replace="~{layout/fragments :: navbar('hop-dong')}"></nav>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <div class="container-xl" style="max-width: 860px;">
+            <!-- Flash Alerts -->
+            <div th:replace="~{layout/fragments :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <a th:href="@{/hop-dong}" class="text-decoration-none text-muted small d-inline-flex align-items-center gap-1 mb-1">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Quay lại danh sách</span>
+                    </a>
+                    <h3 class="fw-bold mb-0">Lập Hợp Đồng Thuê Phòng</h3>
+                </div>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card-custom p-4 p-md-5">
+                <form th:action="@{/hop-dong/luu}" th:object="${hopDongRequest}" method="POST" novalidate>
+                    
+                    <!-- Thông báo liên thông nếu đến từ phiếu Đặt giữ chỗ -->
+                    <div th:if="${thongTinDatCho != null}" class="alert alert-warning border-0 rounded-3 mb-4">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="fa-solid fa-link text-warning fs-5"></i>
+                            <strong class="text-dark">Liên thông từ Phiếu Giữ Chỗ</strong>
+                        </div>
+                        <div class="small text-secondary">
+                            Phòng <strong th:text="${thongTinDatCho.phongTro.maPhong}">P101</strong> đang được giữ chỗ bởi khách
+                            <strong th:text="${thongTinDatCho.khachThue.hoTen}">Tên khách</strong> (CCCD: <span class="font-mono" th:text="${thongTinDatCho.khachThue.cccd}">CCCD</span>).
+                            Hệ thống đã tự động khóa phòng và điền thông tin khách thuê tương ứng để đảm bảo tính toàn vẹn.
+                        </div>
+                    </div>
+
+                    <!-- Section 1: Đối tượng hợp đồng (Phòng & Khách) -->
+                    <div class="mb-4 pb-3 border-bottom">
+                        <h6 class="fw-bold text-dark text-uppercase small mb-3" style="letter-spacing: 0.05em;">
+                            <i class="fa-solid fa-door-open text-warning me-2"></i>1. Phòng Trọ &amp; Khách Thuê
+                        </h6>
+
+                        <div class="row g-3">
+                            <div class="col-md-6 col-12">
+                                <label class="form-label fw-semibold small text-secondary">
+                                    Chọn phòng trọ <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" th:field="*{phongId}" id="selectPhong"
+                                        th:classappend="${#fields.hasErrors('phongId')} ? 'is-invalid'" required>
+                                    <option value="">-- Chọn phòng trọ khả dụng --</option>
+                                    <option th:each="p : ${danhSachPhong}"
+                                            th:value="${p.id}"
+                                            th:data-gia="${p.giaThue}"
+                                            th:data-trangthai="${p.trangThai}"
+                                            th:text="${p.maPhong} + ' - ' + ${p.tenPhong} + ' (' + (${p.trangThai == 'TRONG' ? 'Trống' : 'Đang giữ chỗ'}) + ' - ' + ${#numbers.formatDecimal(p.giaThue, 0, 'POINT', 0, 'COMMA')} + ' đ)'">
+                                        P101 - Phòng 101 (Trống - 2,500,000 đ)
+                                    </option>
+                                </select>
+                                <div th:replace="~{components :: fieldError('phongId')}"></div>
+                                <div class="form-text small">
+                                    Chỉ hiển thị các phòng ở trạng thái <strong>TRỐNG</strong> hoặc <strong>ĐÃ ĐẶT</strong> (giữ chỗ).
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-12">
+                                <label class="form-label fw-semibold small text-secondary">
+                                    Khách thuê đứng tên hợp đồng <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" th:field="*{khachId}"
+                                        th:classappend="${#fields.hasErrors('khachId')} ? 'is-invalid'" required>
+                                    <option value="">-- Chọn khách thuê trong danh sách --</option>
+                                    <option th:each="k : ${danhSachKhach}"
+                                            th:value="${k.id}"
+                                            th:text="${k.hoTen} + ' - CCCD: ' + ${k.cccd} + ' (' + ${k.soDienThoai} + ')'">
+                                        Nguyễn Văn A - CCCD: 079204000001 (0912345678)
+                                    </option>
+                                </select>
+                                <div th:replace="~{components :: fieldError('khachId')}"></div>
+                                <div class="form-text small">
+                                    Nếu phòng đang có phiếu giữ chỗ, người ký phải đúng là khách đã giữ chỗ.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Thời hạn hợp đồng -->
+                    <div class="mb-4 pb-3 border-bottom">
+                        <h6 class="fw-bold text-dark text-uppercase small mb-3" style="letter-spacing: 0.05em;">
+                            <i class="fa-solid fa-calendar-days text-warning me-2"></i>2. Thời Hạn Hiệu Lực
+                        </h6>
+
+                        <div class="row g-3">
+                            <div class="col-md-6 col-12">
+                                <label class="form-label fw-semibold small text-secondary">
+                                    Ngày bắt đầu <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" class="form-control font-mono" th:field="*{ngayBatDau}"
+                                       th:classappend="${#fields.hasErrors('ngayBatDau')} ? 'is-invalid'" required>
+                                <div th:replace="~{components :: fieldError('ngayBatDau')}"></div>
+                            </div>
+
+                            <div class="col-md-6 col-12">
+                                <label class="form-label fw-semibold small text-secondary">
+                                    Ngày kết thúc <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" class="form-control font-mono" th:field="*{ngayKetThuc}"
+                                       th:classappend="${#fields.hasErrors('ngayKetThuc')} ? 'is-invalid'" required>
+                                <div th:replace="~{components :: fieldError('ngayKetThuc')}"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Điều khoản tài chính -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark text-uppercase small mb-3" style="letter-spacing: 0.05em;">
+                            <i class="fa-solid fa-sack-dollar text-warning me-2"></i>3. Giá Thuê &amp; Tiền Đặt Cọc
+                        </h6>
+
+                        <div class="row g-3">
+                            <div class="col-md-6 col-12">
+                                <label class="form-label fw-semibold small text-secondary">
+                                    Mã hợp đồng (Tùy chọn)
+                                </label>
+                                <input type="text" class="form-control font-mono" th:field="*{maHopDong}"
+                                       th:classappend="${#fields.hasErrors('maHopDong')} ? 'is-invalid'"
+                                       placeholder="Để trống hệ thống sẽ tự động sinh mã (VD: HD-P101-261119-123)">
+                                <div th:replace="~{components :: fieldError('maHopDong')}"></div>
+                            </div>
+
+                            <div class="col-md-6 col-12">
+                                <label class="form-label fw-semibold small text-secondary">
+                                    Chu kỳ thanh toán (Tháng/kỳ) <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select font-mono" th:field="*{chuKyThanhToan}"
+                                        th:classappend="${#fields.hasErrors('chuKyThanhToan')} ? 'is-invalid'">
+                                    <option value="1" selected>1 Tháng / lần (Mặc định)</option>
+                                    <option value="2">2 Tháng / lần</option>
+                                    <option value="3">3 Tháng / lần</option>
+                                    <option value="6">6 Tháng / lần</option>
+                                </select>
+                                <div th:replace="~{components :: fieldError('chuKyThanhToan')}"></div>
+                            </div>
+
+                            <div class="col-md-6 col-12">
+                                <label class="form-label fw-semibold small text-secondary">
+                                    Giá thuê thỏa thuận (VNĐ/tháng) <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" class="form-control font-mono" th:field="*{giaThueThoaThuan}"
+                                       th:classappend="${#fields.hasErrors('giaThueThoaThuan')} ? 'is-invalid'"
+                                       id="inputGiaThue" placeholder="3000000" min="100000" step="50000" required>
+                                <div th:replace="~{components :: fieldError('giaThueThoaThuan')}"></div>
+                            </div>
+
+                            <div class="col-md-6 col-12">
+                                <label class="form-label fw-semibold small text-secondary">
+                                    Tiền đặt cọc (VNĐ) <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" class="form-control font-mono" th:field="*{tienDatCoc}"
+                                       th:classappend="${#fields.hasErrors('tienDatCoc')} ? 'is-invalid'"
+                                       id="inputTienCoc" placeholder="3000000" min="0" step="50000" required>
+                                <div th:replace="~{components :: fieldError('tienDatCoc')}"></div>
+                                <div class="form-text small">Thông thường bằng 1 đến 2 tháng tiền phòng.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex align-items-center justify-content-end gap-2 pt-3 border-top">
+                        <a th:href="@{/hop-dong}" class="btn btn-outline-secondary px-4">Hủy bỏ</a>
+                        <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                            <i class="fa-solid fa-file-signature me-2"></i>Xác Nhận Ký Hợp Đồng
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{layout/fragments :: footer}"></footer>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+
+    <script>
+        // Tự động điền giá thuê & tiền cọc khi người dùng thay đổi lựa chọn phòng
+        document.getElementById('selectPhong').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const giaThue = selectedOption.getAttribute('data-gia');
+            if (giaThue) {
+                const inputGia = document.getElementById('inputGiaThue');
+                const inputCoc = document.getElementById('inputTienCoc');
+                if (inputGia && (!inputGia.value || inputGia.value === '0')) {
+                    inputGia.value = giaThue;
+                }
+                if (inputCoc && (!inputCoc.value || inputCoc.value === '0')) {
+                    inputCoc.value = giaThue;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

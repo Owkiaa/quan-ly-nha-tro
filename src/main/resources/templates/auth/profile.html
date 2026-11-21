@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/fragments :: head('Hồ Sơ Cá Nhân & Bảo Mật')}"></head>
+<body>
+
+    <!-- Top Navbar Ngang -->
+    <nav th:replace="~{layout/fragments :: navbar('')}"></nav>
+
+    <main class="main-container">
+        <div class="container-xl">
+            <div th:replace="~{layout/fragments :: alerts}"></div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1">Hồ Sơ Tài Khoản &amp; Bảo Mật</h3>
+                    <p class="text-muted small mb-0">Quản lý định danh tài khoản, phân quyền hệ thống và cơ chế băm mật khẩu SHA-256</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-5">
+                    <div class="card card-custom p-4 mb-4">
+                        <div class="text-center pb-3 border-bottom mb-3">
+                            <div class="rounded-circle bg-warning-subtle text-warning-emphasis d-inline-flex align-items-center justify-content-center mb-3 shadow-sm" style="width: 80px; height: 80px; font-size: 2rem;">
+                                <i class="fa-solid fa-user-shield"></i>
+                            </div>
+                            <h4 class="fw-bold mb-1 text-dark" th:text="${user.tenDangNhap}">admin</h4>
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-3 py-1 font-mono" th:text="${user.vaiTro}">ADMIN</span>
+                        </div>
+
+                        <ul class="list-unstyled mb-0">
+                            <li class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-muted small">Mã định danh:</span>
+                                <span class="fw-bold text-dark font-mono small" th:text="'#' + ${user.id}">#1</span>
+                            </li>
+                            <li class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-muted small">Tên đăng nhập:</span>
+                                <span class="fw-bold text-dark small" th:text="${user.tenDangNhap}">admin</span>
+                            </li>
+                            <li class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-muted small">Vai trò quyền hạn:</span>
+                                <span class="badge bg-warning-subtle text-warning-emphasis fw-bold" th:text="${user.vaiTro}">ADMIN</span>
+                            </li>
+                            <li class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-muted small">Tình trạng tài khoản:</span>
+                                <span th:if="${user.trangThai}" class="badge-status badge-trong">
+                                    <span class="pulse-dot"></span>Hoạt động
+                                </span>
+                                <span th:unless="${user.trangThai}" class="badge-status badge-baotri">
+                                    <i class="fa-solid fa-lock"></i>Bị khóa
+                                </span>
+                            </li>
+                            <li class="d-flex justify-content-between py-2 border-bottom" th:if="${user.khachThue != null}">
+                                <span class="text-muted small">Khách thuê liên kết:</span>
+                                <span class="fw-semibold text-warning-emphasis small" th:text="${user.khachThue.hoTen} + ' (' + ${user.khachThue.cccd} + ')'">Nguyễn Văn A</span>
+                            </li>
+                            <li class="d-flex justify-content-between py-2">
+                                <span class="text-muted small">Thời gian khởi tạo:</span>
+                                <span class="fw-semibold text-dark font-mono small" th:text="${#temporals.format(user.ngayTao, 'dd/MM/yyyy HH:mm')}">20/10/2026</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="card card-custom p-3 bg-white">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="fa-solid fa-shield-halved text-success"></i>
+                            <span class="fw-bold text-dark small">Bảo mật hệ thống (TV1 Architecture)</span>
+                        </div>
+                        <ul class="text-muted small ps-3 mb-0" style="font-size: 0.8rem; line-height: 1.6;">
+                            <li>Thuật toán mã hóa: <strong>SHA-256 kèm muối ngẫu nhiên 8 bytes (16 hex)</strong>.</li>
+                            <li>Quản lý phiên làm việc: <strong>HttpSession &amp; HandlerInterceptor</strong>.</li>
+                            <li>Mật khẩu được băm một chiều an toàn, không thể đảo ngược.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="card card-custom p-4">
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-3 border-bottom">
+                            <div class="rounded-circle bg-warning-subtle text-warning-emphasis d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                <i class="fa-solid fa-key"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-0">Đổi Mật Khẩu Đăng Nhập</h5>
+                                <small class="text-muted">Nên sử dụng mật khẩu mạnh kết hợp chữ hoa, chữ thường và ký tự đặc biệt</small>
+                            </div>
+                        </div>
+
+                        <form th:action="@{/profile/change-password}" method="POST">
+                            <div class="mb-3">
+                                <label for="oldPassword" class="form-label">Mật khẩu hiện tại <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="oldPassword" name="oldPassword" required placeholder="Nhập mật khẩu đang sử dụng">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">Mật khẩu mới <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="newPassword" name="newPassword" required minlength="6" placeholder="Tối thiểu 6 ký tự">
+                                <div class="form-text">Mật khẩu mới sẽ tự động sinh chuỗi Salt mới và băm lại bằng SHA-256.</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="confirmPassword" class="form-label">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required minlength="6" placeholder="Nhập lại mật khẩu mới">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary px-4 py-2">
+                                <i class="fa-solid fa-floppy-disk me-1"></i> Lưu Mật Khẩu Mới
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{layout/fragments :: footer}"></footer>
+
+    <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+</body>
+</html>

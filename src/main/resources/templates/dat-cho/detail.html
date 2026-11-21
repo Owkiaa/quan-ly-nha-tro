@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/fragments :: head('Chi Tiết Đặt Giữ Chỗ')}"></head>
+<body>
+
+    <!-- Top Navbar -->
+    <nav th:replace="~{layout/fragments :: navbar('dat-cho')}"></nav>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <div class="container-xl" style="max-width: 860px;">
+            <!-- Flash Alerts -->
+            <div th:replace="~{layout/fragments :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <div>
+                    <a th:href="@{/dat-cho}" class="text-decoration-none text-muted small d-inline-flex align-items-center gap-1 mb-1">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Quay lại danh sách</span>
+                    </a>
+                    <div class="d-flex align-items-center gap-2">
+                        <h3 class="fw-bold mb-0" th:text="'Chi Tiết Giữ Chỗ Phòng ' + ${datCho.phongTro.maPhong}">Chi Tiết Giữ Chỗ</h3>
+                        <span th:if="${datCho.trangThai == 'DANG_GIU'}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2 rounded-pill">
+                            <i class="fa-regular fa-clock me-1"></i> Đang Giữ Chỗ
+                        </span>
+                        <span th:if="${datCho.trangThai == 'DA_CHUYEN_HOP_DONG'}" class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-check me-1"></i> Đã Ký Hợp Đồng
+                        </span>
+                        <span th:if="${datCho.trangThai == 'HET_HAN'}" class="badge bg-secondary-subtle text-secondary border px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-xmark me-1"></i> Hết Hạn / Đã Hủy
+                        </span>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a th:if="${datCho.trangThai == 'DANG_GIU'}"
+                       th:href="@{/hop-dong/them-moi(phongId=${datCho.phongTro.id}, khachId=${datCho.khachThue.id})}"
+                       class="btn btn-success btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2">
+                        <i class="fa-solid fa-file-signature"></i>
+                        <span>Ký Hợp Đồng Ngay</span>
+                    </a>
+                    <button th:if="${datCho.trangThai == 'DANG_GIU'}"
+                            type="button" class="btn btn-outline-danger btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2"
+                            data-bs-toggle="modal" data-bs-target="#modalHuyDatCho">
+                        <i class="fa-solid fa-ban"></i>
+                        <span>Hủy Giữ Chỗ</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Detail Cards -->
+            <div class="row g-4">
+                <!-- Card 1: Phòng Trọ -->
+                <div class="col-md-6 col-12">
+                    <div class="card-custom p-4 h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                            <h6 class="fw-bold text-dark text-uppercase small mb-0">
+                                <i class="fa-solid fa-door-open text-warning me-2"></i>Thông Tin Phòng Trọ
+                            </h6>
+                            <span class="badge bg-light text-dark font-mono border" th:text="${datCho.phongTro.maPhong}">P101</span>
+                        </div>
+                        <dl class="row mb-0 small">
+                            <dt class="col-5 text-secondary">Tên phòng:</dt>
+                            <dd class="col-7 fw-semibold text-dark" th:text="${datCho.phongTro.tenPhong}">Phòng 101</dd>
+
+                            <dt class="col-5 text-secondary">Loại phòng:</dt>
+                            <dd class="col-7" th:text="${datCho.phongTro.loaiPhong != null ? datCho.phongTro.loaiPhong : 'Tiêu chuẩn'}">Tiêu chuẩn</dd>
+
+                            <dt class="col-5 text-secondary">Diện tích:</dt>
+                            <dd class="col-7 font-mono" th:text="${datCho.phongTro.dienTich != null ? datCho.phongTro.dienTich + ' m²' : '-'}">-</dd>
+
+                            <dt class="col-5 text-secondary">Giá thuê niêm yết:</dt>
+                            <dd class="col-7 fw-bold text-primary font-mono"
+                                th:text="${#numbers.formatDecimal(datCho.phongTro.giaThue, 0, 'POINT', 0, 'COMMA')} + ' đ/tháng'">2,500,000 đ</dd>
+
+                            <dt class="col-5 text-secondary">Trạng thái phòng:</dt>
+                            <dd class="col-7">
+                                <span class="badge bg-light text-dark border font-mono" th:text="${datCho.phongTro.trangThai}">DA_DAT</span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Card 2: Khách Hàng -->
+                <div class="col-md-6 col-12">
+                    <div class="card-custom p-4 h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                            <h6 class="fw-bold text-dark text-uppercase small mb-0">
+                                <i class="fa-solid fa-user text-warning me-2"></i>Thông Tin Khách Hàng
+                            </h6>
+                            <span class="badge bg-light text-secondary font-mono border" th:text="'ID: ' + ${datCho.khachThue.id}">ID: 1</span>
+                        </div>
+                        <dl class="row mb-0 small">
+                            <dt class="col-5 text-secondary">Họ và tên:</dt>
+                            <dd class="col-7 fw-semibold text-dark" th:text="${datCho.khachThue.hoTen}">Nguyễn Văn An</dd>
+
+                            <dt class="col-5 text-secondary">Số CCCD:</dt>
+                            <dd class="col-7 font-mono fw-semibold text-dark" th:text="${datCho.khachThue.cccd}">079204000001</dd>
+
+                            <dt class="col-5 text-secondary">Số điện thoại:</dt>
+                            <dd class="col-7 font-mono text-dark" th:text="${datCho.khachThue.soDienThoai}">0912345678</dd>
+
+                            <dt class="col-5 text-secondary">Email:</dt>
+                            <dd class="col-7 text-dark" th:text="${datCho.khachThue.email != null and datCho.khachThue.email != '' ? datCho.khachThue.email : '-'}">-</dd>
+
+                            <dt class="col-5 text-secondary">Trạng thái hồ sơ:</dt>
+                            <dd class="col-7">
+                                <span class="badge bg-light text-dark border font-mono" th:text="${datCho.khachThue.trangThai}">DANG_THUE</span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Card 3: Thông Tin Giữ Chỗ & Mốc Thời Gian -->
+                <div class="col-12">
+                    <div class="card-custom p-4">
+                        <h6 class="fw-bold text-dark text-uppercase small mb-3 pb-2 border-bottom">
+                            <i class="fa-solid fa-clock-rotate-left text-warning me-2"></i>Tiến Trình &amp; Thời Hạn Giữ Chỗ
+                        </h6>
+                        <div class="row g-3 small">
+                            <div class="col-md-4 col-12">
+                                <div class="p-3 rounded-3 bg-light border">
+                                    <div class="text-secondary mb-1">Thời điểm đặt:</div>
+                                    <div class="fw-bold font-mono text-dark fs-6"
+                                         th:text="${#temporals.format(datCho.ngayDat, 'dd/MM/yyyy HH:mm:ss')}">01/01/2026 10:00:00</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-12">
+                                <div class="p-3 rounded-3 bg-light border">
+                                    <div class="text-secondary mb-1">Thời hạn hết hiệu lực:</div>
+                                    <div class="fw-bold font-mono fs-6"
+                                         th:classappend="${datCho.trangThai == 'DANG_GIU' and datCho.hanGiuCho.isBefore(T(java.time.LocalDateTime).now())} ? 'text-danger' : 'text-dark'"
+                                         th:text="${#temporals.format(datCho.hanGiuCho, 'dd/MM/yyyy HH:mm:ss')}">02/01/2026 10:00:00</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-12">
+                                <div class="p-3 rounded-3 bg-light border">
+                                    <div class="text-secondary mb-1">Tác vụ nền @Scheduled:</div>
+                                    <div class="text-muted small">
+                                        Định kỳ 60s quét và tự động thu hồi phòng về <strong>TRỐNG</strong> nếu quá thời hạn trên.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12" th:if="${datCho.ghiChu != null and datCho.ghiChu != ''}">
+                                <div class="p-3 rounded-3 bg-light border">
+                                    <div class="text-secondary mb-1">Ghi chú lưu vết:</div>
+                                    <div class="text-dark" th:text="${datCho.ghiChu}">Ghi chú</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Hủy Giữ Chỗ -->
+    <div class="modal fade" id="modalHuyDatCho" tabindex="-1" aria-hidden="true" th:if="${datCho.trangThai == 'DANG_GIU'}">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 460px;">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <form th:action="@{'/dat-cho/' + ${datCho.id} + '/huy'}" method="POST">
+                    <div class="modal-body p-4 text-center">
+                        <div class="rounded-circle bg-warning-subtle text-warning d-inline-flex align-items-center justify-content-center mb-3"
+                             style="width: 64px; height: 64px; font-size: 1.75rem;">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">Xác Nhận Hủy Giữ Chỗ</h5>
+                        <p class="text-secondary small mb-3">
+                            Bạn có chắc chắn muốn hủy yêu cầu giữ chỗ phòng <strong th:text="${datCho.phongTro.maPhong}">P101</strong> của khách <strong th:text="${datCho.khachThue.hoTen}">Khách</strong>?
+                        </p>
+                        
+                        <div class="text-start mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Lý do hủy:</label>
+                            <input type="text" name="lyDoHuy" class="form-control form-control-sm"
+                                   placeholder="Khách đổi ý, không ký hợp đồng..." value="Khách yêu cầu hủy giữ chỗ">
+                        </div>
+
+                        <div class="alert alert-info py-2 px-3 small text-start border-0 rounded-3 mb-0">
+                            Phòng sẽ được trả về trạng thái <strong>TRỐNG</strong> ngay lập tức để khách khác có thể đặt.
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-0 py-3 d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-3" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-danger btn-sm px-4 rounded-3">
+                            <i class="fa-solid fa-ban me-1"></i> Xác Nhận Hủy
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer th:replace="~{layout/fragments :: footer}"></footer>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+</body>
+</html>

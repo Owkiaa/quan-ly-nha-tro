@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/fragments :: head(${isEdit} ? 'Chỉnh Sửa Hồ Sơ Khách Thuê' : 'Tiếp Nhận Khách Thuê Mới')}"></head>
+<body>
+<th:block th:replace="~{components :: styles}"></th:block>
+
+    <!-- Top Navbar Ngang -->
+    <nav th:replace="~{layout/fragments :: navbar('khach-thue')}"></nav>
+
+    <main class="main-container">
+        <div class="container-xl">
+            <div th:replace="~{layout/fragments :: alerts}"></div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a th:href="@{/khach-thue}" class="btn btn-outline-secondary btn-sm mb-2">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Quay lại danh sách
+                    </a>
+                    <h3 class="fw-bold mb-1" th:text="${isEdit} ? 'Chỉnh Sửa Hồ Sơ: ' + ${khachThue.hoTen} : 'Tiếp Nhận Khách Thuê Mới'">Tiếp Nhận Khách Thuê</h3>
+                    <p class="text-muted small mb-0">Điền thông tin định danh và liên hệ của khách thuê</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card card-custom p-4">
+                        <form th:action="${isEdit} ? @{/khach-thue/sua/{id}(id=${khachThue.id})} : @{/khach-thue/them}"
+                              method="POST"
+                              th:object="${khachThue}"
+                              novalidate>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="hoTen" class="form-label">Họ và tên khách thuê <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="hoTen" th:field="*{hoTen}"
+                                           th:classappend="${#fields.hasErrors('hoTen')} ? 'is-invalid'"
+                                           placeholder="Ví dụ: Nguyễn Văn A" required>
+                                    <div th:replace="~{components :: fieldError('hoTen')}"></div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="cccd" class="form-label">Số CCCD / CMND <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control font-mono" id="cccd" th:field="*{cccd}"
+                                           th:classappend="${#fields.hasErrors('cccd')} ? 'is-invalid'"
+                                           placeholder="12 chữ số CCCD gắn chip" required>
+                                    <div th:replace="~{components :: fieldError('cccd')}"></div>
+                                    <div class="form-text">Mã định danh công dân duy nhất.</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="soDienThoai" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control font-mono" id="soDienThoai" th:field="*{soDienThoai}"
+                                           th:classappend="${#fields.hasErrors('soDienThoai')} ? 'is-invalid'"
+                                           placeholder="Ví dụ: 0901234567" required>
+                                    <div th:replace="~{components :: fieldError('soDienThoai')}"></div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">Địa chỉ Email</label>
+                                    <input type="email" class="form-control" id="email" th:field="*{email}"
+                                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
+                                           placeholder="Ví dụ: nguyenvana@gmail.com">
+                                    <div th:replace="~{components :: fieldError('email')}"></div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="ngaySinh" class="form-label">Ngày sinh</label>
+                                    <input type="date" class="form-control font-mono" id="ngaySinh" th:field="*{ngaySinh}">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="gioiTinh" class="form-label">Giới tính</label>
+                                    <select class="form-select" id="gioiTinh" th:field="*{gioiTinh}">
+                                        <option value="Nam">Nam</option>
+                                        <option value="Nữ">Nữ</option>
+                                        <option value="Khác">Khác</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="bienSoXe" class="form-label">Biển số xe máy</label>
+                                    <input type="text" class="form-control font-mono" id="bienSoXe" th:field="*{bienSoXe}"
+                                           placeholder="Ví dụ: 29A-123.45">
+                                </div>
+
+                                <div class="col-md-8">
+                                    <label for="queQuan" class="form-label">Quê quán / Thường trú</label>
+                                    <input type="text" class="form-control" id="queQuan" th:field="*{queQuan}"
+                                           placeholder="Ví dụ: TP. Hải Phòng, Nam Định, Nghệ An...">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="trangThai" class="form-label">Tình trạng cư trú <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="trangThai" th:field="*{trangThai}" required>
+                                        <option value="DANG_THUE">Đang thuê (DANG_THUE)</option>
+                                        <option value="DA_TRA_PHONG">Đã trả phòng (DA_TRA_PHONG)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                                <a th:href="@{/khach-thue}" class="btn btn-outline-secondary btn-sm px-3">Hủy bỏ</a>
+                                <button type="submit" class="btn btn-primary btn-sm px-4">
+                                    <i class="fa-solid fa-floppy-disk me-1"></i> Lưu Hồ Sơ Khách
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card card-custom p-3 mb-3">
+                        <h6 class="fw-bold mb-2 small text-warning-emphasis">
+                            <i class="fa-solid fa-shield-halved me-1"></i> Ràng buộc định danh
+                        </h6>
+                        <ul class="small text-muted ps-3 mb-0" style="font-size: 0.8rem; line-height: 1.6;">
+                            <li>Mỗi khách thuê phải có một số <strong>CCCD duy nhất</strong> trong toàn hệ thống.</li>
+                            <li>Số điện thoại dùng để liên lạc thông báo hóa đơn và xác nhận khi giao nhận phòng.</li>
+                            <li>Không thể xóa khách thuê nếu khách đang có hợp đồng hoặc đang giữ chỗ phòng.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{layout/fragments :: footer}"></footer>
+
+    <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+</body>
+</html>

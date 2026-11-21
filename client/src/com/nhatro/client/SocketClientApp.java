@@ -2,8 +2,10 @@ package com.nhatro.client;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Chương trình Client tách biệt chạy bằng hàm main(),
@@ -24,25 +26,44 @@ public class SocketClientApp {
         }
 
         System.out.println("================================================");
-        System.out.println("   KHUNG CLIENT SOCKET - HỆ THỐNG QUẢN LÍ NHÀ TRỌ");
+        System.out.println("   CLIENT SOCKET - HỆ THỐNG QUẢN LÍ NHÀ TRỌ");
         System.out.println("================================================");
         System.out.println("Đang kết nối tới Socket Server tại " + host + ":" + port + "...");
 
         try (Socket socket = new Socket(host, port);
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in))) {
+             PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
 
-            System.out.println("Kết nối Socket thành công! (Nhập 'exit' để thoát)");
+            String greeting = in.readLine();
+            if (greeting != null) {
+                System.out.println("Server: " + greeting);
+            }
+            System.out.println("Cú pháp hỗ trợ: LIST_ROOM | BOOK <ma_phong>#<ho_ten>#<cccd>#<sdt> | EXIT");
+
             String userInput;
             while ((userInput = stdIn.readLine()) != null) {
-                if ("exit".equalsIgnoreCase(userInput.trim())) {
-                    System.out.println("Đang ngắt kết nối...");
+                String trimmed = userInput.trim();
+                if (trimmed.isEmpty()) {
+                    continue;
+                }
+
+                out.println(trimmed);
+                String serverResponse = in.readLine();
+                if (serverResponse == null) {
+                    System.out.println("Server đã đóng kết nối.");
                     break;
                 }
-                out.println(userInput);
-                String serverResponse = in.readLine();
-                System.out.println("Server phản hồi: " + serverResponse);
+                System.out.println("Server phản hồi:\n" + serverResponse);
+
+                Thread.sleep(50);
+                while (in.ready()) {
+                    System.out.println(in.readLine());
+                }
+
+                if ("EXIT".equalsIgnoreCase(trimmed)) {
+                    break;
+                }
             }
         } catch (Exception e) {
             System.err.println("Không thể kết nối tới Socket Server tại " + host + ":" + port);

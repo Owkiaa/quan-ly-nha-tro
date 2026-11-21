@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -17,9 +18,19 @@ public interface HopDongRepository extends JpaRepository<HopDong, Integer> {
 
     boolean existsByMaHopDong(String maHopDong);
 
+    boolean existsByPhongTroId(Integer phongId);
+
+    boolean existsByKhachThueId(Integer khachId);
+
     boolean existsByPhongTroIdAndTrangThai(Integer phongId, String trangThai);
 
     boolean existsByKhachThueIdAndTrangThai(Integer khachId, String trangThai);
+
+    List<HopDong> findByKhachThueId(Integer khachId);
+
+    List<HopDong> findByPhongTroId(Integer phongId);
+
+    long countByTrangThai(String trangThai);
 
     @Query(value = "SELECT h FROM HopDong h JOIN FETCH h.phongTro JOIN FETCH h.khachThue WHERE " +
            "(:keyword IS NULL OR :keyword = '' OR LOWER(h.maHopDong) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(h.phongTro.maPhong) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(h.khachThue.hoTen) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập • Hệ Thống Quản Lý Nhà Trọ</title>
+
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5.3 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6.5.1 CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --font-sans: 'Plus Jakarta Sans', sans-serif;
+            --primary: #d97706;
+            --primary-hover: #b45309;
+            --primary-light: #fef3c7;
+            --text-heading: #1c1917;
+            --text-body: #44403c;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            margin: 0;
+            background-color: #faf7f2;
+            color: var(--text-body);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .split-wrapper {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Cột bên trái: Banner & Ảnh không gian sống ấm cúng */
+        .split-banner {
+            flex: 1.1;
+            background: linear-gradient(135deg, rgba(28, 25, 23, 0.75) 0%, rgba(180, 83, 9, 0.85) 100%),
+                        url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #ffffff;
+            position: relative;
+        }
+
+        .banner-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+        }
+        .banner-logo-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: #fef3c7;
+        }
+
+        .banner-hero h1 {
+            font-size: 2.65rem;
+            font-weight: 800;
+            line-height: 1.2;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.25rem;
+        }
+        .banner-hero p {
+            font-size: 1.05rem;
+            color: #f5f5f4;
+            max-width: 520px;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .feature-pills {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            max-width: 460px;
+        }
+        .feature-pill-item {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .feature-pill-item i {
+            color: #fde68a;
+            font-size: 1.1rem;
+        }
+
+        /* Cột bên phải: Form Đăng nhập thanh lịch, sáng sủa */
+        .split-form-container {
+            flex: 0.9;
+            background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+        }
+        .form-box {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .form-label {
+            color: #292524;
+            font-weight: 600;
+            font-size: 0.825rem;
+            margin-bottom: 0.35rem;
+        }
+        .form-control {
+            border: 1px solid #d6cfc4;
+            border-radius: 10px;
+            padding: 0.7rem 0.95rem;
+            font-size: 0.92rem;
+            color: #1c1917;
+            transition: all 0.15s ease;
+        }
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+        }
+
+        .btn-warm-submit {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border: none;
+            color: #ffffff;
+            font-weight: 700;
+            padding: 0.8rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3);
+            transition: all 0.2s ease;
+        }
+        .btn-warm-submit:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(217, 119, 6, 0.4);
+            color: #ffffff;
+        }
+
+        /* Hộp tài khoản mẫu */
+        .demo-box {
+            background-color: #fbf9f5;
+            border: 1px solid #ede8df;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+        }
+        .demo-badge-btn {
+            background-color: #ffffff;
+            border: 1px solid #d6cfc4;
+            color: #44403c;
+            padding: 0.45rem 0.7rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .demo-badge-btn:hover {
+            background-color: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 991px) {
+            .split-banner {
+                display: none;
+            }
+            .split-form-container {
+                flex: 1;
+                background-color: #faf7f2;
+            }
+            .form-box {
+                background: #ffffff;
+                padding: 2.5rem 2rem;
+                border-radius: 16px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+                border: 1px solid #ede8df;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="split-wrapper">
+    <!-- Cột trái: Split Banner (Ấm cúng, truyền tải thông điệp) -->
+    <div class="split-banner">
+        <div class="banner-logo">
+            <div class="banner-logo-icon">
+                <i class="fa-solid fa-house-chimney"></i>
+            </div>
+            <span>QUẢN LÝ NHÀ TRỌ</span>
+        </div>
+
+        <div class="banner-hero">
+            <h1>Không gian sống tiện nghi, quản lý dễ dàng</h1>
+            <p>Hệ thống vận hành ký túc xá &amp; nhà trọ thông minh, tối ưu hóa quy trình tiếp nhận khách thuê, quản lý phòng và hợp đồng dịch vụ.</p>
+
+            <div class="feature-pills">
+                <div class="feature-pill-item">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Quản lý phòng trọ trực quan theo 4 trạng thái chuẩn</span>
+                </div>
+                <div class="feature-pill-item">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Bảo mật tài khoản đa lớp bằng SHA-256 kèm chuỗi Salt</span>
+                </div>
+                <div class="feature-pill-item">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Xử lý khóa đồng thời (Pessimistic Lock) chống đặt trùng</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="small opacity-75">
+            © 2026 Đồ Án Môn Công Nghệ Java • Nhóm Phát Triển
+        </div>
+    </div>
+
+    <!-- Cột phải: Form Đăng Nhập Sáng Sủa & Tối Giản -->
+    <div class="split-form-container">
+        <div class="form-box">
+            <div class="mb-4">
+                <h3 class="fw-bold text-dark mb-1">Đăng Nhập</h3>
+                <p class="text-muted small mb-0">Nhập thông tin tài khoản của bạn để truy cập hệ thống</p>
+            </div>
+
+            <!-- Flash Alert Errors -->
+            <div th:if="${errorMessage != null}" class="alert alert-danger py-2 px-3 small d-flex align-items-center gap-2 mb-3 rounded-3" role="alert">
+                <i class="fa-solid fa-circle-exclamation text-danger fs-6"></i>
+                <span class="fw-medium text-danger" th:text="${errorMessage}">Tên đăng nhập hoặc mật khẩu không chính xác!</span>
+            </div>
+
+            <div th:if="${infoMessage != null}" class="alert alert-info py-2 px-3 small d-flex align-items-center gap-2 mb-3 rounded-3" role="alert">
+                <i class="fa-solid fa-circle-info text-info fs-6"></i>
+                <span class="fw-medium text-info" th:text="${infoMessage}">Đã đăng xuất khỏi hệ thống thành công!</span>
+            </div>
+
+            <form th:action="@{/login}" method="POST" id="loginForm">
+                <input type="hidden" name="redirect" th:value="${redirect}">
+
+                <div class="mb-3">
+                    <label for="tenDangNhap" class="form-label">TÊN ĐĂNG NHẬP</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0 ps-0" id="tenDangNhap" name="tenDangNhap"
+                               placeholder="Nhập tên tài khoản" th:value="${oldUsername}" required autofocus>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="matKhau" class="form-label">MẬT KHẨU</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted">
+                            <i class="fa-solid fa-lock"></i>
+                        </span>
+                        <input type="password" class="form-control border-start-0 border-end-0 ps-0" id="matKhau" name="matKhau"
+                               placeholder="Nhập mật khẩu" required>
+                        <button class="btn btn-white border border-start-0 text-muted" type="button" id="togglePasswordBtn" title="Hiện/Ẩn mật khẩu">
+                            <i class="fa-solid fa-eye" id="togglePasswordIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-warm-submit w-100">
+                    <i class="fa-solid fa-right-to-bracket me-2"></i>Đăng Nhập Vào Hệ Thống
+                </button>
+            </form>
+
+            <!-- Hộp tài khoản mẫu hỗ trợ kiểm thử đồ án -->
+            <div class="demo-box">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-uppercase fw-bold text-muted" style="font-size: 0.68rem; letter-spacing: 0.05em;">
+                        <i class="fa-solid fa-bolt text-warning me-1"></i>Tài khoản mẫu (Bấm để điền):
+                    </span>
+                    <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size: 0.65rem;">NhaTroDB</span>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="demo-badge-btn" onclick="fillCredentials('admin', 'Admin@123')">
+                        <i class="fa-solid fa-shield-halved text-danger"></i>
+                        <span>admin</span>
+                        <small class="text-muted">(Admin)</small>
+                    </button>
+                    <button type="button" class="demo-badge-btn" onclick="fillCredentials('staff1', 'Staff@123')">
+                        <i class="fa-solid fa-user-tie text-primary"></i>
+                        <span>staff1</span>
+                        <small class="text-muted">(NV)</small>
+                    </button>
+                    <button type="button" class="demo-badge-btn" onclick="fillCredentials('tenant01', 'Tenant@123')">
+                        <i class="fa-solid fa-user text-success"></i>
+                        <span>tenant01</span>
+                        <small class="text-muted">(Khách)</small>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function fillCredentials(u, p) {
+        document.getElementById('tenDangNhap').value = u;
+        document.getElementById('matKhau').value = p;
+    }
+
+    const toggleBtn = document.getElementById('togglePasswordBtn');
+    const passInput = document.getElementById('matKhau');
+    const passIcon = document.getElementById('togglePasswordIcon');
+    if (toggleBtn && passInput) {
+        toggleBtn.addEventListener('click', () => {
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                passIcon.classList.remove('fa-eye');
+                passIcon.classList.add('fa-eye-slash');
+            } else {
+                passInput.type = 'password';
+                passIcon.classList.remove('fa-eye-slash');
+                passIcon.classList.add('fa-eye');
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

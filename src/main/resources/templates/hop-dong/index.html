@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/fragments :: head('Quản Lý Hợp Đồng Thuê')}"></head>
+<body>
+
+    <!-- Top Navbar -->
+    <nav th:replace="~{layout/fragments :: navbar('hop-dong')}"></nav>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <div class="container-xl">
+            <!-- Flash Alerts -->
+            <div th:replace="~{layout/fragments :: alerts}"></div>
+
+            <!-- Page Title & Actions -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1">Quản Lý Hợp Đồng Thuê Phòng</h3>
+                    <p class="text-muted small mb-0">Quản lý vòng đời hợp đồng, thỏa thuận giá thuê, tiền cọc, gia hạn và thanh lý phòng</p>
+                </div>
+                <div>
+                    <a th:href="@{/hop-dong/them-moi}" class="btn btn-primary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Lập Hợp Đồng Mới</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Stat KPI Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-xl-3 col-md-6 col-6">
+                    <div class="stat-card" style="border-top: 3px solid #10b981;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">ĐANG HIỆU LỰC</div>
+                                <h3 class="fw-bold mb-0 text-success font-mono mt-1" th:text="${countHieuLuc}">0</h3>
+                            </div>
+                            <div class="stat-icon bg-success-subtle text-success">
+                                <i class="fa-solid fa-file-circle-check"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 col-6">
+                    <div class="stat-card" style="border-top: 3px solid #f59e0b;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">HẾT HẠN</div>
+                                <h3 class="fw-bold mb-0 text-warning-emphasis font-mono mt-1" th:text="${countHetHan}">0</h3>
+                            </div>
+                            <div class="stat-icon bg-warning-subtle text-warning-emphasis">
+                                <i class="fa-solid fa-file-circle-exclamation"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 col-6">
+                    <div class="stat-card" style="border-top: 3px solid #6b7280;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">ĐÃ THANH LÝ</div>
+                                <h3 class="fw-bold mb-0 text-secondary font-mono mt-1" th:text="${countDaThanhLy}">0</h3>
+                            </div>
+                            <div class="stat-icon bg-secondary-subtle text-secondary">
+                                <i class="fa-solid fa-box-archive"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 col-6">
+                    <div class="stat-card" style="border-top: 3px solid #2563eb;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">TỔNG HỢP ĐỒNG</div>
+                                <h3 class="fw-bold mb-0 text-primary font-mono mt-1" th:text="${pageData.totalElements}">0</h3>
+                            </div>
+                            <div class="stat-icon bg-primary-subtle text-primary">
+                                <i class="fa-solid fa-folder-open"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search & Filter Card -->
+            <div class="card-custom p-3 mb-4">
+                <form th:action="@{/hop-dong}" method="GET" class="row g-2 align-items-center">
+                    <div class="col-md-5 col-12">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light border-end-0 text-muted">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </span>
+                            <input type="text" name="keyword" th:value="${keyword}"
+                                   class="form-control border-start-0"
+                                   placeholder="Tìm kiếm theo mã HĐ, mã phòng, tên khách...">
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <select name="trangThai" class="form-select form-select-sm">
+                            <option value="" th:selected="${trangThai == null or trangThai == ''}">-- Tất cả trạng thái --</option>
+                            <option value="HIEU_LUC" th:selected="${trangThai == 'HIEU_LUC'}">Đang hiệu lực</option>
+                            <option value="HET_HAN" th:selected="${trangThai == 'HET_HAN'}">Hết hạn</option>
+                            <option value="DA_THANH_LY" th:selected="${trangThai == 'DA_THANH_LY'}">Đã thanh lý</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-6">
+                        <select name="sort" class="form-select form-select-sm">
+                            <option value="id,desc" th:selected="${sort == 'id,desc'}">Mới nhất</option>
+                            <option value="id,asc" th:selected="${sort == 'id,asc'}">Cũ nhất</option>
+                            <option value="ngayKetThuc,asc" th:selected="${sort == 'ngayKetThuc,asc'}">Hạn kết thúc (Gần nhất)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-12 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                            <i class="fa-solid fa-filter me-1"></i> Lọc
+                        </button>
+                        <a th:href="@{/hop-dong}" class="btn btn-outline-secondary btn-sm" title="Đặt lại bộ lọc">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Table Card -->
+            <div class="card-custom overflow-hidden mb-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
+                        <thead class="table-light text-secondary text-uppercase fw-semibold" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                            <tr>
+                                <th class="ps-3 py-3" style="width: 50px;">#</th>
+                                <th>Mã Hợp Đồng</th>
+                                <th>Phòng Trọ</th>
+                                <th>Khách Thuê</th>
+                                <th>Thời Hạn Thuê</th>
+                                <th>Giá Thuê / Cọc</th>
+                                <th>Trạng Thái</th>
+                                <th class="text-end pe-3" style="width: 160px;">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${pageData.empty}">
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <div class="mb-2"><i class="fa-solid fa-folder-open fs-1 text-secondary opacity-50"></i></div>
+                                    <p class="mb-0">Không tìm thấy hợp đồng nào phù hợp.</p>
+                                </td>
+                            </tr>
+                            <tr th:each="item, iterStat : ${pageData.content}">
+                                <td class="ps-3 font-mono text-muted" th:text="${pageData.number * pageData.size + iterStat.count}">1</td>
+                                <td>
+                                    <a th:href="@{'/hop-dong/' + ${item.id}}" class="fw-bold text-decoration-none text-dark font-mono"
+                                       th:text="${item.maHopDong}">HD-P101-001</a>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-2 bg-light border d-flex align-items-center justify-content-center fw-bold text-dark font-mono"
+                                             style="width: 40px; height: 36px; font-size: 0.85rem;"
+                                             th:text="${item.phongTro.maPhong}">P101</div>
+                                        <div>
+                                            <div class="fw-semibold text-dark" th:text="${item.phongTro.tenPhong}">Phòng 101</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark" th:text="${item.khachThue.hoTen}">Trần Văn B</div>
+                                    <small class="text-muted font-mono" th:text="'CCCD: ' + ${item.khachThue.cccd}"></small>
+                                </td>
+                                <td>
+                                    <div class="font-mono small">
+                                        <span class="text-secondary" th:text="${#temporals.format(item.ngayBatDau, 'dd/MM/yyyy')}">01/01/2026</span>
+                                        <i class="fa-solid fa-arrow-right mx-1 small text-muted"></i>
+                                        <span class="fw-semibold text-dark" th:text="${#temporals.format(item.ngayKetThuc, 'dd/MM/yyyy')}">01/07/2026</span>
+                                    </div>
+                                    <small class="text-muted" th:text="'Kỳ đóng: ' + ${item.chuKyThanhToan} + ' tháng/lần'"></small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold font-mono text-primary"
+                                         th:text="${#numbers.formatDecimal(item.giaThueThoaThuan, 0, 'POINT', 0, 'COMMA')} + ' đ'">3,000,000 đ</div>
+                                    <small class="text-muted font-mono"
+                                           th:text="'Cọc: ' + ${#numbers.formatDecimal(item.tienDatCoc, 0, 'POINT', 0, 'COMMA')} + ' đ'"></small>
+                                </td>
+                                <td>
+                                    <span th:if="${item.trangThai == 'HIEU_LUC'}" class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill">
+                                        <i class="fa-solid fa-circle-check me-1"></i> Hiệu Lực
+                                    </span>
+                                    <span th:if="${item.trangThai == 'HET_HAN'}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 rounded-pill">
+                                        <i class="fa-solid fa-clock me-1"></i> Hết Hạn
+                                    </span>
+                                    <span th:if="${item.trangThai == 'DA_THANH_LY'}" class="badge bg-secondary-subtle text-secondary border px-2 py-1 rounded-pill">
+                                        <i class="fa-solid fa-box-archive me-1"></i> Đã Thanh Lý
+                                    </span>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="btn-group btn-group-sm">
+                                        <a th:href="@{'/hop-dong/' + ${item.id}}" class="btn btn-light border text-secondary" title="Xem chi tiết">
+                                            <i class="fa-regular fa-eye"></i>
+                                        </a>
+                                        <button th:if="${item.trangThai == 'HIEU_LUC' or item.trangThai == 'HET_HAN'}"
+                                                type="button" class="btn btn-light border text-warning"
+                                                th:onclick="'moModalThanhLy(' + ${item.id} + ', \'' + ${item.maHopDong} + '\', \'' + ${item.phongTro.maPhong} + '\')'"
+                                                title="Thanh lý hợp đồng">
+                                            <i class="fa-solid fa-handshake-slash"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-light border text-danger"
+                                                th:onclick="'moModalXoaHopDong(' + ${item.id} + ', \'' + ${item.maHopDong} + '\')'"
+                                                title="Xóa hợp đồng">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Fragment -->
+                <div class="p-3" th:replace="~{layout/fragments :: pagination(${pageData}, '/hop-dong', ${keyword}, ${trangThai}, ${sort})}"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Thanh Lý Hợp Đồng -->
+    <div class="modal fade" id="modalThanhLy" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 460px;">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <form id="formThanhLy" method="POST" action="">
+                    <div class="modal-body p-4 text-center">
+                        <div class="rounded-circle bg-warning-subtle text-warning d-inline-flex align-items-center justify-content-center mb-3"
+                             style="width: 64px; height: 64px; font-size: 1.75rem;">
+                            <i class="fa-solid fa-handshake-slash"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">Xác Nhận Thanh Lý Hợp Đồng</h5>
+                        <p class="text-secondary small mb-3" id="noiDungThanhLy">Bạn có chắc chắn muốn thanh lý hợp đồng này?</p>
+
+                        <div class="alert alert-info py-2 px-3 small text-start border-0 rounded-3 mb-0">
+                            <i class="fa-solid fa-circle-info text-info me-1"></i>
+                            Khi thanh lý, hợp đồng chuyển sang trạng thái <strong>ĐÃ THANH LÝ</strong> và phòng trọ sẽ tự động được thu hồi về trạng thái <strong>TRỐNG</strong>.
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-0 py-3 d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-3" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning btn-sm px-4 rounded-3 text-dark fw-semibold">
+                            <i class="fa-solid fa-check me-1"></i> Xác Nhận Thanh Lý
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xóa Hợp Đồng (kèm cảnh báo chặn xóa nếu đã có hóa đơn) -->
+    <div class="modal fade" id="modalXoaHopDong" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 460px;">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <form id="formXoaHopDong" method="POST" action="">
+                    <div class="modal-body p-4 text-center">
+                        <div class="rounded-circle bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center mb-3"
+                             style="width: 64px; height: 64px; font-size: 1.75rem;">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">Xác Nhận Xóa Hợp Đồng</h5>
+                        <p class="text-secondary small mb-3" id="noiDungXoa">Bạn có chắc chắn muốn xóa hợp đồng này?</p>
+
+                        <div class="alert alert-danger py-2 px-3 small text-start border-0 rounded-3 mb-0">
+                            <i class="fa-solid fa-shield-halved text-danger me-1"></i>
+                            <strong>Ràng buộc toàn vẹn:</strong> Hệ thống sẽ tự động chặn xóa nếu hợp đồng đã phát sinh hóa đơn tiền phòng thu tiền theo quy tắc đồ án.
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-0 py-3 d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-3" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-danger btn-sm px-4 rounded-3">
+                            <i class="fa-solid fa-trash-can me-1"></i> Xác Nhận Xóa
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer th:replace="~{layout/fragments :: footer}"></footer>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+
+    <script>
+        function moModalThanhLy(id, maHopDong, maPhong) {
+            const form = document.getElementById('formThanhLy');
+            const noiDung = document.getElementById('noiDungThanhLy');
+            if (form && noiDung) {
+                form.action = '/hop-dong/' + id + '/thanh-ly';
+                noiDung.innerHTML = 'Thanh lý hợp đồng <strong>' + maHopDong + '</strong> (Phòng: <strong>' + maPhong + '</strong>)?';
+                const modal = new bootstrap.Modal(document.getElementById('modalThanhLy'));
+                modal.show();
+            }
+        }
+
+        function moModalXoaHopDong(id, maHopDong) {
+            const form = document.getElementById('formXoaHopDong');
+            const noiDung = document.getElementById('noiDungXoa');
+            if (form && noiDung) {
+                form.action = '/hop-dong/' + id + '/xoa';
+                noiDung.innerHTML = 'Bạn có chắc chắn muốn xóa hợp đồng <strong>' + maHopDong + '</strong>?';
+                const modal = new bootstrap.Modal(document.getElementById('modalXoaHopDong'));
+                modal.show();
+            }
+        }
+    </script>
+</body>
+</html>
