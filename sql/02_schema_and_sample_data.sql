@@ -223,7 +223,7 @@ INSERT INTO tai_khoan (ten_dang_nhap, mat_khau, vai_tro, khach_id, trang_thai) V
 ('tenant17', '8a7b6c5d4e3f2021:ba665a8f6c7d6b511be93aea8e08f6eac274da214a01bdc1a5e3b1d18489c924', 'TENANT', 17, 1);
 GO
 
--- 3.4. Dữ liệu mẫu bảng dat_cho (10 bản ghi)
+-- 3.4. Dữ liệu mẫu bảng dat_cho (20 bản ghi: 3 DANG_GIU, 6 HET_HAN, 11 DA_CHUYEN_HOP_DONG)
 -- Phòng P104 (id: 4), P204 (id: 9), P304 (id: 14) có trạng thái DANG_GIU với han_giu_cho còn hạn 7 ngày
 INSERT INTO dat_cho (phong_id, khach_id, ngay_dat, han_giu_cho, trang_thai, ghi_chu) VALUES
 (4, 4, GETDATE(), DATEADD(day, 7, GETDATE()), 'DANG_GIU', N'Khách đặt giữ chỗ P104 qua Web'),
@@ -233,9 +233,19 @@ INSERT INTO dat_cho (phong_id, khach_id, ngay_dat, han_giu_cho, trang_thai, ghi_
 (6, 19, '2025-02-15', '2025-02-17', 'HET_HAN', N'Quá hạn giữ chỗ phòng P201, đã giải phóng tự động'),
 (11, 20, '2025-03-20', '2025-03-22', 'HET_HAN', N'Quá hạn giữ chỗ phòng P301'),
 (16, 18, '2025-04-05', '2025-04-07', 'HET_HAN', N'Khách hủy đặt chỗ phòng P401'),
-(2, 2, '2025-08-01', '2025-08-03', 'DA_CHUYEN_HOP_DONG', N'Đã chuyển thành hợp đồng HD-P102'),
-(7, 7, '2025-08-10', '2025-08-12', 'DA_CHUYEN_HOP_DONG', N'Đã chuyển thành hợp đồng HD-P202'),
-(12, 12, '2025-08-15', '2025-08-17', 'DA_CHUYEN_HOP_DONG', N'Đã chuyển thành hợp đồng HD-P302');
+(1, 19, '2025-05-10', '2025-05-12', 'HET_HAN', N'Khách đổi lịch chưa kịp đến xem phòng P101'),
+(11, 18, '2025-06-18', '2025-06-20', 'HET_HAN', N'Quá hạn giữ chỗ 48 giờ phòng P301, hệ thống tự thu hồi'),
+(2, 2, '2025-12-28', '2025-12-30', 'DA_CHUYEN_HOP_DONG', N'Đã chuyển thành hợp đồng HD-P102'),
+(3, 3, '2026-01-28', '2026-01-30', 'DA_CHUYEN_HOP_DONG', N'Đã chuyển thành hợp đồng HD-P103'),
+(5, 5, '2026-02-25', '2026-02-27', 'DA_CHUYEN_HOP_DONG', N'Đã chuyển thành hợp đồng HD-P105'),
+(7, 7, '2026-01-10', '2026-01-12', 'DA_CHUYEN_HOP_DONG', N'Đã chuyển thành hợp đồng HD-P202'),
+(8, 8, '2026-02-10', '2026-02-12', 'DA_CHUYEN_HOP_DONG', N'Đã chuyển thành hợp đồng HD-P203'),
+(10, 10, '2026-03-10', '2026-03-12', 'DA_CHUYEN_HOP_DONG', N'Đã chuyển thành hợp đồng HD-P205'),
+(12, 12, '2025-12-27', '2025-12-29', 'DA_CHUYEN_HOP_DONG', N'Đã chuyển thành hợp đồng HD-P302'),
+(13, 13, '2026-01-27', '2026-01-29', 'DA_CHUYEN_HOP_DONG', N'Đã chuyển thành hợp đồng HD-P303'),
+(15, 15, '2025-12-26', '2025-12-28', 'DA_CHUYEN_HOP_DONG', N'Đã chuyển thành hợp đồng HD-P402'),
+(16, 16, '2026-01-26', '2026-01-28', 'DA_CHUYEN_HOP_DONG', N'Đã chuyển thành hợp đồng HD-P403'),
+(17, 17, '2026-02-24', '2026-02-26', 'DA_CHUYEN_HOP_DONG', N'Đã chuyển thành hợp đồng HD-P404');
 GO
 
 -- 3.5. Dữ liệu mẫu bảng hop_dong (20 hợp đồng)
