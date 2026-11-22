@@ -31,3 +31,4 @@ passwords.txt
 # OS Generated files
 .DS_Store
 Thumbs.db
+~$*.docx

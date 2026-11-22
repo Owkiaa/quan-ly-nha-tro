@@ -1,6 +1,7 @@
 package com.nhatro.service.impl;
 
 import com.nhatro.entity.YeuCauSuaChua;
+import com.nhatro.exception.BusinessException;
 import com.nhatro.repository.YeuCauSuaChuaRepository;
 import com.nhatro.service.YeuCauSuaChuaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,8 +42,11 @@ public class YeuCauSuaChuaServiceImpl implements YeuCauSuaChuaService {
     @Override
     @Transactional
     public YeuCauSuaChua phanCongTho(Integer id, String thoSuaChua) {
+        if (thoSuaChua == null || thoSuaChua.trim().isEmpty()) {
+            throw new BusinessException("Tên thợ sửa chữa không được để trống.");
+        }
         YeuCauSuaChua yeuCau = getById(id);
-        yeuCau.setThoSuaChua(thoSuaChua);
+        yeuCau.setThoSuaChua(thoSuaChua.trim());
         yeuCau.setTrangThai("DANG_SUA");
         return yeuCauRepository.save(yeuCau);
     }
@@ -50,6 +54,9 @@ public class YeuCauSuaChuaServiceImpl implements YeuCauSuaChuaService {
     @Override
     @Transactional
     public YeuCauSuaChua capNhatChiPhiVaHoanThanh(Integer id, BigDecimal chiPhi) {
+        if (chiPhi == null || chiPhi.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessException("Chi phí sửa chữa không được để trống hoặc âm.");
+        }
         YeuCauSuaChua yeuCau = getById(id);
         yeuCau.setChiPhi(chiPhi);
         yeuCau.setTrangThai("HOAN_THANH");

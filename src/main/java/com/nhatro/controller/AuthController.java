@@ -72,8 +72,9 @@ public class AuthController {
 
             redirectAttributes.addFlashAttribute("successMessage", "Đăng nhập thành công! Chào mừng " + fullName);
 
-            if (redirect != null && !redirect.trim().isEmpty() && !redirect.startsWith("/login")) {
-                return "redirect:" + redirect;
+            String safeRedirect = (redirect != null) ? redirect.trim() : "";
+            if (safeRedirect.startsWith("/") && !safeRedirect.startsWith("//") && !safeRedirect.startsWith("/login")) {
+                return "redirect:" + safeRedirect;
             }
 
             if ("TENANT".equalsIgnoreCase(taiKhoan.getVaiTro())) {
