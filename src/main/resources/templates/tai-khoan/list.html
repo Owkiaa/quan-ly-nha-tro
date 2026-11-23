@@ -111,7 +111,6 @@
                                         <form th:action="@{/tai-khoan/toggle/{id}(id=${tk.id})}" method="POST" class="d-inline">
                                             <button type="submit" class="btn btn-sm btn-action px-2 w-auto"
                                                     th:classappend="${tk.trangThai} ? 'text-warning' : 'text-success'"
-                                                    th:disabled="${session.SESSION_USER_ID == tk.id}"
                                                     th:title="${tk.trangThai} ? 'Khóa tài khoản này' : 'Mở khóa tài khoản'">
                                                 <i class="fa-solid me-1" th:classappend="${tk.trangThai} ? 'fa-lock' : 'fa-lock-open'"></i>
                                                 <span class="small fw-semibold" th:text="${tk.trangThai} ? 'Khóa' : 'Mở'"></span>
