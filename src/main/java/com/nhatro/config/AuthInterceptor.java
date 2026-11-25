@@ -46,7 +46,11 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         // Phân quyền cho module Tài khoản: chỉ ADMIN mới được truy cập
         if (path.startsWith("/tai-khoan") && !"ADMIN".equalsIgnoreCase(role)) {
-            response.sendRedirect(contextPath + "/phong-tro?error=access_denied");
+            if ("TENANT".equalsIgnoreCase(role)) {
+                response.sendRedirect(contextPath + "/tenant/rooms?error=access_denied");
+            } else {
+                response.sendRedirect(contextPath + "/phong-tro?error=access_denied");
+            }
             return false;
         }
 

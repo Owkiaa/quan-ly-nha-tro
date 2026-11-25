@@ -3,7 +3,7 @@
 <head th:replace="~{layout/fragments :: head('Hợp đồng của tôi')}"></head>
 <body>
 <th:block th:replace="~{components :: styles}"></th:block>
-<nav th:replace="~{layout/fragments :: navbar('tenant')}"></nav>
+<nav th:replace="~{layout/fragments :: navbar('tenant-contracts')}"></nav>
 
 <main class="main-container">
     <div class="container-xl">
@@ -40,8 +40,8 @@
                             <span th:text="${#temporals.format(h.ngayBatDau, 'dd/MM/yyyy')}">01/01/2026</span>
                             – <span th:text="${#temporals.format(h.ngayKetThuc, 'dd/MM/yyyy')}">01/01/2027</span>
                         </td>
-                        <td class="font-mono fw-semibold text-nowrap" th:text="${#numbers.formatDecimal(h.giaThueThoaThuan, 0, 'POINT', 0, 'COMMA')}">2.800.000</td>
-                        <td class="font-mono text-nowrap" th:text="${#numbers.formatDecimal(h.tienDatCoc, 0, 'POINT', 0, 'COMMA')}">2.800.000</td>
+                        <td class="font-mono fw-semibold price-red-text text-nowrap" th:text="${#numbers.formatDecimal(h.giaThueThoaThuan, 0, 'POINT', 0, 'COMMA')} + ' đ'">2.800.000 đ</td>
+                        <td class="font-mono text-nowrap" th:text="${#numbers.formatDecimal(h.tienDatCoc, 0, 'POINT', 0, 'COMMA')} + ' đ'">2.800.000 đ</td>
                         <td th:text="${h.chuKyThanhToan + ' tháng/lần'}">1 tháng/lần</td>
                         <td><th:block th:replace="~{components :: statusBadge(${h.trangThai})}"></th:block></td>
                     </tr>

@@ -40,10 +40,11 @@
              kw=${param.keyword != null ? param.keyword[0] : ''},
              size=${param.size != null ? param.size[0] : ''},
              tt=${param.trangThai != null ? param.trangThai[0] : ''},
-             tn=${param.thangNam != null ? param.thangNam[0] : null}"
+             tn=${param.thangNam != null ? param.thangNam[0] : null},
+             vt=${param.vaiTro != null ? param.vaiTro[0] : null}"
     th:attr="aria-sort=${isCur ? (isAsc ? 'ascending' : 'descending') : 'none'}">
     <a class="sort-link"
-       th:href="@{${baseUrl}(sort=${field + ',' + (isAsc ? 'desc' : 'asc')}, keyword=${kw}, size=${size}, trangThai=${tt}, thangNam=${tn})}">
+       th:href="@{${baseUrl}(sort=${field + ',' + (isAsc ? 'desc' : 'asc')}, keyword=${kw}, size=${size}, trangThai=${tt}, thangNam=${tn}, vaiTro=${vt})}">
         <span th:text="${label}">Cột</span>
         <i class="fa-solid"
            th:classappend="${isCur ? (isAsc ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort sort-idle'}"></i>
@@ -79,20 +80,19 @@
     <span th:case="*" class="badge-status badge-datraphong" th:text="${value}">?</span>
 </th:block>
 
-<!-- Thanh chuyển trang của Cổng Khách thuê. active: rooms | contracts | invoices | incidents -->
-<div th:fragment="tenantTabs(active)" class="d-flex flex-wrap gap-1 mb-4 pb-3 border-bottom">
-    <a class="nav-link-custom" th:classappend="${active == 'rooms'} ? 'active'"
-       th:attr="aria-current=${active == 'rooms' ? 'page' : null}" th:href="@{/tenant/rooms}">
-        <i class="fa-solid fa-door-open"></i><span>Phòng trống</span></a>
-    <a class="nav-link-custom" th:classappend="${active == 'contracts'} ? 'active'"
-       th:attr="aria-current=${active == 'contracts' ? 'page' : null}" th:href="@{/tenant/contracts}">
-        <i class="fa-solid fa-file-contract"></i><span>Hợp đồng của tôi</span></a>
-    <a class="nav-link-custom" th:classappend="${active == 'invoices'} ? 'active'"
-       th:attr="aria-current=${active == 'invoices' ? 'page' : null}" th:href="@{/tenant/invoices}">
-        <i class="fa-solid fa-file-invoice-dollar"></i><span>Hóa đơn</span></a>
-    <a class="nav-link-custom" th:classappend="${active == 'incidents'} ? 'active'"
-       th:attr="aria-current=${active == 'incidents' ? 'page' : null}" th:href="@{/tenant/incidents/new}">
-        <i class="fa-solid fa-screwdriver-wrench"></i><span>Báo sự cố</span></a>
-</div>
+<!-- Thanh ngữ cảnh cho Admin/Staff khi xem trước Cổng Khách thuê; ẩn hẳn với TENANT vì Sidebar đã có đủ 4 mục riêng -->
+<th:block th:fragment="tenantTabs(active)">
+    <div th:if="${session.SESSION_ROLE != 'TENANT'}"
+         class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 px-3 py-2 rounded-3"
+         style="background: var(--primary-light); border: 1px solid var(--primary-border);">
+        <div class="small fw-medium text-dark">
+            <i class="fa-solid fa-eye text-primary me-1"></i>
+            Bạn đang xem trước bảng tin phòng trống của <strong>Cổng Khách thuê</strong>.
+        </div>
+        <a th:href="@{/phong-tro}" class="btn-quick">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại Quản trị
+        </a>
+    </div>
+</th:block>
 </body>
 </html>

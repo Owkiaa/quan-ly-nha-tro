@@ -4,236 +4,665 @@
 <body>
 <th:block th:replace="~{components :: styles}"></th:block>
 
-    <!-- Top Navbar Ngang -->
-    <nav th:replace="~{layout/fragments :: navbar('phong-tro')}"></nav>
+<style>
+    /* View Switcher */
+    .view-switcher-box {
+        background: var(--bg-surface-subtle);
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius-sm);
+        padding: 0.2rem;
+        display: inline-flex;
+        gap: 2px;
+    }
+    .view-switcher-box button {
+        border: none;
+        background: transparent;
+        padding: 0.38rem 0.78rem;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        cursor: pointer;
+    }
+    .view-switcher-box button.active {
+        background: #ffffff;
+        color: var(--text-heading);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
 
-    <!-- Main Content Area -->
-    <main class="main-container">
-        <div class="container-xl">
-            <div th:replace="~{layout/fragments :: alerts}"></div>
+    /* Filter Chips */
+    .filter-chip-btn {
+        border: 1px solid var(--border-default);
+        background: var(--bg-surface);
+        color: var(--text-body);
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 0.38rem 0.8rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        text-decoration: none;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+    }
+    .filter-chip-btn:hover {
+        background: var(--bg-surface-subtle);
+        color: var(--text-heading);
+        border-color: #cbd5e1;
+    }
+    .filter-chip-btn.active {
+        background: #0f172a;
+        color: #ffffff;
+        border-color: #0f172a;
+    }
+    .filter-chip-btn.active .badge-count {
+        background: rgba(255, 255, 255, 0.22);
+        color: #ffffff;
+    }
+    .badge-count {
+        padding: 0.1rem 0.45rem;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-family: var(--font-mono);
+        background: var(--bg-surface-subtle);
+        color: var(--text-muted);
+    }
 
-            <!-- Page Title & Header Actions -->
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-                <div>
-                    <h3 class="fw-bold mb-1">Quản Lý Danh Mục Phòng Trọ</h3>
-                    <p class="text-muted small mb-0">Theo dõi trạng thái phòng trống, hợp đồng thuê và tình trạng bảo trì</p>
+    /* Matrix Grid Cards */
+    .room-matrix-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+    @media (max-width: 1399.98px) {
+        .room-matrix-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 991.98px) {
+        .room-matrix-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 575.98px) {
+        .room-matrix-grid { grid-template-columns: 1fr; }
+    }
+
+    .matrix-room-cell {
+        background: var(--bg-surface);
+        border: 1.5px solid var(--border-default);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 172px;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .matrix-room-cell:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--primary);
+    }
+    .matrix-room-cell.status-trong {
+        border-left: 5px solid var(--color-trong);
+        background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+    }
+    .matrix-room-cell.status-trong:hover { border-color: var(--color-trong); }
+    .matrix-room-cell.status-dathue {
+        border-left: 5px solid var(--color-dathue);
+        background: linear-gradient(180deg, #ffffff 0%, #eef2ff 100%);
+    }
+    .matrix-room-cell.status-dathue:hover { border-color: var(--color-dathue); }
+    .matrix-room-cell.status-dadat {
+        border-left: 5px solid var(--color-dadat);
+        background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%);
+    }
+    .matrix-room-cell.status-dadat:hover { border-color: var(--color-dadat); }
+    .matrix-room-cell.status-baotri {
+        border-left: 5px solid var(--color-baotri);
+        background: linear-gradient(180deg, #ffffff 0%, #fef2f2 100%);
+    }
+    .matrix-room-cell.status-baotri:hover { border-color: var(--color-baotri); }
+
+    /* Photo Gallery Cards */
+    .photo-card-item {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-subtle);
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .photo-card-item:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
+        border-color: #cbd5e1;
+    }
+    .photo-card-img-wrap {
+        height: 165px;
+        position: relative;
+        background: #e2e8f0;
+        overflow: hidden;
+    }
+    .photo-card-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.35s ease;
+    }
+    .photo-card-item:hover .photo-card-img-wrap img {
+        transform: scale(1.05);
+    }
+    .photo-status-floating {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 2;
+    }
+    .photo-price-floating {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(15, 23, 42, 0.88);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 0.32rem 0.68rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: baseline;
+        gap: 3px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 2;
+    }
+    .photo-price-floating .num {
+        color: #fb7185;
+        font-family: var(--font-mono);
+        font-weight: 800;
+        font-size: 1.08rem;
+        letter-spacing: -0.02em;
+    }
+    .photo-price-floating .unit {
+        color: #cbd5e1;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+</style>
+
+<!-- Sidebar + Topbar Shell -->
+<nav th:replace="~{layout/fragments :: navbar('phong-tro')}"></nav>
+
+<!-- Main Content Area -->
+<main class="main-container">
+    <div class="container-fluid px-0">
+        <div th:replace="~{layout/fragments :: alerts}"></div>
+
+        <!-- Page Title & View Controls -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+            <div>
+                <h3 class="fw-bold mb-1">Mặt Bằng &amp; Danh Mục Phòng Trọ</h3>
+                <p class="text-muted small mb-0">Quản lý trực quan, giá thuê màu đỏ nổi bật và theo dõi trạng thái thực tế</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <!-- Switcher 3 chế độ xem -->
+                <div class="view-switcher-box" role="group" aria-label="Chế độ hiển thị">
+                    <button type="button" class="active" id="btnViewMatrix" onclick="switchRoomView('matrix')">
+                        <i class="fa-solid fa-building"></i> Sơ đồ phòng
+                    </button>
+                    <button type="button" id="btnViewGrid" onclick="switchRoomView('grid')">
+                        <i class="fa-solid fa-grip"></i> Thẻ ảnh
+                    </button>
+                    <button type="button" id="btnViewTable" onclick="switchRoomView('table')">
+                        <i class="fa-solid fa-table-list"></i> Bảng dữ liệu
+                    </button>
                 </div>
-                <div>
-                    <a th:href="@{/phong-tro/them}" class="btn btn-primary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2">
-                        <i class="fa-solid fa-plus"></i>
-                        <span>Thêm Phòng Mới</span>
-                    </a>
+
+                <a th:href="@{/phong-tro/them}" class="btn btn-primary btn-sm px-3 py-2 shadow-sm d-inline-flex align-items-center gap-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Thêm phòng mới</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- ================= BENTO KPI STATS (TINH GỌN, DỄ NHÌN) ================= -->
+        <div class="bento-header-card py-3 px-3 mb-3"
+             th:with="pctThue=${totalRooms > 0 ? (countDaThue * 100 / totalRooms) : 0},
+                      pctTrong=${totalRooms > 0 ? (countTrong * 100 / totalRooms) : 0},
+                      pctDat=${totalRooms > 0 ? (countDaDat * 100 / totalRooms) : 0},
+                      pctBaoTri=${totalRooms > 0 ? (countBaoTri * 100 / totalRooms) : 0}">
+            <div class="row g-2 align-items-center">
+                <!-- Stat 1: Tổng quy mô -->
+                <div class="col-6 col-lg-3">
+                    <div class="d-flex align-items-center gap-2 p-2 rounded-2" style="background: var(--bg-surface-subtle); border: 1px solid var(--border-default);">
+                        <div class="d-flex align-items-center justify-content-center rounded-2" style="width: 36px; height: 36px; background: #eef2ff; color: #4f46e5; flex-shrink: 0;">
+                            <i class="fa-solid fa-city"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">Tổng quy mô</div>
+                            <div class="fw-bold font-mono text-dark" style="font-size: 1.05rem;">
+                                <span th:text="${totalRooms}">20</span> Phòng
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stat 2: Đang cho thuê -->
+                <div class="col-6 col-lg-3">
+                    <div class="d-flex align-items-center gap-2 p-2 rounded-2" style="background: var(--bg-surface-subtle); border: 1px solid var(--border-default); border-left: 3px solid var(--color-dathue);">
+                        <div class="d-flex align-items-center justify-content-center rounded-2" style="width: 36px; height: 36px; background: var(--bg-dathue); color: var(--color-dathue); flex-shrink: 0;">
+                            <i class="fa-solid fa-user-check"></i>
+                        </div>
+                        <div>
+                            <div class="small fw-semibold text-muted" style="font-size: 0.72rem;">Đang cho thuê</div>
+                            <div class="fw-bold font-mono" style="font-size: 1.05rem; color: var(--color-dathue);">
+                                <span th:text="${countDaThue}">11</span> Phòng
+                                <span class="badge bg-primary-subtle text-primary fw-semibold" style="font-size: 0.65rem;" th:text="${pctThue} + '%'">55%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stat 3: Phòng trống -->
+                <div class="col-6 col-lg-3">
+                    <div class="d-flex align-items-center gap-2 p-2 rounded-2" style="background: var(--bg-surface-subtle); border: 1px solid var(--border-default); border-left: 3px solid var(--color-trong);">
+                        <div class="d-flex align-items-center justify-content-center rounded-2" style="width: 36px; height: 36px; background: var(--bg-trong); color: var(--color-trong); flex-shrink: 0;">
+                            <i class="fa-solid fa-door-open"></i>
+                        </div>
+                        <div>
+                            <div class="small fw-semibold" style="font-size: 0.72rem; color: var(--color-trong);">Còn trống sẵn sàng</div>
+                            <div class="fw-bold font-mono" style="font-size: 1.05rem; color: var(--color-trong);">
+                                <span th:text="${countTrong}">4</span> Phòng
+                                <span class="badge bg-success-subtle text-success fw-semibold" style="font-size: 0.65rem;" th:text="${pctTrong} + '%'">20%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stat 4: Giữ chỗ & Bảo trì -->
+                <div class="col-6 col-lg-3">
+                    <div class="d-flex align-items-center gap-2 p-2 rounded-2" style="background: var(--bg-surface-subtle); border: 1px solid var(--border-default); border-left: 3px solid var(--color-dadat);">
+                        <div class="d-flex align-items-center justify-content-center rounded-2" style="width: 36px; height: 36px; background: var(--bg-dadat); color: var(--color-dadat); flex-shrink: 0;">
+                            <i class="fa-solid fa-bell"></i>
+                        </div>
+                        <div>
+                            <div class="small fw-semibold text-muted" style="font-size: 0.72rem;">Giữ chỗ &amp; Bảo trì</div>
+                            <div class="fw-bold font-mono text-dark" style="font-size: 1.05rem;">
+                                <span style="color: var(--color-dadat);" th:text="${countDaDat} + ' Cọc'">3 Cọc</span>
+                                <span class="text-muted mx-1">&bull;</span>
+                                <span style="color: var(--color-baotri);" th:text="${countBaoTri} + ' Sửa'">2 Sửa</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Quick Stat KPI Cards (Tông ấm, viền mỏng thanh lịch) -->
-            <div class="row g-3 mb-4">
-                <div class="col-xl-2 col-md-4 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #78716c;">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">TỔNG PHÒNG</div>
-                                <h3 class="fw-bold mb-0 text-dark font-mono mt-1" th:text="${totalRooms}">20</h3>
+            <!-- Thanh tiến độ công suất mảnh, tinh tế -->
+            <div class="occupancy-bar-live mt-2 mb-0" title="Tỷ lệ lấp đầy phòng trọ">
+                <div class="occupancy-segment" th:style="'width:' + ${pctThue} + '%; background: var(--color-dathue);'"></div>
+                <div class="occupancy-segment" th:style="'width:' + ${pctTrong} + '%; background: var(--color-trong);'"></div>
+                <div class="occupancy-segment" th:style="'width:' + ${pctDat} + '%; background: var(--color-dadat);'"></div>
+                <div class="occupancy-segment" th:style="'width:' + ${pctBaoTri} + '%; background: var(--color-baotri);'"></div>
+            </div>
+        </div>
+
+        <!-- ================= BỘ LỌC TRẠNG THÁI & TÌM KIẾM ================= -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <!-- Filter Chips -->
+            <div class="d-flex flex-wrap gap-1">
+                <a th:href="@{/phong-tro(keyword=${keyword}, sort=${sort})}"
+                   th:classappend="${trangThai == null or trangThai == ''} ? 'active' : ''"
+                   class="filter-chip-btn">
+                    <i class="fa-solid fa-border-all"></i> Tất cả
+                    <span class="badge-count" th:text="${totalRooms}">20</span>
+                </a>
+                <a th:href="@{/phong-tro(trangThai='TRONG', keyword=${keyword}, sort=${sort})}"
+                   th:classappend="${trangThai == 'TRONG'} ? 'active' : ''"
+                   class="filter-chip-btn">
+                    <span class="legend-dot" style="background: var(--color-trong);"></span> Trống
+                    <span class="badge-count" th:text="${countTrong}">4</span>
+                </a>
+                <a th:href="@{/phong-tro(trangThai='DA_THUE', keyword=${keyword}, sort=${sort})}"
+                   th:classappend="${trangThai == 'DA_THUE'} ? 'active' : ''"
+                   class="filter-chip-btn">
+                    <span class="legend-dot" style="background: var(--color-dathue);"></span> Đang thuê
+                    <span class="badge-count" th:text="${countDaThue}">11</span>
+                </a>
+                <a th:href="@{/phong-tro(trangThai='DA_DAT', keyword=${keyword}, sort=${sort})}"
+                   th:classappend="${trangThai == 'DA_DAT'} ? 'active' : ''"
+                   class="filter-chip-btn">
+                    <span class="legend-dot" style="background: var(--color-dadat);"></span> Giữ chỗ
+                    <span class="badge-count" th:text="${countDaDat}">3</span>
+                </a>
+                <a th:href="@{/phong-tro(trangThai='BAO_TRI', keyword=${keyword}, sort=${sort})}"
+                   th:classappend="${trangThai == 'BAO_TRI'} ? 'active' : ''"
+                   class="filter-chip-btn">
+                    <span class="legend-dot" style="background: var(--color-baotri);"></span> Bảo trì
+                    <span class="badge-count" th:text="${countBaoTri}">2</span>
+                </a>
+            </div>
+
+            <!-- Tìm kiếm -->
+            <form th:action="@{/phong-tro}" method="GET" class="d-flex align-items-center gap-2">
+                <input type="hidden" name="trangThai" th:if="${trangThai != null and trangThai != ''}" th:value="${trangThai}">
+                <div class="input-group input-group-sm" style="width: 240px;">
+                    <span class="input-group-text bg-white text-muted border-end-0">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0" name="keyword" th:value="${keyword}"
+                           placeholder="Tìm mã hoặc tên phòng...">
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm px-3">Tìm</button>
+                <a th:if="${(keyword != null and !keyword.isEmpty()) or (trangThai != null and !trangThai.isEmpty())}"
+                   th:href="@{/phong-tro}" class="btn btn-outline-secondary btn-sm" title="Đặt lại bộ lọc">
+                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                </a>
+            </form>
+        </div>
+
+        <!-- Trạng thái trống (Không tìm thấy phòng) -->
+        <div th:if="${pageData.empty}" class="card card-custom text-center py-5 mb-3">
+            <div class="text-muted mb-2">
+                <i class="fa-solid fa-folder-open fs-1 opacity-50"></i>
+            </div>
+            <h6 class="fw-bold text-dark">Không tìm thấy phòng trọ phù hợp</h6>
+            <p class="text-muted small mb-3">Vui lòng điều chỉnh lại bộ lọc hoặc từ khóa tìm kiếm</p>
+            <div>
+                <a th:href="@{/phong-tro/them}" class="btn btn-primary btn-sm px-3">
+                    <i class="fa-solid fa-plus me-1"></i> Thêm Phòng Mới Ngay
+                </a>
+            </div>
+        </div>
+
+        <th:block th:unless="${pageData.empty}">
+            <!-- ================= VIEW 1: SƠ ĐỒ PHÒNG (MATRIX VIEW) ================= -->
+            <div id="viewMatrixContainer">
+                <div class="room-matrix-grid">
+                    <div th:each="phong : ${pageData.content}"
+                         class="matrix-room-cell"
+                         th:classappend="${phong.trangThai == 'TRONG'} ? 'status-trong' : (${phong.trangThai == 'DA_THUE'} ? 'status-dathue' : (${phong.trangThai == 'DA_DAT'} ? 'status-dadat' : 'status-baotri'))">
+
+                        <!-- Header ô phòng: Mã + chấm trạng thái | Loại phòng + Diện tích 1 dòng -->
+                        <div class="d-flex justify-content-between align-items-center gap-1 mb-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <a th:href="@{/phong-tro/chi-tiet/{id}(id=${phong.id})}"
+                                   class="fw-bold font-mono text-dark fs-5 text-decoration-none"
+                                   th:text="${phong.maPhong}">P101</a>
+                                <span th:if="${phong.trangThai == 'TRONG'}" class="pulse-indicator" title="Phòng trống sẵn sàng"></span>
+                                <span th:if="${phong.trangThai == 'DA_THUE'}" class="legend-dot" style="background: var(--color-dathue);" title="Đang cho thuê"></span>
+                                <span th:if="${phong.trangThai == 'DA_DAT'}" class="legend-dot" style="background: var(--color-dadat);" title="Đã đặt cọc"></span>
+                                <span th:if="${phong.trangThai == 'BAO_TRI'}" class="legend-dot" style="background: var(--color-baotri);" title="Đang bảo trì"></span>
                             </div>
-                            <div class="stat-icon bg-light text-secondary">
-                                <i class="fa-solid fa-door-closed"></i>
+                            <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                <span class="room-type-tag"
+                                      th:classappend="${phong.loaiPhong != null and #strings.containsIgnoreCase(phong.loaiPhong, 'Đôi')} ? 'type-doi' : (${phong.loaiPhong != null and (#strings.containsIgnoreCase(phong.loaiPhong, 'VIP') or #strings.containsIgnoreCase(phong.loaiPhong, 'Studio'))} ? 'type-vip' : (${phong.loaiPhong != null and #strings.containsIgnoreCase(phong.loaiPhong, 'Gác')} ? 'type-gac' : ''))"
+                                      th:text="${phong.loaiPhong != null ? phong.loaiPhong : 'Đơn'}">Đơn</span>
+                                <span class="area-badge-pill"
+                                      th:text="${phong.dienTich != null ? #numbers.formatDecimal(phong.dienTich, 1, 0) + 'm²' : '-'}">20m²</span>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="col-xl-2 col-md-4 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #10b981;">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">PHÒNG TRỐNG</div>
-                                <h3 class="fw-bold mb-0 text-success font-mono mt-1" th:text="${countTrong}">4</h3>
+                        <!-- Tên phòng nhỏ -->
+                        <div class="text-muted small text-truncate" th:text="${phong.tenPhong}">Phòng 101</div>
+
+                        <!-- TIÊU ĐIỂM CHỦ ĐẠO: GIÁ TIỀN ĐỎ NỔI BẬT -->
+                        <div class="room-red-price-tag">
+                            <div class="price-amount">
+                                <span th:text="${#numbers.formatDecimal(phong.giaThue, 0, 'POINT', 0, 'COMMA')}">2.200.000</span>
+                                <span class="price-currency">đ</span>
                             </div>
-                            <div class="stat-icon bg-success-subtle text-success">
-                                <i class="fa-solid fa-door-open"></i>
-                            </div>
+                            <div class="price-subtext">/ tháng</div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="col-xl-2 col-md-4 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #f59e0b;">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">ĐÃ GIỮ CHỖ</div>
-                                <h3 class="fw-bold mb-0 text-warning-emphasis font-mono mt-1" th:text="${countDaDat}">3</h3>
+                        <!-- Footer ô phòng: Trạng thái & Thao tác nhanh 1-click -->
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-1 pt-2 border-top">
+                            <div class="d-inline-flex gap-1 flex-wrap">
+                                <a th:if="${phong.trangThai == 'TRONG'}" th:href="@{/dat-cho/them-moi(phongId=${phong.id})}" class="btn-quick btn-quick-amber">
+                                    <i class="fa-solid fa-bookmark"></i> Giữ chỗ
+                                </a>
+                                <a th:if="${phong.trangThai == 'TRONG'}" th:href="@{/hop-dong/them-moi(phongId=${phong.id})}" class="btn-quick">
+                                    <i class="fa-solid fa-file-signature"></i> Lập HĐ
+                                </a>
+                                <a th:if="${phong.trangThai == 'DA_DAT'}" th:href="@{/hop-dong/them-moi(phongId=${phong.id})}" class="btn-quick btn-quick-green">
+                                    <i class="fa-solid fa-file-signature"></i> Ký HĐ ngay
+                                </a>
+                                <a th:if="${phong.trangThai == 'DA_THUE'}" th:href="@{/hoa-don/tao-moi}" class="btn-quick">
+                                    <i class="fa-solid fa-receipt"></i> Lập hóa đơn
+                                </a>
+                                <a th:if="${phong.trangThai == 'BAO_TRI'}" th:href="@{/yeu-cau-sua-chua}" class="btn-quick">
+                                    <i class="fa-solid fa-wrench"></i> Sự cố
+                                </a>
                             </div>
-                            <div class="stat-icon bg-warning-subtle text-warning-emphasis">
-                                <i class="fa-solid fa-clock"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #2563eb;">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">ĐANG CHO THUÊ</div>
-                                <h3 class="fw-bold mb-0 text-primary font-mono mt-1" th:text="${countDaThue}">11</h3>
-                            </div>
-                            <div class="stat-icon bg-primary-subtle text-primary">
-                                <i class="fa-solid fa-key"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6 col-12">
-                    <div class="stat-card" style="border-top: 3px solid #ef4444;">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">ĐANG BẢO TRÌ</div>
-                                <h3 class="fw-bold mb-0 text-danger font-mono mt-1" th:text="${countBaoTri}">2</h3>
-                            </div>
-                            <div class="stat-icon bg-danger-subtle text-danger">
-                                <i class="fa-solid fa-screwdriver-wrench"></i>
+                            <div class="d-inline-flex gap-1">
+                                <a th:href="@{/phong-tro/chi-tiet/{id}(id=${phong.id})}" class="btn-action action-view" style="width:28px; height:28px; font-size:0.75rem;" title="Xem chi tiết">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                <a th:href="@{/phong-tro/sua/{id}(id=${phong.id})}" class="btn-action action-edit" style="width:28px; height:28px; font-size:0.75rem;" title="Chỉnh sửa">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                <button type="button" class="btn-action action-delete" style="width:28px; height:28px; font-size:0.75rem;" title="Xóa phòng"
+                                        th:onclick="confirmDelete('/phong-tro/xoa/' + [[${phong.id}]], [[${phong.maPhong} + ' - ' + ${phong.tenPhong}]])">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Toolbar Tìm kiếm & Lọc -->
-            <div class="card card-custom mb-4">
-                <div class="card-body p-3">
-                    <form th:action="@{/phong-tro}" method="GET" class="row g-2 align-items-center">
-                        <div class="col-md-5 col-sm-6">
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-white text-muted border-end-0">
-                                    <i class="fa-solid fa-magnifying-glass"></i>
-                                </span>
-                                <input type="text" class="form-control border-start-0" name="keyword" th:value="${keyword}"
-                                       placeholder="Tìm theo mã phòng hoặc tên phòng...">
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-sm-4">
-                            <select class="form-select form-select-sm" name="trangThai">
-                                <option value="" th:selected="${trangThai == null or trangThai == ''}">-- Tất cả trạng thái --</option>
-                                <option value="TRONG" th:selected="${trangThai == 'TRONG'}">Phòng trống (TRONG)</option>
-                                <option value="DA_DAT" th:selected="${trangThai == 'DA_DAT'}">Đã đặt giữ chỗ (DA_DAT)</option>
-                                <option value="DA_THUE" th:selected="${trangThai == 'DA_THUE'}">Đang cho thuê (DA_THUE)</option>
-                                <option value="BAO_TRI" th:selected="${trangThai == 'BAO_TRI'}">Đang bảo trì (BAO_TRI)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4 col-sm-12 d-flex gap-2">
-                            <button type="submit" class="btn btn-primary btn-sm px-3">
-                                <i class="fa-solid fa-filter me-1"></i> Lọc
-                            </button>
-                            <a th:href="@{/phong-tro}" class="btn btn-outline-secondary btn-sm px-3">
-                                <i class="fa-solid fa-arrow-rotate-left me-1"></i> Đặt lại
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
+            <!-- ================= VIEW 2: THẺ ẢNH (PHOTO GALLERY VIEW) ================= -->
+            <div id="viewGridContainer" class="d-none">
+                <div class="row g-3">
+                    <div class="col-xl-3 col-lg-4 col-md-6 col-12" th:each="phong : ${pageData.content}">
+                        <div class="photo-card-item">
+                            <div class="photo-card-img-wrap">
+                                <img th:if="${phong.hinhAnh != null and !phong.hinhAnh.isEmpty()}"
+                                     th:src="${phong.hinhAnh}"
+                                     th:alt="${phong.tenPhong}"
+                                     onerror="this.onerror=null;this.src='/images/default-room.jpg';">
+                                <img th:unless="${phong.hinhAnh != null and !phong.hinhAnh.isEmpty()}"
+                                     src="/images/default-room.jpg"
+                                     th:alt="${phong.tenPhong}">
 
-            <!-- Bảng Dữ Liệu Phòng Trọ -->
-            <div class="card card-custom overflow-hidden">
-                <div class="table-responsive">
-                    <table class="table table-custom align-middle">
-                        <thead>
-                            <tr>
-                                <th style="width: 60px;">Ảnh</th>
-                                <th th:replace="~{components :: sortTh('Mã Phòng', 'maPhong', '/phong-tro')}"></th>
-                                <th th:replace="~{components :: sortTh('Tên Phòng', 'tenPhong', '/phong-tro')}"></th>
-                                <th>Loại Phòng</th>
-                                <th th:replace="~{components :: sortTh('Diện Tích', 'dienTich', '/phong-tro')}"></th>
-                                <th th:replace="~{components :: sortTh('Giá Thuê / Tháng', 'giaThue', '/phong-tro')}"></th>
-                                <th th:replace="~{components :: sortTh('Trạng Thái', 'trangThai', '/phong-tro')}"></th>
-                                <th class="text-end" style="width: 140px;">Thao Tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:if="${pageData.empty}">
-                                <td colspan="8" class="text-center py-5">
-                                    <div class="text-muted mb-2">
-                                        <i class="fa-solid fa-folder-open fs-1 text-secondary opacity-50"></i>
-                                    </div>
-                                    <h6 class="fw-bold text-dark">Không tìm thấy phòng trọ phù hợp</h6>
-                                    <p class="text-muted small mb-3">Vui lòng điều chỉnh lại bộ lọc hoặc từ khóa tìm kiếm</p>
-                                    <a th:href="@{/phong-tro/them}" class="btn btn-primary btn-sm px-3">
-                                        <i class="fa-solid fa-plus me-1"></i> Thêm Phòng Mới Ngay
-                                    </a>
-                                </td>
-                            </tr>
-                            <tr th:each="phong : ${pageData.content}">
-                                <td>
-                                    <img th:if="${phong.hinhAnh != null and !phong.hinhAnh.isEmpty()}"
-                                         th:src="${phong.hinhAnh}"
-                                         class="room-img-thumb"
-                                         onerror="this.src='https://placehold.co/100x75/ede8df/78716c?text=Room';"
-                                         alt="Ảnh phòng">
-                                    <div th:unless="${phong.hinhAnh != null and !phong.hinhAnh.isEmpty()}"
-                                         class="room-img-thumb d-flex align-items-center justify-content-center text-muted">
-                                        <i class="fa-solid fa-image"></i>
-                                    </div>
-                                </td>
-                                <td>
-                                    <a th:href="@{/phong-tro/chi-tiet/{id}(id=${phong.id})}" class="fw-bold text-warning-emphasis font-mono text-decoration-none" th:text="${phong.maPhong}">P101</a>
-                                </td>
-                                <td>
-                                    <span class="fw-semibold text-dark" th:text="${phong.tenPhong}">Phòng 101</span>
-                                </td>
-                                <td>
-                                    <span class="badge bg-light text-dark border fw-medium" th:text="${phong.loaiPhong != null ? phong.loaiPhong : 'Tiêu chuẩn'}">Đơn</span>
-                                </td>
-                                <td>
-                                    <span class="font-mono text-secondary" th:text="${phong.dienTich != null ? phong.dienTich + ' m²' : '-'}">20.0 m²</span>
-                                </td>
-                                <td>
-                                    <span class="fw-bold text-dark font-mono" th:text="${#numbers.formatDecimal(phong.giaThue, 0, 'POINT', 0, 'COMMA')} + ' đ'">2,200,000 đ</span>
-                                </td>
-                                <td>
-                                    <span th:if="${phong.trangThai == 'TRONG'}" class="badge-status badge-trong">
+                                <!-- Floating Status Badge -->
+                                <div class="photo-status-floating">
+                                    <span th:if="${phong.trangThai == 'TRONG'}" class="badge-status badge-trong shadow-sm">
                                         <span class="pulse-dot"></span>Trống
                                     </span>
-                                    <span th:if="${phong.trangThai == 'DA_DAT'}" class="badge-status badge-dadat">
-                                        <i class="fa-solid fa-clock"></i>Đã đặt
-                                    </span>
-                                    <span th:if="${phong.trangThai == 'DA_THUE'}" class="badge-status badge-dathue">
+                                    <span th:if="${phong.trangThai == 'DA_THUE'}" class="badge-status badge-dathue shadow-sm">
                                         <i class="fa-solid fa-user-check"></i>Đang thuê
                                     </span>
-                                    <span th:if="${phong.trangThai == 'BAO_TRI'}" class="badge-status badge-baotri">
+                                    <span th:if="${phong.trangThai == 'DA_DAT'}" class="badge-status badge-dadat shadow-sm">
+                                        <i class="fa-solid fa-clock"></i>Giữ chỗ
+                                    </span>
+                                    <span th:if="${phong.trangThai == 'BAO_TRI'}" class="badge-status badge-baotri shadow-sm">
                                         <i class="fa-solid fa-wrench"></i>Bảo trì
                                     </span>
-                                </td>
-                                <td class="text-end">
+                                </div>
+
+                                <!-- Floating Red Price Banner -->
+                                <div class="photo-price-floating">
+                                    <span class="num" th:text="${#numbers.formatDecimal(phong.giaThue, 0, 'POINT', 0, 'COMMA')}">2.200.000</span>
+                                    <span class="unit">đ/tháng</span>
+                                </div>
+                            </div>
+
+                            <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center gap-1 mb-1">
+                                        <a th:href="@{/phong-tro/chi-tiet/{id}(id=${phong.id})}"
+                                           class="fw-bold font-mono text-dark fs-6 text-decoration-none"
+                                           th:text="${phong.maPhong} + ' • ' + ${phong.tenPhong}">P101 • Phòng 101</a>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1 mb-2">
+                                        <span class="room-type-tag"
+                                              th:classappend="${phong.loaiPhong != null and #strings.containsIgnoreCase(phong.loaiPhong, 'Đôi')} ? 'type-doi' : (${phong.loaiPhong != null and (#strings.containsIgnoreCase(phong.loaiPhong, 'VIP') or #strings.containsIgnoreCase(phong.loaiPhong, 'Studio'))} ? 'type-vip' : (${phong.loaiPhong != null and #strings.containsIgnoreCase(phong.loaiPhong, 'Gác')} ? 'type-gac' : ''))"
+                                              th:text="${phong.loaiPhong != null ? phong.loaiPhong : 'Đơn'}">Đơn</span>
+                                        <span class="area-badge-pill"
+                                              th:text="${phong.dienTich != null ? #numbers.formatDecimal(phong.dienTich, 1, 0) + 'm²' : '-'}">20m²</span>
+                                    </div>
+                                    <p class="text-muted small mb-3 text-truncate"
+                                       th:text="${phong.moTa != null and !phong.moTa.isEmpty() ? phong.moTa : 'Phòng trọ đầy đủ tiện nghi cơ bản.'}">Mô tả</p>
+                                </div>
+
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-1 pt-2 border-top">
+                                    <div class="d-inline-flex gap-1 flex-wrap">
+                                        <a th:if="${phong.trangThai == 'TRONG'}" th:href="@{/dat-cho/them-moi(phongId=${phong.id})}" class="btn-quick btn-quick-amber">
+                                            <i class="fa-solid fa-bookmark"></i> Giữ chỗ
+                                        </a>
+                                        <a th:if="${phong.trangThai == 'TRONG'}" th:href="@{/hop-dong/them-moi(phongId=${phong.id})}" class="btn-quick">
+                                            <i class="fa-solid fa-file-signature"></i> Lập HĐ
+                                        </a>
+                                        <a th:if="${phong.trangThai == 'DA_DAT'}" th:href="@{/hop-dong/them-moi(phongId=${phong.id})}" class="btn-quick btn-quick-green">
+                                            <i class="fa-solid fa-file-signature"></i> Ký HĐ ngay
+                                        </a>
+                                        <a th:if="${phong.trangThai == 'DA_THUE'}" th:href="@{/hoa-don/tao-moi}" class="btn-quick">
+                                            <i class="fa-solid fa-receipt"></i> Lập hóa đơn
+                                        </a>
+                                    </div>
                                     <div class="d-inline-flex gap-1">
-                                        <a th:href="@{/phong-tro/chi-tiet/{id}(id=${phong.id})}" class="btn-action action-view" title="Xem chi tiết">
+                                        <a th:href="@{/phong-tro/chi-tiet/{id}(id=${phong.id})}" class="btn-action action-view" style="width:28px; height:28px; font-size:0.75rem;" title="Xem chi tiết">
                                             <i class="fa-solid fa-eye"></i>
                                         </a>
-                                        <a th:href="@{/phong-tro/sua/{id}(id=${phong.id})}" class="btn-action action-edit" title="Chỉnh sửa">
+                                        <a th:href="@{/phong-tro/sua/{id}(id=${phong.id})}" class="btn-action action-edit" style="width:28px; height:28px; font-size:0.75rem;" title="Chỉnh sửa">
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </a>
-                                        <button type="button" class="btn-action action-delete" title="Xóa phòng"
+                                        <button type="button" class="btn-action action-delete" style="width:28px; height:28px; font-size:0.75rem;" title="Xóa phòng"
                                                 th:onclick="confirmDelete('/phong-tro/xoa/' + [[${phong.id}]], [[${phong.maPhong} + ' - ' + ${phong.tenPhong}]])">
                                             <i class="fa-solid fa-trash-can"></i>
                                         </button>
                                     </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <!-- Phân trang -->
-                <div class="px-3 pb-3" th:replace="~{layout/fragments :: pagination(${pageData}, '/phong-tro', ${keyword}, ${trangThai}, ${sort})}"></div>
             </div>
-        </div>
-    </main>
 
-    <!-- Modal xác nhận xóa -->
-    <div th:replace="~{layout/fragments :: deleteModal}"></div>
+            <!-- ================= VIEW 3: BẢNG DỮ LIỆU (TABLE VIEW) ================= -->
+            <div id="viewTableContainer" class="d-none">
+                <div class="card card-custom overflow-hidden">
+                    <div class="table-responsive">
+                        <table class="table table-custom align-middle">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">Ảnh</th>
+                                    <th th:replace="~{components :: sortTh('Mã Phòng', 'maPhong', '/phong-tro')}"></th>
+                                    <th th:replace="~{components :: sortTh('Tên Phòng', 'tenPhong', '/phong-tro')}"></th>
+                                    <th>Loại Phòng</th>
+                                    <th th:replace="~{components :: sortTh('Diện Tích', 'dienTich', '/phong-tro')}"></th>
+                                    <th th:replace="~{components :: sortTh('Giá Thuê / Tháng', 'giaThue', '/phong-tro')}"></th>
+                                    <th th:replace="~{components :: sortTh('Trạng Thái', 'trangThai', '/phong-tro')}"></th>
+                                    <th class="text-end" style="width: 240px;">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="phong : ${pageData.content}">
+                                    <td>
+                                        <img th:if="${phong.hinhAnh != null and !phong.hinhAnh.isEmpty()}"
+                                             th:src="${phong.hinhAnh}"
+                                             class="room-img-thumb"
+                                             onerror="this.onerror=null;this.src='/images/default-room.jpg';"
+                                             alt="Ảnh phòng">
+                                        <img th:unless="${phong.hinhAnh != null and !phong.hinhAnh.isEmpty()}"
+                                             src="/images/default-room.jpg"
+                                             class="room-img-thumb"
+                                             alt="Ảnh phòng">
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/phong-tro/chi-tiet/{id}(id=${phong.id})}" class="fw-bold text-dark font-mono text-decoration-none" th:text="${phong.maPhong}">P101</a>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-dark" th:text="${phong.tenPhong}">Phòng 101</div>
+                                        <div class="text-muted small text-truncate" style="max-width: 240px;" th:if="${phong.moTa != null}" th:text="${phong.moTa}"></div>
+                                    </td>
+                                    <td>
+                                        <span class="room-type-tag"
+                                              th:classappend="${phong.loaiPhong != null and #strings.containsIgnoreCase(phong.loaiPhong, 'Đôi')} ? 'type-doi' : (${phong.loaiPhong != null and (#strings.containsIgnoreCase(phong.loaiPhong, 'VIP') or #strings.containsIgnoreCase(phong.loaiPhong, 'Studio'))} ? 'type-vip' : (${phong.loaiPhong != null and #strings.containsIgnoreCase(phong.loaiPhong, 'Gác')} ? 'type-gac' : ''))"
+                                              th:text="${phong.loaiPhong != null ? phong.loaiPhong : 'Đơn'}">Đơn</span>
+                                    </td>
+                                    <td>
+                                        <span class="area-badge-pill"
+                                              th:text="${phong.dienTich != null ? #numbers.formatDecimal(phong.dienTich, 1, 0) + 'm²' : '-'}">20m²</span>
+                                    </td>
+                                    <td>
+                                        <span class="price-red-text fs-6" th:text="${#numbers.formatDecimal(phong.giaThue, 0, 'POINT', 0, 'COMMA')} + ' đ'">2.200.000 đ</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${phong.trangThai == 'TRONG'}" class="badge-status badge-trong">
+                                            <span class="pulse-dot"></span>Trống
+                                        </span>
+                                        <span th:if="${phong.trangThai == 'DA_DAT'}" class="badge-status badge-dadat">
+                                            <i class="fa-solid fa-clock"></i>Đã đặt
+                                        </span>
+                                        <span th:if="${phong.trangThai == 'DA_THUE'}" class="badge-status badge-dathue">
+                                            <i class="fa-solid fa-user-check"></i>Đang thuê
+                                        </span>
+                                        <span th:if="${phong.trangThai == 'BAO_TRI'}" class="badge-status badge-baotri">
+                                            <i class="fa-solid fa-wrench"></i>Bảo trì
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex gap-1 align-items-center">
+                                            <a th:if="${phong.trangThai == 'TRONG'}" th:href="@{/hop-dong/them-moi(phongId=${phong.id})}" class="btn-quick" title="Lập hợp đồng">Lập HĐ</a>
+                                            <a th:if="${phong.trangThai == 'DA_DAT'}" th:href="@{/hop-dong/them-moi(phongId=${phong.id})}" class="btn-quick btn-quick-green" title="Ký hợp đồng">Ký HĐ</a>
+                                            <a th:if="${phong.trangThai == 'DA_THUE'}" th:href="@{/hoa-don/tao-moi}" class="btn-quick" title="Lập hóa đơn">Hóa đơn</a>
+                                            <a th:href="@{/phong-tro/chi-tiet/{id}(id=${phong.id})}" class="btn-action action-view" title="Xem chi tiết">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+                                            <a th:href="@{/phong-tro/sua/{id}(id=${phong.id})}" class="btn-action action-edit" title="Chỉnh sửa">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </a>
+                                            <button type="button" class="btn-action action-delete" title="Xóa phòng"
+                                                    th:onclick="confirmDelete('/phong-tro/xoa/' + [[${phong.id}]], [[${phong.maPhong} + ' - ' + ${phong.tenPhong}]])">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-    <!-- Footer -->
-    <footer th:replace="~{layout/fragments :: footer}"></footer>
+            <!-- Phân trang -->
+            <div class="mt-3" th:replace="~{layout/fragments :: pagination(${pageData}, '/phong-tro', ${keyword}, ${trangThai}, ${sort})}"></div>
+        </th:block>
+    </div>
+</main>
 
-    <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+<!-- Modal xác nhận xóa -->
+<div th:replace="~{layout/fragments :: deleteModal}"></div>
+
+<!-- Footer -->
+<footer th:replace="~{layout/fragments :: footer}"></footer>
+
+<th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+<script>
+    function switchRoomView(mode) {
+        const views = {
+            matrix: { el: document.getElementById('viewMatrixContainer'), btn: document.getElementById('btnViewMatrix') },
+            grid:   { el: document.getElementById('viewGridContainer'),   btn: document.getElementById('btnViewGrid') },
+            table:  { el: document.getElementById('viewTableContainer'),  btn: document.getElementById('btnViewTable') }
+        };
+        Object.keys(views).forEach(k => {
+            if (views[k].el) views[k].el.classList.toggle('d-none', k !== mode);
+            if (views[k].btn) views[k].btn.classList.toggle('active', k === mode);
+        });
+        try { localStorage.setItem('nhatro_room_view', mode); } catch (e) {}
+    }
+
+    (function () {
+        let saved = 'matrix';
+        try { saved = localStorage.getItem('nhatro_room_view') || 'matrix'; } catch (e) {}
+        if (!['matrix', 'grid', 'table'].includes(saved)) saved = 'matrix';
+        switchRoomView(saved);
+    })();
+</script>
 </body>
 </html>

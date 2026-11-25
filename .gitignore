@@ -32,3 +32,7 @@ passwords.txt
 .DS_Store
 Thumbs.db
 ~$*.docx
+
+# Runtime uploads & local UI preview
+uploads/
+preview-giao-dien-moi.html

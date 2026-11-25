@@ -25,59 +25,43 @@
                 </div>
             </div>
 
-            <!-- Quick Stat KPI Cards -->
-            <div class="row g-3 mb-4">
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #78716c;">
-                        <div class="d-flex align-items-center justify-content-between">
+            <!-- Quick Stat KPI Strip (1 hàng gọn gàng, Tổng độc lập bộ lọc) -->
+            <div class="kpi-bar"
+                 th:with="tongHoaDon=${totalInvoices != null ? totalInvoices : (countDaThanhToan + countChuaThanhToan)}">
+                <div class="row g-2">
+                    <div class="col-xl-3 col-md-6 col-6">
+                        <div class="kpi-item">
+                            <div class="kpi-icon" style="background: #eef2ff; color: #4f46e5;"><i class="fa-solid fa-receipt"></i></div>
                             <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">TỔNG HÓA ĐƠN</div>
-                                <h3 class="fw-bold mb-0 text-dark font-mono mt-1" th:text="${pageData.totalElements}">20</h3>
-                            </div>
-                            <div class="stat-icon bg-light text-secondary">
-                                <i class="fa-solid fa-receipt"></i>
+                                <div class="kpi-label">Tổng hóa đơn</div>
+                                <div class="kpi-val" th:text="${tongHoaDon}">20</div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #10b981;">
-                        <div class="d-flex align-items-center justify-content-between">
+                    <div class="col-xl-3 col-md-6 col-6">
+                        <div class="kpi-item" style="border-left: 3px solid var(--color-trong);">
+                            <div class="kpi-icon" style="background: var(--bg-trong); color: var(--color-trong);"><i class="fa-solid fa-circle-check"></i></div>
                             <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">ĐÃ THANH TOÁN</div>
-                                <h3 class="fw-bold mb-0 text-success font-mono mt-1" th:text="${countDaThanhToan != null ? countDaThanhToan : '-'}">-</h3>
-                            </div>
-                            <div class="stat-icon bg-success-subtle text-success">
-                                <i class="fa-solid fa-circle-check"></i>
+                                <div class="kpi-label">Đã thanh toán</div>
+                                <div class="kpi-val" style="color: var(--color-trong);" th:text="${countDaThanhToan != null ? countDaThanhToan : '-'}">-</div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #ef4444;">
-                        <div class="d-flex align-items-center justify-content-between">
+                    <div class="col-xl-3 col-md-6 col-6">
+                        <div class="kpi-item" style="border-left: 3px solid var(--color-baotri);">
+                            <div class="kpi-icon" style="background: var(--bg-baotri); color: var(--color-baotri);"><i class="fa-solid fa-xmark"></i></div>
                             <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">CHƯA THANH TOÁN (NỢ)</div>
-                                <h3 class="fw-bold mb-0 text-danger font-mono mt-1" th:text="${countChuaThanhToan != null ? countChuaThanhToan : '-'}">-</h3>
-                            </div>
-                            <div class="stat-icon bg-danger-subtle text-danger">
-                                <i class="fa-solid fa-xmark"></i>
+                                <div class="kpi-label">Chưa thanh toán (nợ)</div>
+                                <div class="kpi-val" style="color: var(--color-baotri);" th:text="${countChuaThanhToan != null ? countChuaThanhToan : '-'}">-</div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #d97706;">
-                        <div class="d-flex align-items-center justify-content-between">
+                    <div class="col-xl-3 col-md-6 col-6">
+                        <div class="kpi-item" style="border-left: 3px solid var(--price-red);">
+                            <div class="kpi-icon" style="background: var(--price-bg); color: var(--price-red);"><i class="fa-solid fa-coins"></i></div>
                             <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">DOANH THU ĐÃ THU</div>
-                                <h3 class="fw-bold mb-0 text-warning-emphasis font-mono mt-1" th:text="${tongDaThu != null ? #numbers.formatDecimal(tongDaThu, 0, 'POINT', 0, 'COMMA') + ' đ' : '-'}">-</h3>
-                            </div>
-                            <div class="stat-icon bg-warning-subtle text-warning-emphasis">
-                                <i class="fa-solid fa-coins"></i>
+                                <div class="kpi-label">Doanh thu đã thu</div>
+                                <div class="kpi-val price-red-text" th:text="${tongDaThu != null ? #numbers.formatDecimal(tongDaThu, 0, 'POINT', 0, 'COMMA') + ' đ' : '-'}">-</div>
                             </div>
                         </div>
                     </div>
@@ -152,7 +136,7 @@
                             </tr>
                             <tr th:each="hd : ${pageData.content}">
                                 <td>
-                                    <a th:href="@{/hoa-don/{id}(id=${hd.id})}" class="fw-bold text-warning-emphasis font-mono text-decoration-none" th:text="${hd.maHoaDon}">HD001</a>
+                                    <a th:href="@{/hoa-don/{id}(id=${hd.id})}" class="fw-bold text-primary font-mono text-decoration-none" th:text="${hd.maHoaDon}">HD001</a>
                                 </td>
                                 <td>
                                     <span class="fw-bold text-dark font-mono" th:text="${hd.hopDong != null and hd.hopDong.phongTro != null ? hd.hopDong.phongTro.maPhong : '-'}">P101</span>
@@ -170,7 +154,7 @@
                                     <span class="text-muted small d-block" th:text="'(' + ${hd.chiSoNuocMoi - hd.chiSoNuocCu} + ' m³)'"></span>
                                 </td>
                                 <td>
-                                    <span class="fw-bold text-dark font-mono" th:text="${#numbers.formatDecimal(hd.tongTien, 0, 'POINT', 0, 'COMMA')} + ' đ'">3,375,000 đ</span>
+                                    <span class="price-red-text fs-6" th:text="${#numbers.formatDecimal(hd.tongTien, 0, 'POINT', 0, 'COMMA')} + ' đ'">3,375,000 đ</span>
                                 </td>
                                 <td>
                                     <span th:if="${hd.trangThai == 'DA_THANH_TOAN'}" class="badge-status badge-trong">

@@ -12,6 +12,10 @@ public class HomeController {
     @GetMapping("/")
     public String root(HttpSession session) {
         if (session != null && session.getAttribute(AuthInterceptor.SESSION_USER) != null) {
+            String role = (String) session.getAttribute(AuthInterceptor.SESSION_ROLE);
+            if ("TENANT".equalsIgnoreCase(role)) {
+                return "redirect:/tenant/rooms";
+            }
             return "redirect:/phong-tro";
         }
         return "redirect:/login";

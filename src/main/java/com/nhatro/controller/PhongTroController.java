@@ -17,10 +17,15 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 @Controller
 @RequestMapping("/phong-tro")
 public class PhongTroController {
+
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+            "id", "maPhong", "tenPhong", "loaiPhong", "dienTich", "giaThue", "trangThai"
+    );
 
     private final PhongTroService phongTroService;
 
@@ -38,13 +43,17 @@ public class PhongTroController {
     public String listPhongTro(@RequestParam(value = "keyword", required = false) String keyword,
                                @RequestParam(value = "trangThai", required = false) String trangThai,
                                @RequestParam(value = "page", defaultValue = "0") int page,
-                               @RequestParam(value = "size", defaultValue = "10") int size,
-                               @RequestParam(value = "sort", defaultValue = "id,desc") String sort,
+                               @RequestParam(value = "size", defaultValue = "20") int size,
+                               @RequestParam(value = "sort", defaultValue = "maPhong,asc") String sort,
                                Model model) {
         String[] sortParams = sort.split(",");
-        String sortField = sortParams[0];
-        Sort.Direction direction = (sortParams.length > 1 && sortParams[1].equalsIgnoreCase("asc")) ?
-                Sort.Direction.ASC : Sort.Direction.DESC;
+        String sortField = ALLOWED_SORT_FIELDS.contains(sortParams[0]) ? sortParams[0] : "maPhong";
+        Sort.Direction direction = (sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc")) ?
+                Sort.Direction.DESC : Sort.Direction.ASC;
+        if (!ALLOWED_SORT_FIELDS.contains(sortParams[0])) {
+            direction = Sort.Direction.ASC;
+            sort = "maPhong,asc";
+        }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
         Page<PhongTro> pageData = phongTroService.search(keyword, trangThai, pageable);

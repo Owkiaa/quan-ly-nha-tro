@@ -25,48 +25,19 @@
                 </div>
             </div>
 
-            <!-- Quick Stat KPI Cards (Tông ấm, sáng sủa) -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-4 col-sm-6">
-                    <div class="stat-card" style="border-top: 3px solid #78716c;">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">TỔNG KHÁCH THUÊ</div>
-                                <h3 class="fw-bold mb-0 text-dark font-mono mt-1" th:text="${totalTenants}">20</h3>
-                            </div>
-                            <div class="stat-icon bg-light text-secondary">
-                                <i class="fa-solid fa-users"></i>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Quick Stat KPI Strip -->
+            <div class="kpi-bar mb-4">
+                <div class="kpi-item">
+                    <div class="kpi-num text-dark" th:text="${totalTenants}">20</div>
+                    <div class="kpi-lbl">Tổng khách thuê</div>
                 </div>
-
-                <div class="col-md-4 col-sm-6">
-                    <div class="stat-card" style="border-top: 3px solid #10b981;">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">ĐANG CƯ TRÚ (DANG_THUE)</div>
-                                <h3 class="fw-bold mb-0 text-success font-mono mt-1" th:text="${countDangThue}">17</h3>
-                            </div>
-                            <div class="stat-icon bg-success-subtle text-success">
-                                <i class="fa-solid fa-user-check"></i>
-                            </div>
-                        </div>
-                    </div>
+                <div class="kpi-item">
+                    <div class="kpi-num text-success" th:text="${countDangThue}">17</div>
+                    <div class="kpi-lbl">Đang cư trú</div>
                 </div>
-
-                <div class="col-md-4 col-sm-12">
-                    <div class="stat-card" style="border-top: 3px solid #a8a29e;">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">ĐÃ TRẢ PHÒNG (DA_TRA_PHONG)</div>
-                                <h3 class="fw-bold mb-0 text-secondary font-mono mt-1" th:text="${countDaTraPhong}">3</h3>
-                            </div>
-                            <div class="stat-icon bg-secondary-subtle text-secondary">
-                                <i class="fa-solid fa-person-walking-arrow-right"></i>
-                            </div>
-                        </div>
-                    </div>
+                <div class="kpi-item">
+                    <div class="kpi-num text-secondary" th:text="${countDaTraPhong}">3</div>
+                    <div class="kpi-lbl">Đã trả phòng</div>
                 </div>
             </div>
 
@@ -133,7 +104,7 @@
                             </tr>
                             <tr th:each="khach : ${pageData.content}">
                                 <td>
-                                    <a th:href="@{/khach-thue/chi-tiet/{id}(id=${khach.id})}" class="fw-bold text-warning-emphasis text-decoration-none" th:text="${khach.hoTen}">Nguyễn Văn A</a>
+                                    <a th:href="@{/khach-thue/chi-tiet/{id}(id=${khach.id})}" class="fw-bold text-primary text-decoration-none" th:text="${khach.hoTen}">Nguyễn Văn A</a>
                                     <span th:if="${khach.gioiTinh != null}" class="badge bg-light text-muted border ms-1" style="font-size: 0.68rem;" th:text="${khach.gioiTinh}">Nam</span>
                                 </td>
                                 <td>

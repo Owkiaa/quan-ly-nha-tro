@@ -76,14 +76,25 @@
 
                                 <div class="col-md-6">
                                     <label for="trangThai" class="form-label">Trạng thái phòng <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="trangThai" th:field="*{trangThai}"
-                                            th:classappend="${#fields.hasErrors('trangThai')} ? 'is-invalid'" required>
-                                        <option value="TRONG">Phòng trống (TRONG)</option>
-                                        <option value="DA_DAT">Đã giữ chỗ (DA_DAT)</option>
-                                        <option value="DA_THUE">Đang thuê (DA_THUE)</option>
-                                        <option value="BAO_TRI">Bảo trì (BAO_TRI)</option>
-                                    </select>
-                                    <div th:replace="~{components :: fieldError('trangThai')}"></div>
+                                    <th:block th:if="${isEdit and (phongTro.trangThai == 'DA_THUE' or phongTro.trangThai == 'DA_DAT')}">
+                                        <input type="hidden" th:field="*{trangThai}">
+                                        <div class="form-control bg-light d-flex align-items-center justify-content-between">
+                                            <th:block th:replace="~{components :: statusBadge(${phongTro.trangThai})}"></th:block>
+                                            <span class="small text-muted"><i class="fa-solid fa-lock me-1"></i>Khóa tự động</span>
+                                        </div>
+                                        <div class="form-text text-primary">
+                                            Trạng thái được quản lý tự động qua Hợp đồng / Đặt giữ chỗ để bảo toàn dữ liệu.
+                                        </div>
+                                    </th:block>
+                                    <th:block th:unless="${isEdit and (phongTro.trangThai == 'DA_THUE' or phongTro.trangThai == 'DA_DAT')}">
+                                        <select class="form-select" id="trangThai" th:field="*{trangThai}"
+                                                th:classappend="${#fields.hasErrors('trangThai')} ? 'is-invalid'" required>
+                                            <option value="TRONG">Phòng trống (TRONG)</option>
+                                            <option value="BAO_TRI">Đang bảo trì (BAO_TRI)</option>
+                                        </select>
+                                        <div th:replace="~{components :: fieldError('trangThai')}"></div>
+                                        <div class="form-text">Chuyển sang Đã đặt / Đang thuê thực hiện qua Đặt giữ chỗ hoặc Lập hợp đồng.</div>
+                                    </th:block>
                                 </div>
 
                                 <div class="col-md-6">
@@ -120,10 +131,10 @@
                                  th:src="${phongTro.hinhAnh}"
                                  id="imagePreview"
                                  class="w-100 h-100 object-fit-cover"
-                                 onerror="this.src='https://placehold.co/400x300/ede8df/78716c?text=Chua+co+anh';"
+                                 onerror="this.onerror=null;this.src='/images/default-room.jpg';"
                                  alt="Ảnh xem trước">
                             <img th:unless="${phongTro.hinhAnh != null and !phongTro.hinhAnh.isEmpty()}"
-                                 src="https://placehold.co/400x300/ede8df/78716c?text=Chua+co+anh"
+                                 src="/images/default-room.jpg"
                                  id="imagePreview"
                                  class="w-100 h-100 object-fit-cover"
                                  alt="Ảnh xem trước">
@@ -131,7 +142,7 @@
                     </div>
 
                     <div class="card card-custom p-3">
-                        <h6 class="fw-bold mb-2 small text-warning-emphasis">
+                        <h6 class="fw-bold mb-2 small text-primary">
                             <i class="fa-solid fa-circle-info me-1"></i> Trạng thái quy chuẩn phòng
                         </h6>
                         <ul class="small text-muted ps-3 mb-0" style="font-size: 0.8rem; line-height: 1.6;">

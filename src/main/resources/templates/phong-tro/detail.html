@@ -17,7 +17,19 @@
                     </a>
                     <h3 class="fw-bold mb-1" th:text="'Chi Tiết Phòng: ' + ${phongTro.maPhong} + ' (' + ${phongTro.tenPhong} + ')'">Chi Tiết Phòng</h3>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:if="${phongTro.trangThai == 'TRONG'}" th:href="@{/dat-cho/them-moi(phongId=${phongTro.id})}" class="btn-quick btn-quick-amber px-3 py-2">
+                        <i class="fa-solid fa-bookmark"></i> Giữ chỗ
+                    </a>
+                    <a th:if="${phongTro.trangThai == 'TRONG'}" th:href="@{/hop-dong/them-moi(phongId=${phongTro.id})}" class="btn-quick px-3 py-2">
+                        <i class="fa-solid fa-file-signature"></i> Lập hợp đồng
+                    </a>
+                    <a th:if="${phongTro.trangThai == 'DA_DAT'}" th:href="@{/hop-dong/them-moi(phongId=${phongTro.id})}" class="btn-quick btn-quick-green px-3 py-2">
+                        <i class="fa-solid fa-file-signature"></i> Ký hợp đồng ngay
+                    </a>
+                    <a th:if="${phongTro.trangThai == 'DA_THUE'}" th:href="@{/hoa-don/tao-moi}" class="btn-quick px-3 py-2">
+                        <i class="fa-solid fa-receipt"></i> Lập hóa đơn
+                    </a>
                     <a th:href="@{/phong-tro/sua/{id}(id=${phongTro.id})}" class="btn btn-primary btn-sm px-3">
                         <i class="fa-solid fa-pen-to-square me-1"></i> Chỉnh sửa
                     </a>
@@ -35,12 +47,12 @@
                              th:src="${phongTro.hinhAnh}"
                              class="w-100 object-fit-cover"
                              style="height: 300px;"
-                             onerror="this.src='https://placehold.co/600x400/ede8df/78716c?text=Room+Image';"
+                             onerror="this.onerror=null;this.src='/images/default-room.jpg';"
                              alt="Ảnh phòng">
                         <div th:unless="${phongTro.hinhAnh != null and !phongTro.hinhAnh.isEmpty()}"
                              class="bg-light d-flex align-items-center justify-content-center text-muted"
                              style="height: 300px;">
-                            <i class="fa-solid fa-image fs-1"></i>
+                            <img src="/images/default-room.jpg" class="w-100 h-100 object-fit-cover" alt="Ảnh phòng mặc định">
                         </div>
                         <div class="p-3 bg-light border-top">
                             <span class="text-muted small">Đường dẫn ảnh: </span>
@@ -70,24 +82,24 @@
                         <div class="row g-3">
                             <div class="col-sm-6">
                                 <div class="text-muted small">Mã định danh phòng:</div>
-                                <div class="fs-5 fw-bold text-warning-emphasis font-mono" th:text="${phongTro.maPhong}">P101</div>
+                                <div class="fs-5 fw-bold text-primary font-mono" th:text="${phongTro.maPhong}">P101</div>
                             </div>
                             <div class="col-sm-6">
                                 <div class="text-muted small">Tên gọi hiển thị:</div>
                                 <div class="fs-5 fw-semibold text-dark" th:text="${phongTro.tenPhong}">Phòng 101</div>
                             </div>
                             <div class="col-sm-6">
-                                <div class="text-muted small">Loại phòng:</div>
-                                <div class="fw-semibold text-dark" th:text="${phongTro.loaiPhong != null ? phongTro.loaiPhong : 'Tiêu chuẩn'}">Đơn</div>
+                                <div class="text-muted small mb-1">Loại phòng:</div>
+                                <span class="room-type-tag" th:text="${phongTro.loaiPhong != null ? phongTro.loaiPhong : 'Tiêu chuẩn'}">Đơn</span>
                             </div>
                             <div class="col-sm-6">
-                                <div class="text-muted small">Diện tích sử dụng:</div>
-                                <div class="fw-semibold text-dark font-mono" th:text="${phongTro.dienTich != null ? phongTro.dienTich + ' m²' : 'Chưa cập nhật'}">20.0 m²</div>
+                                <div class="text-muted small mb-1">Diện tích sử dụng:</div>
+                                <span class="area-badge-pill" th:text="${phongTro.dienTich != null ? #numbers.formatDecimal(phongTro.dienTich, 1, 0) + 'm²' : 'Chưa cập nhật'}">20m²</span>
                             </div>
                             <div class="col-12">
-                                <div class="p-3 bg-light rounded-3 border">
-                                    <div class="text-muted small">Đơn giá thuê hàng tháng:</div>
-                                    <div class="fs-3 fw-bold text-warning-emphasis font-mono" th:text="${#numbers.formatDecimal(phongTro.giaThue, 0, 'POINT', 0, 'COMMA')} + ' VNĐ / tháng'">2,200,000 VNĐ / tháng</div>
+                                <div class="p-3 rounded-3" style="background: var(--price-bg); border: 1px solid var(--price-border);">
+                                    <div class="small fw-semibold" style="color: #be123c;">Đơn giá thuê hàng tháng:</div>
+                                    <div class="fs-3 price-red-text" th:text="${#numbers.formatDecimal(phongTro.giaThue, 0, 'POINT', 0, 'COMMA')} + ' VNĐ / tháng'">2.200.000 VNĐ / tháng</div>
                                 </div>
                             </div>
                             <div class="col-12">

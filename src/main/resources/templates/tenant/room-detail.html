@@ -3,7 +3,7 @@
 <head th:replace="~{layout/fragments :: head('Chi tiết phòng')}"></head>
 <body>
 <th:block th:replace="~{components :: styles}"></th:block>
-<nav th:replace="~{layout/fragments :: navbar('tenant')}"></nav>
+<nav th:replace="~{layout/fragments :: navbar('tenant-rooms')}"></nav>
 
 <main class="main-container">
     <div class="container-xl">
@@ -22,35 +22,32 @@
 
         <div class="row g-4">
             <div class="col-lg-6">
-                <div class="room-photo">
-                    <img th:if="${room.hinhAnh != null and !#strings.isEmpty(room.hinhAnh)}"
-                         th:src="@{${room.hinhAnh}}" th:alt="${'Ảnh ' + room.tenPhong}"
-                         onerror="this.classList.add('is-hidden');this.nextElementSibling.classList.remove('is-hidden')">
-                    <div class="room-photo-empty"
-                         th:classappend="${room.hinhAnh != null and !#strings.isEmpty(room.hinhAnh)} ? 'is-hidden'">
-                        <i class="fa-regular fa-image"></i><span>Chưa có ảnh phòng</span>
-                    </div>
+                <div class="room-photo card-custom overflow-hidden p-0">
+                    <img class="w-100 h-100 object-fit-cover"
+                         th:src="${room.hinhAnh != null and !#strings.isEmpty(room.hinhAnh)} ? @{${room.hinhAnh}} : @{/images/default-room.jpg}"
+                         th:alt="${'Ảnh ' + room.tenPhong}"
+                         onerror="this.onerror=null;this.src='/images/default-room.jpg';">
                 </div>
             </div>
 
             <div class="col-lg-6">
                 <div class="card-custom p-4">
-                    <div class="text-muted small">Giá thuê</div>
-                    <div class="mb-3">
-                        <span class="fs-3 fw-bold font-mono" th:text="${#numbers.formatDecimal(room.giaThue, 0, 'POINT', 0, 'COMMA')}">2.200.000</span>
-                        <span class="text-muted">đ/tháng</span>
+                    <div class="text-muted small mb-1">Giá thuê niêm yết</div>
+                    <div class="mb-3 d-flex align-items-center flex-wrap gap-2">
+                        <span class="room-red-price-tag fs-5 font-mono" th:text="${#numbers.formatDecimal(room.giaThue, 0, 'POINT', 0, 'COMMA')} + ' đ/tháng'">2.200.000 đ/tháng</span>
+                        <span class="area-badge-pill" th:if="${room.dienTich != null}" th:text="${#numbers.formatDecimal(room.dienTich, 0, 'POINT', 0, 'COMMA')} + 'm²'">20m²</span>
                     </div>
                     <dl class="detail-list">
                         <dt>Trạng thái</dt>
                         <dd><th:block th:replace="~{components :: statusBadge(${room.trangThai})}"></th:block></dd>
                         <dt>Loại phòng</dt>
-                        <dd th:text="${room.loaiPhong != null} ? ${room.loaiPhong} : '—'">Đơn</dd>
+                        <dd><span class="room-type-tag" th:text="${room.loaiPhong != null} ? ${room.loaiPhong} : 'Tiêu chuẩn'">Đơn</span></dd>
                         <dt>Diện tích</dt>
                         <dd th:text="${room.dienTich != null} ? ${#numbers.formatDecimal(room.dienTich, 0, 'POINT', 1, 'COMMA') + ' m²'} : '—'">20,0 m²</dd>
                         <dt>Mô tả</dt>
                         <dd th:text="${room.moTa != null and !#strings.isEmpty(room.moTa)} ? ${room.moTa} : '—'">Mô tả phòng</dd>
                     </dl>
-                    <div class="alert alert-warning py-2 px-3 small border-0 rounded-3 mt-4 mb-0" th:if="${room.trangThai == 'TRONG'}">
+                    <div class="alert alert-primary py-2 px-3 small border-0 rounded-3 mt-4 mb-0" th:if="${room.trangThai == 'TRONG'}">
                         <i class="fa-solid fa-circle-info me-1"></i>
                         Phòng đang trống. Hãy liên hệ quản lý nhà trọ để đặt giữ chỗ hoặc xem phòng trực tiếp.
                     </div>

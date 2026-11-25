@@ -16,9 +16,15 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Set;
+
 @Controller
 @RequestMapping("/tai-khoan")
 public class TaiKhoanController {
+
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+            "id", "tenDangNhap", "vaiTro", "trangThai", "ngayTao"
+    );
 
     private final TaiKhoanService taiKhoanService;
     private final KhachThueRepository khachThueRepository;
@@ -33,13 +39,24 @@ public class TaiKhoanController {
                                @RequestParam(value = "vaiTro", required = false) String vaiTro,
                                @RequestParam(value = "page", defaultValue = "0") int page,
                                @RequestParam(value = "size", defaultValue = "10") int size,
+                               @RequestParam(value = "sort", defaultValue = "id,desc") String sort,
                                Model model) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        String[] sortParams = sort.split(",");
+        String sortField = ALLOWED_SORT_FIELDS.contains(sortParams[0]) ? sortParams[0] : "id";
+        Sort.Direction direction = (sortParams.length > 1 && sortParams[1].equalsIgnoreCase("asc")) ?
+                Sort.Direction.ASC : Sort.Direction.DESC;
+        if (!ALLOWED_SORT_FIELDS.contains(sortParams[0])) {
+            direction = Sort.Direction.DESC;
+            sort = "id,desc";
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
         Page<TaiKhoan> pageData = taiKhoanService.search(keyword, vaiTro, pageable);
 
         model.addAttribute("pageData", pageData);
         model.addAttribute("keyword", keyword);
         model.addAttribute("vaiTro", vaiTro);
+        model.addAttribute("sort", sort);
         return "tai-khoan/list";
     }
 
@@ -54,7 +71,8 @@ public class TaiKhoanController {
     public String handleAdd(@ModelAttribute("taiKhoan") TaiKhoan taiKhoan,
                             @RequestParam("rawPassword") String rawPassword,
                             @RequestParam(value = "khachId", required = false) Integer khachId,
-                            RedirectAttributes redirectAttributes) {
+                            RedirectAttributes redirectAttributes,
+                            Model model) {
         try {
             if (khachId != null) {
                 KhachThue khach = khachThueRepository.findById(khachId).orElse(null);
@@ -64,8 +82,10 @@ public class TaiKhoanController {
             redirectAttributes.addFlashAttribute("successMessage", "Thêm tài khoản mới thành công!");
             return "redirect:/tai-khoan";
         } catch (BusinessException ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-            return "redirect:/tai-khoan/them";
+            model.addAttribute("errorMessage", ex.getMessage());
+            model.addAttribute("danhSachKhach", khachThueRepository.findAll());
+            model.addAttribute("selectedKhachId", khachId);
+            return "tai-khoan/form";
         }
     }
 

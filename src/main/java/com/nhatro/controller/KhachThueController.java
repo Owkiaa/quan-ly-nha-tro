@@ -15,11 +15,16 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @Controller
 @RequestMapping("/khach-thue")
 public class KhachThueController {
+
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+            "id", "hoTen", "cccd", "soDienThoai", "email", "ngaySinh", "trangThai"
+    );
 
     private static final Pattern CCCD_PATTERN = Pattern.compile("^\\d{9,12}$");
     private static final Pattern PHONE_PATTERN = Pattern.compile("^0\\d{9,10}$");
@@ -45,9 +50,13 @@ public class KhachThueController {
                                 @RequestParam(value = "sort", defaultValue = "id,desc") String sort,
                                 Model model) {
         String[] sortParams = sort.split(",");
-        String sortField = sortParams[0];
+        String sortField = ALLOWED_SORT_FIELDS.contains(sortParams[0]) ? sortParams[0] : "id";
         Sort.Direction direction = (sortParams.length > 1 && sortParams[1].equalsIgnoreCase("asc")) ?
                 Sort.Direction.ASC : Sort.Direction.DESC;
+        if (!ALLOWED_SORT_FIELDS.contains(sortParams[0])) {
+            direction = Sort.Direction.DESC;
+            sort = "id,desc";
+        }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
         Page<KhachThue> pageData = khachThueService.search(keyword, trangThai, pageable);

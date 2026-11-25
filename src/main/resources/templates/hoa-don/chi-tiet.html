@@ -24,7 +24,7 @@
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                 <div>
                     <h3 class="fw-bold mb-1">
-                        Chi Tiết Hóa Đơn <span class="font-mono text-warning-emphasis" th:text="${hoaDon.maHoaDon}">HD001</span>
+                        Chi Tiết Hóa Đơn <span class="font-mono text-primary" th:text="${hoaDon.maHoaDon}">HD001</span>
                     </h3>
                     <p class="text-muted small mb-0">Xem chi tiết các khoản thu và lịch sử gạch nợ thanh toán</p>
                 </div>
@@ -142,9 +142,9 @@
                             </tr>
                         </tbody>
                         <tfoot>
-                            <tr class="table-light">
-                                <th colspan="5" class="text-end text-uppercase" style="font-size: 0.8rem;">TỔNG CỘNG PHẢI THU:</th>
-                                <th class="text-end text-danger fs-5 fw-bold font-mono" th:text="${#numbers.formatDecimal(hoaDon.tongTien, 0, 'POINT', 0, 'COMMA')} + ' đ'">3,375,000 đ</th>
+                            <tr style="background: var(--price-bg);">
+                                <th colspan="5" class="text-end text-uppercase" style="font-size: 0.8rem; color: #be123c;">TỔNG CỘNG PHẢI THU:</th>
+                                <th class="text-end price-red-text fs-5" th:text="${#numbers.formatDecimal(hoaDon.tongTien, 0, 'POINT', 0, 'COMMA')} + ' đ'">3,375,000 đ</th>
                             </tr>
                         </tfoot>
                     </table>

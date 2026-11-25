@@ -19,69 +19,23 @@
                 </div>
             </div>
 
-            <!-- 4 Thẻ KPI Tài Chính & Vận Hành -->
-            <div class="row g-3 mb-4">
-                <!-- 1. Tổng doanh thu đã thu -->
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #10b981;">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">DOANH THU ĐÃ THU</div>
-                                <h3 class="fw-bold mb-0 text-success font-mono mt-1" th:text="${#numbers.formatDecimal(stats.tongDoanhThuDaThu, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</h3>
-                                <small class="text-muted font-mono" style="font-size: 0.72rem;" th:text="${stats.soHoaDonDaThanhToan} + ' hóa đơn đã gạch nợ'"></small>
-                            </div>
-                            <div class="stat-icon bg-success-subtle text-success">
-                                <i class="fa-solid fa-money-bill-trend-up"></i>
-                            </div>
-                        </div>
-                    </div>
+            <!-- 4 KPI Tài Chính & Vận Hành (1-row KPI strip) -->
+            <div class="kpi-bar mb-4">
+                <div class="kpi-item">
+                    <div class="kpi-num text-success" th:text="${#numbers.formatDecimal(stats.tongDoanhThuDaThu, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</div>
+                    <div class="kpi-lbl">Doanh thu đã thu (<span th:text="${stats.soHoaDonDaThanhToan}">0</span> HĐ)</div>
                 </div>
-
-                <!-- 2. Nợ chưa thanh toán -->
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #ef4444;">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">KHOẢN NỢ CHƯA THU</div>
-                                <h3 class="fw-bold mb-0 text-danger font-mono mt-1" th:text="${#numbers.formatDecimal(stats.tongNoChuaThu, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</h3>
-                                <small class="text-muted font-mono" style="font-size: 0.72rem;" th:text="${stats.soHoaDonChuaThanhToan} + ' hóa đơn chưa thu'"></small>
-                            </div>
-                            <div class="stat-icon bg-danger-subtle text-danger">
-                                <i class="fa-solid fa-clock-rotate-left"></i>
-                            </div>
-                        </div>
-                    </div>
+                <div class="kpi-item">
+                    <div class="kpi-num price-red-text" th:text="${#numbers.formatDecimal(stats.tongNoChuaThu, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</div>
+                    <div class="kpi-lbl">Khoản nợ chưa thu (<span th:text="${stats.soHoaDonChuaThanhToan}">0</span> HĐ)</div>
                 </div>
-
-                <!-- 3. Tỷ lệ lấp đầy phòng -->
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #d97706;">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">TỈ LỆ PHÒNG ĐƯỢC THUÊ</div>
-                                <h3 class="fw-bold mb-0 text-warning-emphasis font-mono mt-1" th:text="${stats.tiLeLapDay} + '%'">0%</h3>
-                                <small class="text-muted font-mono" style="font-size: 0.72rem;" th:text="${stats.soPhongDangThue} + ' / ' + ${stats.tongSoPhong} + ' phòng đang thuê'"></small>
-                            </div>
-                            <div class="stat-icon bg-warning-subtle text-warning-emphasis">
-                                <i class="fa-solid fa-chart-pie"></i>
-                            </div>
-                        </div>
-                    </div>
+                <div class="kpi-item">
+                    <div class="kpi-num text-primary" th:text="${stats.tiLeLapDay} + '%'">0%</div>
+                    <div class="kpi-lbl">Lấp đầy (<span th:text="${stats.soPhongDangThue} + '/' + ${stats.tongSoPhong}">0/0</span> phòng)</div>
                 </div>
-
-                <!-- 4. Phòng trống sẵn sàng -->
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #2563eb;">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">PHÒNG CÒN TRỐNG</div>
-                                <h3 class="fw-bold mb-0 text-primary font-mono mt-1" th:text="${stats.soPhongTrong}">0</h3>
-                            </div>
-                            <div class="stat-icon bg-primary-subtle text-primary">
-                                <i class="fa-solid fa-door-open"></i>
-                            </div>
-                        </div>
-                    </div>
+                <div class="kpi-item">
+                    <div class="kpi-num text-dark" th:text="${stats.soPhongTrong}">0</div>
+                    <div class="kpi-lbl">Phòng trống sẵn sàng</div>
                 </div>
             </div>
 
@@ -93,7 +47,7 @@
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>
                                 <h6 class="fw-bold text-dark mb-1">
-                                    <i class="fa-solid fa-chart-simple text-warning-emphasis me-2"></i>Biểu Đồ Doanh Thu &amp; Nợ Đọng 6 Tháng Gần Nhất
+                                    <i class="fa-solid fa-chart-simple text-primary me-2"></i>Biểu Đồ Doanh Thu &amp; Nợ Đọng 6 Tháng Gần Nhất
                                 </h6>
                                 <p class="text-muted small mb-0">Đối soát số tiền đã thu thực tế và số tiền nợ còn đọng qua từng kỳ</p>
                             </div>
@@ -110,7 +64,7 @@
                     <div class="card card-custom p-4 h-100">
                         <div class="mb-3">
                             <h6 class="fw-bold text-dark mb-1">
-                                <i class="fa-solid fa-chart-pie text-warning-emphasis me-2"></i>Cơ Cấu Trạng Thái Phòng
+                                <i class="fa-solid fa-chart-pie text-primary me-2"></i>Cơ Cấu Trạng Thái Phòng
                             </h6>
                             <p class="text-muted small mb-0">Tỷ trọng công suất lấp đầy nhà trọ</p>
                         </div>
@@ -128,7 +82,7 @@
                             </div>
                             <div class="col-6">
                                 <div class="text-muted small" style="font-size: 0.72rem;">ĐÃ ĐẶT CỌC</div>
-                                <div class="fw-bold font-mono text-warning-emphasis" th:text="${stats.soPhongDaDat}">3</div>
+                                <div class="fw-bold font-mono" style="color: #d97706;" th:text="${stats.soPhongDaDat}">3</div>
                             </div>
                             <div class="col-6">
                                 <div class="text-muted small" style="font-size: 0.72rem;">BẢO TRÌ</div>
@@ -143,7 +97,7 @@
             <div class="card card-custom p-4 mb-4">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                     <h6 class="fw-bold text-dark mb-0">
-                        <i class="fa-solid fa-circle-info text-warning-emphasis me-2"></i>Tóm Tắt Báo Cáo Tài Chính &amp; Vận Hành
+                        <i class="fa-solid fa-circle-info text-primary me-2"></i>Tóm Tắt Báo Cáo Tài Chính &amp; Vận Hành
                     </h6>
                 </div>
                 <div class="table-responsive">
@@ -162,7 +116,7 @@
                                 <td class="fw-bold font-mono" th:text="${stats.tiLeLapDay} + '%'">0%</td>
                                 <td>
                                     <span th:if="${stats.tiLeLapDay >= 70}" class="text-success small fw-semibold"><i class="fa-solid fa-circle-check me-1"></i>Công suất khai thác rất tốt</span>
-                                    <span th:if="${stats.tiLeLapDay < 70}" class="text-warning-emphasis small fw-semibold"><i class="fa-solid fa-triangle-exclamation me-1"></i>Đẩy mạnh tiếp thị phòng trống</span>
+                                    <span th:if="${stats.tiLeLapDay < 70}" class="text-primary small fw-semibold"><i class="fa-solid fa-triangle-exclamation me-1"></i>Đẩy mạnh tiếp thị phòng trống</span>
                                 </td>
                                 <td class="text-end">
                                     <a th:href="@{/phong-tro(trangThai='TRONG')}" class="btn btn-outline-secondary btn-sm py-1 px-2" style="font-size: 0.75rem;">Xem phòng trống</a>
@@ -234,7 +188,7 @@
                     legend: {
                         position: 'top',
                         labels: {
-                            font: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: '600' }
+                            font: { family: "'Inter', sans-serif", size: 12, weight: '600' }
                         }
                     },
                     tooltip: {
@@ -255,7 +209,7 @@
                             },
                             font: { family: "'JetBrains Mono', monospace", size: 11 }
                         },
-                        grid: { color: '#f5f1eb' }
+                        grid: { color: '#e2e8f0' }
                     },
                     x: {
                         ticks: {
@@ -277,7 +231,7 @@
                     data: phongValues,
                     backgroundColor: [
                         '#10b981', // Đang thuê
-                        '#2563eb', // Trống
+                        '#4f46e5', // Trống
                         '#f59e0b', // Đã cọc
                         '#ef4444'  // Bảo trì
                     ],
@@ -292,7 +246,7 @@
                     legend: {
                         position: 'bottom',
                         labels: {
-                            font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: '500' },
+                            font: { family: "'Inter', sans-serif", size: 11, weight: '500' },
                             boxWidth: 12
                         }
                     }

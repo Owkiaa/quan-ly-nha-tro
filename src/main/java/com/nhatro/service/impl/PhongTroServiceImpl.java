@@ -81,6 +81,12 @@ public class PhongTroServiceImpl implements PhongTroService {
 
         if (phongTro.getTrangThai() == null || phongTro.getTrangThai().trim().isEmpty()) {
             phongTro.setTrangThai("TRONG");
+        } else {
+            String initStatus = phongTro.getTrangThai().trim().toUpperCase();
+            if (!"TRONG".equals(initStatus) && !"BAO_TRI".equals(initStatus)) {
+                throw new BusinessException("Phòng mới tạo chỉ được phép ở trạng thái TRONG hoặc BAO_TRI");
+            }
+            phongTro.setTrangThai(initStatus);
         }
 
         String savedImagePath = handleUploadImage(imageFile);
@@ -103,12 +109,30 @@ public class PhongTroServiceImpl implements PhongTroService {
             throw new BusinessException("Mã phòng '" + maPhong + "' đã tồn tại trong hệ thống");
         }
 
+        String requestedStatus = (phongTro.getTrangThai() != null && !phongTro.getTrangThai().trim().isEmpty())
+                ? phongTro.getTrangThai().trim().toUpperCase()
+                : existing.getTrangThai();
+
+        if (!requestedStatus.equals(existing.getTrangThai())) {
+            if ("DA_THUE".equals(existing.getTrangThai())
+                    || hopDongRepository.existsByPhongTroIdAndTrangThai(id, "HIEU_LUC")) {
+                throw new BusinessException("Không thể thay đổi thủ công trạng thái phòng đang thuê (DA_THUE). Vui lòng thanh lý hợp đồng trước.");
+            }
+            if ("DA_DAT".equals(existing.getTrangThai())
+                    || datChoRepository.existsByPhongTroIdAndTrangThai(id, "DANG_GIU")) {
+                throw new BusinessException("Không thể thay đổi thủ công trạng thái phòng đang giữ chỗ (DA_DAT). Vui lòng xử lý giữ chỗ trước.");
+            }
+            if (!"TRONG".equals(requestedStatus) && !"BAO_TRI".equals(requestedStatus)) {
+                throw new BusinessException("Không thể gán thủ công trạng thái Đã thuê / Đã đặt. Vui lòng thực hiện qua luồng Đặt chỗ hoặc Hợp đồng.");
+            }
+        }
+
         existing.setMaPhong(maPhong);
         existing.setTenPhong(phongTro.getTenPhong().trim());
         existing.setLoaiPhong(phongTro.getLoaiPhong());
         existing.setDienTich(phongTro.getDienTich());
         existing.setGiaThue(phongTro.getGiaThue());
-        existing.setTrangThai(phongTro.getTrangThai());
+        existing.setTrangThai(requestedStatus);
         existing.setMoTa(phongTro.getMoTa());
 
         String savedImagePath = handleUploadImage(imageFile);

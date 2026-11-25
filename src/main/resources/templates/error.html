@@ -10,12 +10,12 @@
             <div class="row justify-content-center">
                 <div class="col-lg-6 col-md-8">
                     <div class="card-custom p-4 p-md-5 text-center">
-                        <div class="rounded-circle bg-warning-subtle text-warning d-inline-flex align-items-center justify-content-center mb-3"
+                        <div class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mb-3"
                              style="width: 72px; height: 72px; font-size: 2rem;">
                             <i class="fa-solid fa-triangle-exclamation"></i>
                         </div>
 
-                        <div class="badge bg-amber-subtle text-amber border border-warning-subtle px-3 py-2 rounded-pill mb-3 font-mono"
+                        <div class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill mb-3 font-mono"
                              th:text="'Mã phản hồi HTTP ' + (${errorCode != null ? errorCode : (status != null ? status : 500)})">
                             Mã phản hồi HTTP 500
                         </div>
@@ -39,7 +39,7 @@
                             <a href="javascript:history.back()" class="btn btn-outline-secondary px-4">
                                 <i class="fa-solid fa-arrow-left me-1"></i> Quay lại
                             </a>
-                            <a th:href="@{/}" class="btn btn-primary-custom px-4">
+                            <a th:href="@{/}" class="btn btn-primary px-4">
                                 <i class="fa-solid fa-house me-1"></i> Về trang chính
                             </a>
                         </div>

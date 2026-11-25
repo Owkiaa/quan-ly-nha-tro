@@ -87,7 +87,7 @@
                     </tr>
                     <tr th:each="yc : ${yeuCauPage.content}">
                         <td>
-                            <a th:href="@{/phong-tro/chi-tiet/{id}(id=${yc.phongTro.id})}" class="fw-bold text-warning-emphasis font-mono text-decoration-none" th:text="${yc.phongTro.maPhong}">P101</a>
+                            <a th:href="@{/phong-tro/chi-tiet/{id}(id=${yc.phongTro.id})}" class="fw-bold text-primary font-mono text-decoration-none" th:text="${yc.phongTro.maPhong}">P101</a>
                         </td>
                         <td>
                             <span class="text-dark small fw-medium" th:text="${yc.noiDung}">Nội dung</span>
@@ -100,31 +100,33 @@
                             <span class="small text-muted" th:text="${yc.thoSuaChua != null ? yc.thoSuaChua : 'Chưa phân công'}"></span>
                         </td>
                         <td>
-                            <span class="fw-bold text-dark font-mono" th:text="${yc.chiPhi != null ? #numbers.formatDecimal(yc.chiPhi, 0, 'POINT', 0, 'COMMA') + ' đ' : '0 đ'}">0 đ</span>
+                            <span class="fw-bold price-red-text font-mono" th:text="${yc.chiPhi != null ? #numbers.formatDecimal(yc.chiPhi, 0, 'POINT', 0, 'COMMA') + ' đ' : '0 đ'}">0 đ</span>
                         </td>
                         <td>
-                            <span th:if="${yc.trangThai == 'CHO_TIEP_NHAN'}" class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2 py-1">Chờ tiếp nhận</span>
+                            <span th:if="${yc.trangThai == 'CHO_TIEP_NHAN'}" class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">Chờ tiếp nhận</span>
                             <span th:if="${yc.trangThai == 'DANG_SUA'}" class="badge bg-info-subtle text-info-emphasis border border-info px-2 py-1"><i class="fa-solid fa-wrench me-1"></i>Đang sửa</span>
                             <span th:if="${yc.trangThai == 'HOAN_THANH'}" class="badge-status badge-trong"><i class="fa-solid fa-check me-1"></i>Hoàn thành</span>
                         </td>
                         <td class="text-end">
-                            <!-- Nút Phân công thợ -->
-                            <button th:if="${yc.trangThai != 'HOAN_THANH'}" type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 w-100 mb-1" data-bs-toggle="modal" th:data-bs-target="'#phanCongModal' + ${yc.id}">
-                                <i class="fa-solid fa-user-gear"></i> <span style="font-size: 0.75rem;">Phân công</span>
-                            </button>
+                            <div class="d-inline-flex gap-1 align-items-center flex-nowrap">
+                                <!-- Nút Phân công thợ -->
+                                <button th:if="${yc.trangThai != 'HOAN_THANH'}" type="button" class="btn-quick" title="Phân công thợ" data-bs-toggle="modal" th:data-bs-target="'#phanCongModal' + ${yc.id}">
+                                    <i class="fa-solid fa-user-gear"></i> Phân công
+                                </button>
 
-                            <!-- Nút Hoàn thành -->
-                            <button th:if="${yc.trangThai == 'DANG_SUA'}" type="button" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 w-100 mb-1" data-bs-toggle="modal" th:data-bs-target="'#hoanThanhModal' + ${yc.id}">
-                                <i class="fa-solid fa-check-double"></i> <span style="font-size: 0.75rem;">Nghiệm thu</span>
-                            </button>
+                                <!-- Nút Hoàn thành -->
+                                <button th:if="${yc.trangThai == 'DANG_SUA'}" type="button" class="btn-quick btn-quick-green" title="Nghiệm thu hoàn thành" data-bs-toggle="modal" th:data-bs-target="'#hoanThanhModal' + ${yc.id}">
+                                    <i class="fa-solid fa-check-double"></i> Nghiệm thu
+                                </button>
 
-                            <!-- Nút Xóa -->
-                            <button type="button" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 w-100"
-                                    th:data-url="'/yeu-cau-sua-chua/xoa/' + ${yc.id}"
-                                    th:data-label="'Yêu cầu sửa chữa phòng ' + ${yc.phongTro.maPhong}"
-                                    onclick="confirmDelete(this.dataset.url, this.dataset.label)">
-                                <i class="fa-solid fa-trash-can"></i> <span style="font-size: 0.75rem;">Xóa</span>
-                            </button>
+                                <!-- Nút Xóa -->
+                                <button type="button" class="btn-action btn-action-del" title="Xóa yêu cầu"
+                                        th:data-url="'/yeu-cau-sua-chua/xoa/' + ${yc.id}"
+                                        th:data-label="'Yêu cầu sửa chữa phòng ' + ${yc.phongTro.maPhong}"
+                                        onclick="confirmDelete(this.dataset.url, this.dataset.label)">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
 
                             <!-- ================= MODAL PHÂN CÔNG ================= -->
                             <div th:if="${yc.trangThai != 'HOAN_THANH'}" class="modal fade text-start" th:id="'phanCongModal' + ${yc.id}" tabindex="-1">

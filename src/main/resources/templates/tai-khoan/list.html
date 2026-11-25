@@ -63,11 +63,11 @@
                     <table class="table table-custom align-middle">
                         <thead>
                             <tr>
-                                <th>Tên Đăng Nhập</th>
-                                <th>Vai Trò</th>
+                                <th th:replace="~{components :: sortTh('Tên Đăng Nhập', 'tenDangNhap', '/tai-khoan')}"></th>
+                                <th th:replace="~{components :: sortTh('Vai Trò', 'vaiTro', '/tai-khoan')}"></th>
                                 <th>Khách Thuê Liên Kết</th>
-                                <th>Trạng Thái</th>
-                                <th>Ngày Tạo</th>
+                                <th th:replace="~{components :: sortTh('Trạng Thái', 'trangThai', '/tai-khoan')}"></th>
+                                <th th:replace="~{components :: sortTh('Ngày Tạo', 'ngayTao', '/tai-khoan')}"></th>
                                 <th class="text-end" style="width: 220px;">Hành Động Quản Trị</th>
                             </tr>
                         </thead>
@@ -81,7 +81,7 @@
                             <tr th:each="tk : ${pageData.content}">
                                 <td>
                                     <span class="fw-bold text-dark font-mono" th:text="${tk.tenDangNhap}">admin</span>
-                                    <span th:if="${session.SESSION_USER_ID == tk.id}" class="badge bg-warning-subtle text-warning-emphasis border border-warning ms-1" style="font-size: 0.65rem;">Đang đăng nhập</span>
+                                    <span th:if="${session.SESSION_USER_ID == tk.id}" class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1" style="font-size: 0.65rem;">Đang đăng nhập</span>
                                 </td>
                                 <td>
                                     <span th:if="${tk.vaiTro == 'ADMIN'}" class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 font-mono">ADMIN</span>
@@ -110,7 +110,7 @@
                                     <div class="d-inline-flex gap-1">
                                         <form th:action="@{/tai-khoan/toggle/{id}(id=${tk.id})}" method="POST" class="d-inline">
                                             <button type="submit" class="btn btn-sm btn-action px-2 w-auto"
-                                                    th:classappend="${tk.trangThai} ? 'text-warning' : 'text-success'"
+                                                    th:classappend="${tk.trangThai} ? 'text-danger' : 'text-success'"
                                                     th:title="${tk.trangThai} ? 'Khóa tài khoản này' : 'Mở khóa tài khoản'">
                                                 <i class="fa-solid me-1" th:classappend="${tk.trangThai} ? 'fa-lock' : 'fa-lock-open'"></i>
                                                 <span class="small fw-semibold" th:text="${tk.trangThai} ? 'Khóa' : 'Mở'"></span>
@@ -132,7 +132,7 @@
                 </div>
 
                 <!-- Phân trang -->
-                <div class="px-3 pb-3" th:replace="~{layout/fragments :: pagination(${pageData}, '/tai-khoan', ${keyword}, ${vaiTro}, 'id,desc')}"></div>
+                <div class="px-3 pb-3" th:replace="~{layout/fragments :: pagination(${pageData}, '/tai-khoan', ${keyword}, ${vaiTro}, ${sort != null ? sort : 'id,desc'})}"></div>
             </div>
         </div>
     </main>

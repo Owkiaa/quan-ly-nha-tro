@@ -53,6 +53,7 @@
                                     <option value="">-- Chọn khách thuê liên kết --</option>
                                     <option th:each="khach : ${danhSachKhach}"
                                             th:value="${khach.id}"
+                                            th:selected="${selectedKhachId != null and selectedKhachId == khach.id}"
                                             th:text="${khach.hoTen} + ' - CCCD: ' + ${khach.cccd} + ' (SĐT: ' + ${khach.soDienThoai} + ')'">
                                     </option>
                                 </select>
@@ -71,7 +72,7 @@
 
                 <div class="col-lg-5">
                     <div class="card card-custom p-4">
-                        <h6 class="fw-bold mb-3 text-warning-emphasis">
+                        <h6 class="fw-bold mb-3 text-primary">
                             <i class="fa-solid fa-shield-halved me-1"></i> Phân quyền các vai trò
                         </h6>
                         <ul class="small text-muted ps-3 mb-0" style="font-size: 0.825rem; line-height: 1.7;">
@@ -91,12 +92,19 @@
     <script>
         function handleRoleChange(role) {
             const group = document.getElementById('tenantSelectGroup');
+            if (!group) return;
             if (role === 'TENANT') {
                 group.style.display = 'block';
             } else {
                 group.style.display = 'none';
             }
         }
+        document.addEventListener('DOMContentLoaded', function() {
+            const roleSelect = document.getElementById('vaiTro');
+            if (roleSelect) {
+                handleRoleChange(roleSelect.value);
+            }
+        });
     </script>
 </body>
 </html>
