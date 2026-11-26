@@ -1,6 +1,7 @@
 package com.nhatro.controller;
 
 import com.nhatro.entity.YeuCauSuaChua;
+import com.nhatro.repository.YeuCauSuaChuaRepository;
 import com.nhatro.service.YeuCauSuaChuaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -45,6 +46,13 @@ public class YeuCauSuaChuaController {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", yeuCauPage.getTotalPages());
         model.addAttribute("activeMenu", "yeu-cau-sua-chua");
+
+        model.addAttribute("countChoTiepNhan", yeuCauSuaChuaService.countByTrangThai("CHO_TIEP_NHAN"));
+        model.addAttribute("countDangSua", yeuCauSuaChuaService.countByTrangThai("DANG_SUA"));
+        model.addAttribute("countHoanThanh", yeuCauSuaChuaService.countByTrangThai("HOAN_THANH"));
+        model.addAttribute("countCapBach", yeuCauSuaChuaService.countByMucDo("CAP_BACH"));
+        model.addAttribute("countBinhThuong", yeuCauSuaChuaService.countByMucDo("BINH_THUONG"));
+        model.addAttribute("sumTongChiPhi", yeuCauSuaChuaService.sumTongChiPhi());
 
         return "yeucausuachua/index";
     }
