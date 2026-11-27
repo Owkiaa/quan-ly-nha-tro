@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+
 @Repository
 public interface YeuCauSuaChuaRepository extends JpaRepository<YeuCauSuaChua, Integer> {
 
@@ -22,4 +24,7 @@ public interface YeuCauSuaChuaRepository extends JpaRepository<YeuCauSuaChua, In
            "(:keyword IS NULL OR :keyword = '' OR LOWER(y.phongTro.maPhong) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(y.noiDung) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:trangThai IS NULL OR :trangThai = '' OR y.trangThai = :trangThai)")
     Page<YeuCauSuaChua> search(@Param("keyword") String keyword, @Param("trangThai") String trangThai, Pageable pageable);
+
+    @Query("SELECT COALESCE(SUM(y.chiPhi), 0) FROM YeuCauSuaChua y")
+    BigDecimal sumTongChiPhi();
 }

@@ -19,6 +19,8 @@ public class DashboardDTO {
     private BigDecimal tongDoanhThuDaThu;
     private BigDecimal tongNoChuaThu;
     private BigDecimal doanhThuThangNay;
+    private BigDecimal tongChiPhiSuaChua;
+    private BigDecimal loiNhuanThucNhan;
     private long soHoaDonChuaThanhToan;
     private long soHoaDonDaThanhToan;
 
@@ -158,5 +160,21 @@ public class DashboardDTO {
 
     public void setBieuDoPhongValues(List<Long> bieuDoPhongValues) {
         this.bieuDoPhongValues = bieuDoPhongValues;
+    }
+
+    public BigDecimal getTongChiPhiSuaChua() {
+        return tongChiPhiSuaChua;
+    }
+
+    public void setTongChiPhiSuaChua(BigDecimal tongChiPhiSuaChua) {
+        this.tongChiPhiSuaChua = tongChiPhiSuaChua;
+    }
+
+    public BigDecimal getLoiNhuanThucNhan() {
+        return loiNhuanThucNhan;
+    }
+
+    public void setLoiNhuanThucNhan(BigDecimal loiNhuanThucNhan) {
+        this.loiNhuanThucNhan = loiNhuanThucNhan;
     }
 }
