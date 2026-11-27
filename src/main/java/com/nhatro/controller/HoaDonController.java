@@ -9,6 +9,7 @@ import com.nhatro.entity.HopDong;
 import com.nhatro.exception.BusinessException;
 import com.nhatro.service.HoaDonService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,19 +17,33 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 @Controller
 @RequestMapping("/hoa-don")
 public class HoaDonController {
 
+    private static final Pattern THANG_NAM_PATTERN = Pattern.compile("^(0[1-9]|1[0-2])/\\d{4}$");
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("id", "maHoaDon", "thangNam", "tongTien", "trangThai", "ngayLap");
+
     @Autowired
     private HoaDonService hoaDonService;
+
+    @InitBinder
+    public void initBinder(WebDataBinder dataBinder) {
+        StringTrimmerEditor stringTrimmerEditor = new StringTrimmerEditor(true);
+        dataBinder.registerCustomEditor(String.class, stringTrimmerEditor);
+    }
 
     @GetMapping
     public String danhSach(
@@ -37,34 +52,69 @@ public class HoaDonController {
             @RequestParam(name = "trangThai", required = false) String trangThai,
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "sort", defaultValue = "id,desc") String sort,
             Model model
     ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        String[] sortParams = (sort != null && !sort.isBlank()) ? sort.split(",") : new String[]{"id", "desc"};
+        String sortField = sortParams[0].trim();
+        Sort.Direction direction = (sortParams.length > 1 && "asc".equalsIgnoreCase(sortParams[1].trim()))
+                ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+        if (!ALLOWED_SORT_FIELDS.contains(sortField)) {
+            sortField = "id";
+            direction = Sort.Direction.DESC;
+        }
+        String normalizedSort = sortField + "," + (direction == Sort.Direction.ASC ? "asc" : "desc");
+
+        Pageable pageable = PageRequest.of(Math.max(0, page), size <= 0 ? 10 : size, Sort.by(direction, sortField));
         Page<HoaDon> pageData = hoaDonService.searchHoaDon(keyword, thangNam, trangThai, pageable);
 
         long countDaThanhToan = hoaDonService.countByTrangThai("DA_THANH_TOAN");
         long countChuaThanhToan = hoaDonService.countByTrangThai("CHUA_THANH_TOAN");
-        java.math.BigDecimal tongDaThu = hoaDonService.sumTongDoanhThuDaThu();
+        long totalInvoices = countDaThanhToan + countChuaThanhToan;
+        BigDecimal tongDaThu = hoaDonService.sumTongDoanhThuDaThu();
+        BigDecimal tongNoChuaThu = hoaDonService.sumTongNoChuaThu();
 
         model.addAttribute("pageData", pageData);
         model.addAttribute("countDaThanhToan", countDaThanhToan);
         model.addAttribute("countChuaThanhToan", countChuaThanhToan);
+        model.addAttribute("totalInvoices", totalInvoices);
         model.addAttribute("tongDaThu", tongDaThu);
+        model.addAttribute("tongNoChuaThu", tongNoChuaThu);
         model.addAttribute("keyword", keyword);
         model.addAttribute("thangNam", thangNam);
         model.addAttribute("trangThai", trangThai);
-        model.addAttribute("sort", "id,desc");
-        model.addAttribute("currentPage", page);
+        model.addAttribute("sort", normalizedSort);
+        model.addAttribute("currentPage", Math.max(0, page));
         model.addAttribute("totalPages", pageData.getTotalPages());
 
         return "hoa-don/danh-sach";
     }
 
     @GetMapping("/tao-moi")
-    public String formTaoMoi(Model model) {
+    public String formTaoMoi(
+            @RequestParam(name = "hopDongId", required = false) Integer hopDongId,
+            Model model
+    ) {
         List<HopDong> danhSachHopDong = hoaDonService.getDanhSachHopDongHieuLuc();
         HoaDonCreateDTO dto = new HoaDonCreateDTO();
         dto.setThangNam(LocalDate.now().format(DateTimeFormatter.ofPattern("MM/yyyy")));
+
+        if (hopDongId != null) {
+            try {
+                ChiSoDienNuocDTO prefill = hoaDonService.getChiSoDienNuoc(hopDongId);
+                dto.setHopDongId(prefill.getHopDongId());
+                if (prefill.getGiaThue() != null) {
+                    dto.setTienPhong(prefill.getGiaThue());
+                }
+                dto.setChiSoDienCu(prefill.getChiSoDienCu());
+                dto.setChiSoDienMoi(prefill.getChiSoDienCu());
+                dto.setChiSoNuocCu(prefill.getChiSoNuocCu());
+                dto.setChiSoNuocMoi(prefill.getChiSoNuocCu());
+            } catch (BusinessException ex) {
+                model.addAttribute("errorMessage", ex.getMessage());
+            }
+        }
 
         model.addAttribute("hoaDonDTO", dto);
         model.addAttribute("danhSachHopDong", danhSachHopDong);
@@ -85,9 +135,16 @@ public class HoaDonController {
     @PostMapping("/tao-moi")
     public String xuLyTaoMoi(
             @ModelAttribute("hoaDonDTO") HoaDonCreateDTO dto,
+            BindingResult bindingResult,
             RedirectAttributes redirectAttributes,
             Model model
     ) {
+        validateHoaDonCreateDTO(dto, bindingResult);
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("danhSachHopDong", hoaDonService.getDanhSachHopDongHieuLuc());
+            return "hoa-don/tao-moi";
+        }
+
         try {
             HoaDon hoaDonMoi = hoaDonService.taoHoaDon(dto);
             redirectAttributes.addFlashAttribute("successMessage",
@@ -96,6 +153,14 @@ public class HoaDonController {
                             ". Tổng tiền: " + String.format("%,.0f", hoaDonMoi.getTongTien()) + " VNĐ");
             return "redirect:/hoa-don";
         } catch (BusinessException ex) {
+            String msg = ex.getMessage() != null ? ex.getMessage().toLowerCase() : "";
+            if (msg.contains("đã có hóa đơn trong tháng")) {
+                bindingResult.rejectValue("thangNam", "duplicate", ex.getMessage());
+            } else if (msg.contains("chỉ số điện")) {
+                bindingResult.rejectValue("chiSoDienMoi", "invalid", ex.getMessage());
+            } else if (msg.contains("chỉ số nước")) {
+                bindingResult.rejectValue("chiSoNuocMoi", "invalid", ex.getMessage());
+            }
             model.addAttribute("errorMessage", ex.getMessage());
             model.addAttribute("danhSachHopDong", hoaDonService.getDanhSachHopDongHieuLuc());
             return "hoa-don/tao-moi";
@@ -106,8 +171,6 @@ public class HoaDonController {
         }
     }
 
-<<<<<<< Updated upstream
-=======
     @GetMapping("/tao-hang-loat")
     public String formTaoHangLoat(
             @RequestParam(name = "thangNam", required = false) String thangNam,
@@ -277,7 +340,6 @@ public class HoaDonController {
         }
     }
 
->>>>>>> Stashed changes
     @GetMapping("/{id}")
     public String xemChiTiet(@PathVariable("id") Integer id, Model model) {
         HoaDon hoaDon = hoaDonService.getById(id);
@@ -304,7 +366,7 @@ public class HoaDonController {
         } catch (BusinessException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
-        return "redirect:" + redirectUrl;
+        return "redirect:" + sanitizeRedirectUrl(redirectUrl);
     }
 
     @PostMapping("/{id}/huy-thanh-toan")
@@ -319,6 +381,32 @@ public class HoaDonController {
         } catch (BusinessException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
-        return "redirect:" + redirectUrl;
+        return "redirect:" + sanitizeRedirectUrl(redirectUrl);
+    }
+
+    @PostMapping("/{id}/xoa")
+    public String xoaHoaDon(
+            @PathVariable("id") Integer id,
+            @RequestParam(name = "redirectUrl", defaultValue = "/hoa-don") String redirectUrl,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            hoaDonService.xoaHoaDon(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã xóa hóa đơn nháp thành công.");
+        } catch (BusinessException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:" + sanitizeRedirectUrl(redirectUrl);
+    }
+
+    private String sanitizeRedirectUrl(String redirectUrl) {
+        if (redirectUrl == null || redirectUrl.isBlank()) {
+            return "/hoa-don";
+        }
+        String trimmed = redirectUrl.trim();
+        if (!trimmed.startsWith("/") || trimmed.startsWith("//")) {
+            return "/hoa-don";
+        }
+        return trimmed;
     }
 }

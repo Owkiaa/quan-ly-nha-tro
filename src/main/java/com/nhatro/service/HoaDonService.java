@@ -121,25 +121,6 @@ public class HoaDonService {
             throw new BusinessException("Hợp đồng " + hopDong.getMaHopDong() + " (Phòng " + tenPhong + ") đã có hóa đơn trong tháng " + thangNamChuan + "! Không thể lập trùng.");
         }
 
-<<<<<<< Updated upstream
-        // 3. Tính lượng tiêu thụ: Hỗ trợ linh hoạt chênh lệch (Math.abs) giữa hai chỉ số
-        int chiSoDienCu = (dto.getChiSoDienCu() != null) ? dto.getChiSoDienCu() : 0;
-        int chiSoDienMoi = (dto.getChiSoDienMoi() != null) ? dto.getChiSoDienMoi() : 0;
-        int soDien = Math.abs(chiSoDienMoi - chiSoDienCu);
-
-        int chiSoNuocCu = (dto.getChiSoNuocCu() != null) ? dto.getChiSoNuocCu() : 0;
-        int chiSoNuocMoi = (dto.getChiSoNuocMoi() != null) ? dto.getChiSoNuocMoi() : 0;
-        int soNuoc = Math.abs(chiSoNuocMoi - chiSoNuocCu);
-
-        BigDecimal donGiaDien = (dto.getDonGiaDien() != null && dto.getDonGiaDien().compareTo(BigDecimal.ZERO) >= 0)
-                ? dto.getDonGiaDien() : new BigDecimal("2200");
-        BigDecimal donGiaNuoc = (dto.getDonGiaNuoc() != null && dto.getDonGiaNuoc().compareTo(BigDecimal.ZERO) >= 0)
-                ? dto.getDonGiaNuoc() : new BigDecimal("12900");
-        BigDecimal tienDichVu = (dto.getTienDichVu() != null && dto.getTienDichVu().compareTo(BigDecimal.ZERO) >= 0)
-                ? dto.getTienDichVu() : new BigDecimal("50000");
-        BigDecimal tienPhong = (dto.getTienPhong() != null && dto.getTienPhong().compareTo(BigDecimal.ZERO) > 0)
-                ? dto.getTienPhong() : hopDong.getGiaThueThoaThuan();
-=======
         HoaDon hoaDon = createHoaDonEntity(
                 hopDong,
                 thangNamChuan,
@@ -389,7 +370,6 @@ public class HoaDonService {
                 ? tienDichVuInput : new BigDecimal("100000");
         BigDecimal tienPhong = (tienPhongInput != null && tienPhongInput.compareTo(BigDecimal.ZERO) > 0)
                 ? tienPhongInput : hopDong.getGiaThueThoaThuan();
->>>>>>> Stashed changes
 
         BigDecimal tienDien = BigDecimal.valueOf(soDien).multiply(donGiaDien);
         BigDecimal tienNuoc = BigDecimal.valueOf(soNuoc).multiply(donGiaNuoc);
@@ -460,11 +440,28 @@ public class HoaDonService {
         log.info("Hủy thanh toán hóa đơn: {}", hoaDon.getMaHoaDon());
     }
 
+    @Transactional
+    public void xoaHoaDon(Integer hoaDonId) {
+        HoaDon hoaDon = getById(hoaDonId);
+        if ("DA_THANH_TOAN".equals(hoaDon.getTrangThai())) {
+            throw new BusinessException("Không thể xóa hóa đơn " + hoaDon.getMaHoaDon() + " do đã được thanh toán! Vui lòng hoàn tác thanh toán trước nếu cần hủy.");
+        }
+        if (!"CHUA_THANH_TOAN".equals(hoaDon.getTrangThai())) {
+            throw new BusinessException("Chỉ được phép xóa hóa đơn ở trạng thái CHƯA THANH TOÁN!");
+        }
+        hoaDonRepository.delete(hoaDon);
+        log.info("Xóa thành công hóa đơn nháp: {}", hoaDon.getMaHoaDon());
+    }
+
     public long countByTrangThai(String trangThai) {
         return hoaDonRepository.countByTrangThai(trangThai);
     }
 
     public BigDecimal sumTongDoanhThuDaThu() {
         return hoaDonRepository.sumTongDoanhThuDaThu();
+    }
+
+    public BigDecimal sumTongNoChuaThu() {
+        return hoaDonRepository.sumTongNoChuaThu();
     }
 }
