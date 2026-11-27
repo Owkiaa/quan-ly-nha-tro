@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/fragments :: head('Lập Hóa Đơn Hàng Loạt')}"></head>
+<body>
+<th:block th:replace="~{components :: styles}"></th:block>
+
+    <nav th:replace="~{layout/fragments :: navbar('hoa-don')}"></nav>
+
+    <main class="main-container">
+        <div class="container-xl">
+            <div th:replace="~{layout/fragments :: alerts}"></div>
+
+            <div class="mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <a th:href="@{/hoa-don}" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Quay lại danh sách hóa đơn</span>
+                </a>
+                <a th:href="@{/hoa-don/tao-moi}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span>Lập lẻ 1 hóa đơn</span>
+                </a>
+            </div>
+
+            <div class="mb-4">
+                <h3 class="fw-bold mb-1">Chốt Điện Nước &amp; Lập Hóa Đơn Hàng Loạt</h3>
+                <p class="text-muted small mb-0">Điền nhanh chỉ số điện nước mới cho các hợp đồng đang có hiệu lực để xuất hóa đơn đồng loạt</p>
+            </div>
+
+            <form th:action="@{/hoa-don/tao-hang-loat}" th:object="${batchForm}" method="post" id="formBatchInvoice" novalidate>
+                <div class="card card-custom p-3 mb-4">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label small fw-semibold text-dark">Kỳ Hóa Đơn (MM/yyyy) <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" th:field="*{thangNam}" id="inputBatchThangNam" class="form-control font-mono"
+                                       th:classappend="${#fields.hasErrors('thangNam')} ? 'is-invalid'" placeholder="11/2026" required>
+                                <button type="button" id="btnCheckPeriod" th:attr="data-base-url=@{/hoa-don/tao-hang-loat}" class="btn btn-outline-secondary" title="Kiểm tra các phòng đã lập trong kỳ này">
+                                    <i class="fa-solid fa-arrows-rotate me-1"></i>Tải kỳ
+                                </button>
+                            </div>
+                            <div th:replace="~{components :: fieldError('thangNam')}"></div>
+                        </div>
+
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label small fw-semibold text-dark">Đơn giá điện (đ/kWh)</label>
+                            <input type="number" th:field="*{donGiaDien}" id="batchDonGiaDien" class="form-control form-control-sm font-mono"
+                                   th:classappend="${#fields.hasErrors('donGiaDien')} ? 'is-invalid'" min="0" step="100" required>
+                            <div th:replace="~{components :: fieldError('donGiaDien')}"></div>
+                        </div>
+
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label small fw-semibold text-dark">Đơn giá nước (đ/m³)</label>
+                            <input type="number" th:field="*{donGiaNuoc}" id="batchDonGiaNuoc" class="form-control form-control-sm font-mono"
+                                   th:classappend="${#fields.hasErrors('donGiaNuoc')} ? 'is-invalid'" min="0" step="500" required>
+                            <div th:replace="~{components :: fieldError('donGiaNuoc')}"></div>
+                        </div>
+
+                        <div class="col-md-3 col-sm-6">
+                            <label class="form-label small fw-semibold text-dark">Phí dịch vụ chung mặc định (đ)</label>
+                            <div class="input-group input-group-sm">
+                                <input type="number" id="inputDefaultServiceFee" class="form-control font-mono" value="100000" min="0" step="1000">
+                                <button type="button" id="btnApplyServiceFee" class="btn btn-outline-secondary">Áp dụng</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-custom overflow-hidden mb-4">
+                    <div class="table-responsive">
+                        <table class="table table-custom align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="width: 44px;">
+                                        <input type="checkbox" id="checkAllRows" class="form-check-input" title="Chọn / bỏ chọn tất cả phòng chưa lập">
+                                    </th>
+                                    <th>Phòng &amp; Khách Thuê</th>
+                                    <th style="width: 145px;">Tiền Phòng (đ)</th>
+                                    <th style="width: 220px;">Điện: Cũ &rarr; Mới (kWh)</th>
+                                    <th style="width: 210px;">Nước: Cũ &rarr; Mới (m³)</th>
+                                    <th style="width: 130px;">Dịch Vụ (đ)</th>
+                                    <th class="text-end" style="width: 155px;">Tổng Dự Kiến</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(batchForm.items)}">
+                                    <td colspan="7" class="text-center py-5">
+                                        <div class="text-muted mb-2">
+                                            <i class="fa-solid fa-file-circle-exclamation fs-1 text-secondary opacity-50"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-dark">Không có hợp đồng hiệu lực nào</h6>
+                                        <p class="text-muted small mb-0">Chỉ những hợp đồng ở trạng thái HIEU_LUC mới xuất hiện trong danh sách lập hóa đơn.</p>
+                                    </td>
+                                </tr>
+
+                                <tr th:each="item, stat : *{items}" class="batch-row"
+                                    th:classappend="${item.daCoHoaDon} ? 'table-light opacity-75'"
+                                    th:attr="data-billed=${item.daCoHoaDon}">
+                                    <td class="text-center">
+                                        <input type="hidden" th:field="*{items[__${stat.index}__].hopDongId}">
+                                        <input type="checkbox" th:field="*{items[__${stat.index}__].selected}"
+                                               class="form-check-input row-check"
+                                               th:disabled="${item.daCoHoaDon}">
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <span class="fw-bold text-dark font-mono" th:text="${item.maPhong}">P101</span>
+                                            <span class="badge bg-light text-muted border font-mono" th:text="${item.maHopDong}">HD-P101</span>
+                                            <a th:if="${item.daCoHoaDon and item.existingHoaDonId != null}"
+                                               th:href="@{/hoa-don/{id}(id=${item.existingHoaDonId})}"
+                                               class="badge bg-success-subtle text-success border border-success-subtle text-decoration-none"
+                                               th:text="'Đã lập: ' + ${item.existingMaHoaDon}">Đã lập</a>
+                                        </div>
+                                        <div class="text-muted small mt-1" th:text="${item.tenKhachThue}">Nguyễn Văn An</div>
+                                    </td>
+                                    <td>
+                                        <input type="number" th:field="*{items[__${stat.index}__].tienPhong}"
+                                               class="form-control form-control-sm font-mono text-end row-tien-phong"
+                                               th:classappend="${#fields.hasErrors('items[__${stat.index}__].tienPhong')} ? 'is-invalid'"
+                                               min="0" step="1000" th:readonly="${item.daCoHoaDon}">
+                                        <div class="invalid-feedback d-block"
+                                             th:if="${#fields.hasErrors('items[__${stat.index}__].tienPhong')}"
+                                             th:errors="*{items[__${stat.index}__].tienPhong}"></div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <input type="number" th:field="*{items[__${stat.index}__].chiSoDienCu}"
+                                                   class="form-control form-control-sm font-mono bg-light row-dien-cu"
+                                                   th:classappend="${#fields.hasErrors('items[__${stat.index}__].chiSoDienCu')} ? 'is-invalid'"
+                                                   min="0" th:readonly="${item.daCoHoaDon}">
+                                            <span class="text-muted small">&rarr;</span>
+                                            <input type="number" th:field="*{items[__${stat.index}__].chiSoDienMoi}"
+                                                   class="form-control form-control-sm font-mono row-dien-moi"
+                                                   th:classappend="${#fields.hasErrors('items[__${stat.index}__].chiSoDienMoi')} ? 'is-invalid'"
+                                                   min="0" th:readonly="${item.daCoHoaDon}">
+                                        </div>
+                                        <div class="small text-muted font-mono mt-1 row-dien-info">0 kWh &bull; 0 đ</div>
+                                        <div class="invalid-feedback d-block"
+                                             th:if="${#fields.hasErrors('items[__${stat.index}__].chiSoDienCu')}"
+                                             th:errors="*{items[__${stat.index}__].chiSoDienCu}"></div>
+                                        <div class="invalid-feedback d-block"
+                                             th:if="${#fields.hasErrors('items[__${stat.index}__].chiSoDienMoi')}"
+                                             th:errors="*{items[__${stat.index}__].chiSoDienMoi}"></div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <input type="number" th:field="*{items[__${stat.index}__].chiSoNuocCu}"
+                                                   class="form-control form-control-sm font-mono bg-light row-nuoc-cu"
+                                                   th:classappend="${#fields.hasErrors('items[__${stat.index}__].chiSoNuocCu')} ? 'is-invalid'"
+                                                   min="0" th:readonly="${item.daCoHoaDon}">
+                                            <span class="text-muted small">&rarr;</span>
+                                            <input type="number" th:field="*{items[__${stat.index}__].chiSoNuocMoi}"
+                                                   class="form-control form-control-sm font-mono row-nuoc-moi"
+                                                   th:classappend="${#fields.hasErrors('items[__${stat.index}__].chiSoNuocMoi')} ? 'is-invalid'"
+                                                   min="0" th:readonly="${item.daCoHoaDon}">
+                                        </div>
+                                        <div class="small text-muted font-mono mt-1 row-nuoc-info">0 m³ &bull; 0 đ</div>
+                                        <div class="invalid-feedback d-block"
+                                             th:if="${#fields.hasErrors('items[__${stat.index}__].chiSoNuocCu')}"
+                                             th:errors="*{items[__${stat.index}__].chiSoNuocCu}"></div>
+                                        <div class="invalid-feedback d-block"
+                                             th:if="${#fields.hasErrors('items[__${stat.index}__].chiSoNuocMoi')}"
+                                             th:errors="*{items[__${stat.index}__].chiSoNuocMoi}"></div>
+                                    </td>
+                                    <td>
+                                        <input type="number" th:field="*{items[__${stat.index}__].tienDichVu}"
+                                               class="form-control form-control-sm font-mono text-end row-dich-vu"
+                                               th:classappend="${#fields.hasErrors('items[__${stat.index}__].tienDichVu')} ? 'is-invalid'"
+                                               min="0" step="1000" th:readonly="${item.daCoHoaDon}">
+                                        <div class="invalid-feedback d-block"
+                                             th:if="${#fields.hasErrors('items[__${stat.index}__].tienDichVu')}"
+                                             th:errors="*{items[__${stat.index}__].tienDichVu}"></div>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="fw-bold font-mono text-dark row-tong-tien">0 đ</div>
+                                        <div class="small text-muted" th:if="${item.daCoHoaDon}">Đã xuất</div>
+                                        <div class="small text-muted row-status-hint" th:unless="${item.daCoHoaDon}">Chờ lập</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="p-3 bg-light border-top d-flex flex-wrap justify-content-between align-items-center gap-3">
+                        <div class="d-flex flex-wrap align-items-center gap-4">
+                            <div class="small">
+                                Số phòng được chọn: <strong id="lblSelectedCount" class="font-mono text-dark">0</strong>
+                            </div>
+                            <div class="small">
+                                Tổng doanh thu dự kiến lập mới:
+                                <strong id="lblGrandTotal" class="font-mono text-warning-emphasis fs-5 ms-1">0 đ</strong>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a th:href="@{/hoa-don}" class="btn btn-outline-secondary btn-sm px-3 py-2">Hủy bỏ</a>
+                            <button type="submit" id="btnSubmitBatch" class="btn btn-primary btn-sm px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center gap-2">
+                                <i class="fa-solid fa-layer-group"></i>
+                                <span>Lập Hóa Đơn Hàng Loạt</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer th:replace="~{layout/fragments :: footer}"></footer>
+
+    <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+
+    <script>
+        (function () {
+            const formatMoney = (amount) => new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
+
+            const inputThangNam = document.getElementById('inputBatchThangNam');
+            const btnCheckPeriod = document.getElementById('btnCheckPeriod');
+            const donGiaDienInput = document.getElementById('batchDonGiaDien');
+            const donGiaNuocInput = document.getElementById('batchDonGiaNuoc');
+            const defaultServiceInput = document.getElementById('inputDefaultServiceFee');
+            const btnApplyServiceFee = document.getElementById('btnApplyServiceFee');
+            const checkAllRows = document.getElementById('checkAllRows');
+            const lblSelectedCount = document.getElementById('lblSelectedCount');
+            const lblGrandTotal = document.getElementById('lblGrandTotal');
+            const btnSubmitBatch = document.getElementById('btnSubmitBatch');
+            const rows = Array.from(document.querySelectorAll('.batch-row'));
+
+            const updateSelectAllState = () => {
+                const enabledChecks = rows
+                    .filter(r => r.dataset.billed !== 'true')
+                    .map(r => r.querySelector('.row-check'))
+                    .filter(Boolean);
+                if (enabledChecks.length === 0) {
+                    checkAllRows.checked = false;
+                    checkAllRows.disabled = true;
+                    return;
+                }
+                checkAllRows.disabled = false;
+                checkAllRows.checked = enabledChecks.every(cb => cb.checked);
+            };
+
+            const recalculateAll = () => {
+                const giaDien = Math.max(0, parseFloat(donGiaDienInput.value) || 0);
+                const giaNuoc = Math.max(0, parseFloat(donGiaNuocInput.value) || 0);
+                let selectedCount = 0;
+                let grandTotal = 0;
+
+                rows.forEach(row => {
+                    const isBilled = row.dataset.billed === 'true';
+                    const checkEl = row.querySelector('.row-check');
+                    const dienCuEl = row.querySelector('.row-dien-cu');
+                    const dienMoiEl = row.querySelector('.row-dien-moi');
+                    const nuocCuEl = row.querySelector('.row-nuoc-cu');
+                    const nuocMoiEl = row.querySelector('.row-nuoc-moi');
+                    const tienPhongEl = row.querySelector('.row-tien-phong');
+                    const dichVuEl = row.querySelector('.row-dich-vu');
+                    const dienInfoEl = row.querySelector('.row-dien-info');
+                    const nuocInfoEl = row.querySelector('.row-nuoc-info');
+                    const tongTienEl = row.querySelector('.row-tong-tien');
+                    const hintEl = row.querySelector('.row-status-hint');
+
+                    const dienCu = parseInt(dienCuEl.value) || 0;
+                    const dienMoi = parseInt(dienMoiEl.value) || 0;
+                    const nuocCu = parseInt(nuocCuEl.value) || 0;
+                    const nuocMoi = parseInt(nuocMoiEl.value) || 0;
+                    const tienPhong = Math.max(0, parseFloat(tienPhongEl.value) || 0);
+                    const dichVu = Math.max(0, parseFloat(dichVuEl.value) || 0);
+
+                    const soDien = Math.max(0, dienMoi - dienCu);
+                    const soNuoc = Math.max(0, nuocMoi - nuocCu);
+                    const tienDien = soDien * giaDien;
+                    const tienNuoc = soNuoc * giaNuoc;
+                    const rowTotal = tienPhong + tienDien + tienNuoc + dichVu;
+
+                    if (!isBilled) {
+                        dienMoiEl.classList.toggle('border-danger', dienMoi < dienCu);
+                        nuocMoiEl.classList.toggle('border-danger', nuocMoi < nuocCu);
+                    }
+
+                    dienInfoEl.textContent = soDien + ' kWh \u2022 ' + formatMoney(tienDien);
+                    nuocInfoEl.textContent = soNuoc + ' m\u00B3 \u2022 ' + formatMoney(tienNuoc);
+                    tongTienEl.textContent = formatMoney(rowTotal);
+
+                    if (!isBilled && checkEl && checkEl.checked) {
+                        selectedCount++;
+                        grandTotal += rowTotal;
+                        if (hintEl) {
+                            hintEl.textContent = 'Sẽ lập';
+                            hintEl.className = 'small text-primary fw-semibold row-status-hint';
+                        }
+                    } else if (!isBilled && hintEl) {
+                        hintEl.textContent = 'Bỏ qua';
+                        hintEl.className = 'small text-muted row-status-hint';
+                    }
+                });
+
+                lblSelectedCount.textContent = selectedCount;
+                lblGrandTotal.textContent = formatMoney(grandTotal);
+                btnSubmitBatch.disabled = selectedCount === 0;
+                updateSelectAllState();
+            };
+
+            if (btnCheckPeriod) {
+                btnCheckPeriod.addEventListener('click', () => {
+                    const period = (inputThangNam.value || '').trim();
+                    const baseUrl = btnCheckPeriod.dataset.baseUrl || '/hoa-don/tao-hang-loat';
+                    const url = baseUrl + (period ? '?thangNam=' + encodeURIComponent(period) : '');
+                    window.location.href = url;
+                });
+            }
+
+            if (inputThangNam) {
+                inputThangNam.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (btnCheckPeriod) {
+                            btnCheckPeriod.click();
+                        }
+                    }
+                });
+            }
+
+            if (checkAllRows) {
+                checkAllRows.addEventListener('change', () => {
+                    rows.forEach(row => {
+                        if (row.dataset.billed !== 'true') {
+                            const cb = row.querySelector('.row-check');
+                            if (cb) {
+                                cb.checked = checkAllRows.checked;
+                            }
+                        }
+                    });
+                    recalculateAll();
+                });
+            }
+
+            if (btnApplyServiceFee) {
+                btnApplyServiceFee.addEventListener('click', () => {
+                    const fee = Math.max(0, parseFloat(defaultServiceInput.value) || 0);
+                    rows.forEach(row => {
+                        if (row.dataset.billed !== 'true') {
+                            const el = row.querySelector('.row-dich-vu');
+                            if (el) {
+                                el.value = fee;
+                            }
+                        }
+                    });
+                    recalculateAll();
+                });
+            }
+
+            [donGiaDienInput, donGiaNuocInput].forEach(el => {
+                if (el) {
+                    el.addEventListener('input', recalculateAll);
+                }
+            });
+
+            rows.forEach(row => {
+                row.querySelectorAll('input').forEach(inp => {
+                    inp.addEventListener('input', recalculateAll);
+                    inp.addEventListener('change', recalculateAll);
+                });
+            });
+
+            recalculateAll();
+        })();
+    </script>
+</body>
+</html>
