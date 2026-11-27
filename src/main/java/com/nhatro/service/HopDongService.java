@@ -379,4 +379,20 @@ public class HopDongService {
     public long demDaThanhLy() {
         return hopDongRepository.countByTrangThai(TRANG_THAI_DA_THANH_LY);
     }
+
+    /**
+     * Tính toán chuỗi băm SHA-256 toàn vẹn cho hợp đồng.
+     */
+    public String tinhMaBamToanVen(HopDong hopDong) {
+        return com.nhatro.util.ContractHashUtil.generateContractHash(hopDong);
+    }
+
+    /**
+     * Đối soát tính toàn vẹn của hợp đồng theo ID và mã băm kỳ vọng.
+     */
+    public boolean kiemTraToanVen(Integer hopDongId, String expectedHash) {
+        return hopDongRepository.findById(hopDongId)
+                .map(hd -> com.nhatro.util.ContractHashUtil.verifyContractHash(hd, expectedHash))
+                .orElse(false);
+    }
 }

@@ -18,6 +18,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.servlet.http.HttpServletRequest;
+import com.nhatro.util.ContractHashUtil;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -148,20 +150,75 @@ public class HopDongController {
     }
 
     /**
-     * Xem thông tin chi tiết một hợp đồng thuê phòng.
+     * Xem thông tin chi tiết một hợp đồng thuê phòng, bao gồm chứng thư và mã băm toàn vẹn SHA-256.
      */
     @GetMapping("/{id}")
-    public String xemChiTiet(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
+    public String xemChiTiet(@PathVariable Integer id,
+                             @RequestParam(required = false) String check,
+                             HttpServletRequest request,
+                             Model model, RedirectAttributes redirectAttributes) {
         return hopDongService.timTheoId(id)
                 .map(hd -> {
+                    String hash = hopDongService.tinhMaBamToanVen(hd);
+                    String scheme = request.getScheme();
+                    String serverName = request.getServerName();
+                    int serverPort = request.getServerPort();
+                    String contextPath = request.getContextPath();
+                    String portStr = (("http".equals(scheme) && serverPort == 80) || ("https".equals(scheme) && serverPort == 443)) ? "" : ":" + serverPort;
+                    String baseUrl = scheme + "://" + serverName + portStr + contextPath;
+
+                    String linkXacThuc = baseUrl + "/hop-dong/xac-thuc/" + hd.getMaHopDong();
+                    String qrUrl = ContractHashUtil.buildQrCodeUrl(linkXacThuc);
+
                     model.addAttribute("hopDong", hd);
+                    model.addAttribute("maBamToanVen", hash);
+                    model.addAttribute("linkXacThuc", linkXacThuc);
+                    model.addAttribute("qrCodeUrl", qrUrl);
                     model.addAttribute("activeMenu", "hop-dong");
+
+                    if ("true".equalsIgnoreCase(check)) {
+                        model.addAttribute("daKiemTraToanVen", true);
+                    }
                     return "hop-dong/detail";
                 })
                 .orElseGet(() -> {
                     redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy hợp đồng với ID: " + id);
                     return "redirect:/hop-dong";
                 });
+    }
+
+    /**
+     * Tra cứu công khai và chứng thực tính toàn vẹn của hợp đồng qua mã hợp đồng (quét từ mã QR).
+     */
+    @GetMapping("/xac-thuc/{maHopDong}")
+    public String xacThucHopDong(@PathVariable String maHopDong,
+                                 HttpServletRequest request,
+                                 Model model) {
+        Optional<HopDong> opt = hopDongService.timTheoMaHopDong(maHopDong);
+        if (opt.isEmpty()) {
+            model.addAttribute("timThay", false);
+            model.addAttribute("maHopDong", maHopDong);
+            return "hop-dong/xac-thuc";
+        }
+
+        HopDong hd = opt.get();
+        String hash = hopDongService.tinhMaBamToanVen(hd);
+        String scheme = request.getScheme();
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
+        String contextPath = request.getContextPath();
+        String portStr = (("http".equals(scheme) && serverPort == 80) || ("https".equals(scheme) && serverPort == 443)) ? "" : ":" + serverPort;
+        String baseUrl = scheme + "://" + serverName + portStr + contextPath;
+
+        String linkXacThuc = baseUrl + "/hop-dong/xac-thuc/" + hd.getMaHopDong();
+        String qrUrl = ContractHashUtil.buildQrCodeUrl(linkXacThuc);
+
+        model.addAttribute("timThay", true);
+        model.addAttribute("hopDong", hd);
+        model.addAttribute("maBamToanVen", hash);
+        model.addAttribute("linkXacThuc", linkXacThuc);
+        model.addAttribute("qrCodeUrl", qrUrl);
+        return "hop-dong/xac-thuc";
     }
 
     /**

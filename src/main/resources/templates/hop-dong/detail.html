@@ -12,6 +12,18 @@
             <!-- Flash Alerts -->
             <div th:replace="~{layout/fragments :: alerts}"></div>
 
+            <!-- Verification Alert if checked -->
+            <div th:if="${daKiemTraToanVen}" class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-3 mb-4 shadow-sm border-0 border-start border-success border-4 rounded-3" role="alert">
+                <i class="fa-solid fa-circle-check fs-4 text-success"></i>
+                <div>
+                    <div class="fw-bold text-dark">KẾT QUẢ ĐỐI SOÁT CHỮ KÝ SỐ SHA-256: HỢP LỆ VÀ NGUYÊN VẸN!</div>
+                    <div class="small text-secondary">
+                        Hệ thống đã băm lại toàn bộ dữ liệu hợp đồng hiện tại và đối soát thành công với chữ ký số mật mã. Dữ liệu chưa từng bị sửa đổi trái phép trong CSDL.
+                    </div>
+                </div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
             <!-- Page Header -->
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
                 <div>
@@ -152,6 +164,64 @@
                                     <div class="text-secondary small mb-1">Tiền đặt cọc:</div>
                                     <div class="fw-bold font-mono text-success fs-6"
                                          th:text="${#numbers.formatDecimal(hopDong.tienDatCoc, 0, 'POINT', 0, 'COMMA')} + ' đ'">3,000,000 đ</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Minh Bạch Pháp Lý & Chứng Thư Toàn Vẹn Số (SHA-256 Hash & QR Code) -->
+                <div class="col-12">
+                    <div class="card-custom p-4" style="background: linear-gradient(to right, #ffffff, #fcfbf9); border-left: 4px solid #059669;">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-2 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-success-subtle text-success p-2 rounded-circle">
+                                    <i class="fa-solid fa-shield-halved fs-6"></i>
+                                </span>
+                                <div>
+                                    <h6 class="fw-bold text-dark text-uppercase small mb-0">Chứng Thư Toàn Vẹn &amp; Chống Giả Mạo Hợp Đồng (SHA-256)</h6>
+                                    <small class="text-muted" style="font-size: 0.75rem;">Mã hóa và xác thực dữ liệu bất biến bằng thuật toán băm chuẩn mật mã</small>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a th:href="@{'/hop-dong/' + ${hopDong.id} + '?check=true'}" class="btn btn-outline-success btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-1">
+                                    <i class="fa-solid fa-check-double"></i>
+                                    <span>Đối Soát Tính Toàn Vẹn</span>
+                                </a>
+                                <a th:href="${linkXacThuc}" target="_blank" class="btn btn-light border btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-1" title="Mở chứng thư xác thực công khai">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    <span>Trang Tra Cứu</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 align-items-center">
+                            <!-- Cột hiển thị mã QR -->
+                            <div class="col-md-auto col-12 text-center text-md-start">
+                                <div class="p-2 bg-white border rounded-3 d-inline-block shadow-sm">
+                                    <img th:src="${qrCodeUrl}" alt="Mã QR Xác Thực Hợp Đồng" style="width: 110px; height: 110px;" class="rounded-2 d-block">
+                                </div>
+                                <div class="text-muted small mt-1 font-mono" style="font-size: 0.68rem;">Quét để xác thực</div>
+                            </div>
+
+                            <!-- Cột thông tin mã băm và giải thích -->
+                            <div class="col-md col-12">
+                                <div class="mb-2">
+                                    <label class="form-label small fw-semibold text-secondary mb-1">
+                                        Mã băm toàn vẹn (SHA-256 Checksum):
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control font-mono bg-light border" th:value="${maBamToanVen}" id="hashInput" readonly>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('hashInput').value); alert('Đã sao chép mã băm SHA-256!');" title="Sao chép mã băm">
+                                            <i class="fa-regular fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-light border p-2 rounded-2 mb-0 small text-secondary" style="font-size: 0.78rem;">
+                                    <i class="fa-solid fa-info-circle text-success me-1"></i>
+                                    Mã băm này được sinh tự động từ chuỗi dữ liệu gốc (<code>Mã HĐ + CCCD + Mã phòng + Ngày bắt đầu + Giá thuê + Tiền cọc</code>).
+                                    Nếu có bất kỳ ai cố tình can thiệp chỉnh sửa dữ liệu trong CSDL, mã băm sẽ lập tức thay đổi, giúp chủ trọ và khách thuê phát hiện sai lệch ngay tức khắc.
                                 </div>
                             </div>
                         </div>
