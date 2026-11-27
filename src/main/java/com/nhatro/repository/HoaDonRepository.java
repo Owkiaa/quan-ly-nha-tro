@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -32,6 +33,12 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
     Page<HoaDon> search(@Param("keyword") String keyword, @Param("thangNam") String thangNam, @Param("trangThai") String trangThai, Pageable pageable);
 
     java.util.Optional<HoaDon> findTopByHopDongIdOrderByNgayLapDesc(Integer hopDongId);
+
+    @Query("SELECT hd FROM HoaDon hd JOIN FETCH hd.hopDong WHERE hd.thangNam = :thangNam")
+    List<HoaDon> findByThangNamWithHopDong(@Param("thangNam") String thangNam);
+
+    @Query("SELECT hd FROM HoaDon hd JOIN FETCH hd.hopDong WHERE hd.hopDong.id IN :hopDongIds ORDER BY hd.ngayLap DESC, hd.id DESC")
+    List<HoaDon> findLatestByHopDongIds(@Param("hopDongIds") List<Integer> hopDongIds);
 
     @Query("SELECT COALESCE(SUM(hd.tongTien), 0) FROM HoaDon hd WHERE hd.trangThai = 'DA_THANH_TOAN'")
     java.math.BigDecimal sumTongDoanhThuDaThu();
