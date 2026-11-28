@@ -26,59 +26,43 @@
                 </div>
             </div>
 
-            <!-- Quick Stat KPI Cards -->
-            <div class="row g-3 mb-4">
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #10b981;">
-                        <div class="d-flex align-items-center justify-content-between">
+            <!-- Quick Stat KPI Strip (1 hàng gọn gàng, Tổng độc lập bộ lọc) -->
+            <div class="kpi-bar"
+                 th:with="tongHopDong=${totalContracts != null ? totalContracts : (countHieuLuc + countHetHan + countDaThanhLy)}">
+                <div class="row g-2">
+                    <div class="col-xl-3 col-md-6 col-6">
+                        <div class="kpi-item" style="border-left: 3px solid var(--color-trong);">
+                            <div class="kpi-icon" style="background: var(--bg-trong); color: var(--color-trong);"><i class="fa-solid fa-file-circle-check"></i></div>
                             <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">ĐANG HIỆU LỰC</div>
-                                <h3 class="fw-bold mb-0 text-success font-mono mt-1" th:text="${countHieuLuc}">0</h3>
-                            </div>
-                            <div class="stat-icon bg-success-subtle text-success">
-                                <i class="fa-solid fa-file-circle-check"></i>
+                                <div class="kpi-label">Đang hiệu lực</div>
+                                <div class="kpi-val" style="color: var(--color-trong);" th:text="${countHieuLuc}">0</div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #f59e0b;">
-                        <div class="d-flex align-items-center justify-content-between">
+                    <div class="col-xl-3 col-md-6 col-6">
+                        <div class="kpi-item" style="border-left: 3px solid var(--color-dadat);">
+                            <div class="kpi-icon" style="background: var(--bg-dadat); color: var(--color-dadat);"><i class="fa-solid fa-file-circle-exclamation"></i></div>
                             <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">HẾT HẠN</div>
-                                <h3 class="fw-bold mb-0 text-warning-emphasis font-mono mt-1" th:text="${countHetHan}">0</h3>
-                            </div>
-                            <div class="stat-icon bg-warning-subtle text-warning-emphasis">
-                                <i class="fa-solid fa-file-circle-exclamation"></i>
+                                <div class="kpi-label">Hết hạn</div>
+                                <div class="kpi-val" style="color: var(--color-dadat);" th:text="${countHetHan}">0</div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #6b7280;">
-                        <div class="d-flex align-items-center justify-content-between">
+                    <div class="col-xl-3 col-md-6 col-6">
+                        <div class="kpi-item">
+                            <div class="kpi-icon" style="background: #f1f5f9; color: #475569;"><i class="fa-solid fa-box-archive"></i></div>
                             <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">ĐÃ THANH LÝ</div>
-                                <h3 class="fw-bold mb-0 text-secondary font-mono mt-1" th:text="${countDaThanhLy}">0</h3>
-                            </div>
-                            <div class="stat-icon bg-secondary-subtle text-secondary">
-                                <i class="fa-solid fa-box-archive"></i>
+                                <div class="kpi-label">Đã thanh lý</div>
+                                <div class="kpi-val text-secondary" th:text="${countDaThanhLy}">0</div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #2563eb;">
-                        <div class="d-flex align-items-center justify-content-between">
+                    <div class="col-xl-3 col-md-6 col-6">
+                        <div class="kpi-item" style="border-left: 3px solid var(--color-dathue);">
+                            <div class="kpi-icon" style="background: var(--bg-dathue); color: var(--color-dathue);"><i class="fa-solid fa-folder-open"></i></div>
                             <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">TỔNG HỢP ĐỒNG</div>
-                                <h3 class="fw-bold mb-0 text-primary font-mono mt-1" th:text="${pageData.totalElements}">0</h3>
-                            </div>
-                            <div class="stat-icon bg-primary-subtle text-primary">
-                                <i class="fa-solid fa-folder-open"></i>
+                                <div class="kpi-label">Tổng hợp đồng</div>
+                                <div class="kpi-val" style="color: var(--color-dathue);" th:text="${tongHopDong}">0</div>
                             </div>
                         </div>
                     </div>
@@ -127,8 +111,8 @@
             <!-- Table Card -->
             <div class="card-custom overflow-hidden mb-4">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
-                        <thead class="table-light text-secondary text-uppercase fw-semibold" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                    <table class="table table-custom align-middle mb-0">
+                        <thead>
                             <tr>
                                 <th class="ps-3 py-3" style="width: 50px;">#</th>
                                 <th>Mã Hợp Đồng</th>
@@ -137,7 +121,7 @@
                                 <th>Thời Hạn Thuê</th>
                                 <th>Giá Thuê / Cọc</th>
                                 <th>Trạng Thái</th>
-                                <th class="text-end pe-3" style="width: 160px;">Thao Tác</th>
+                                <th class="text-end pe-3" style="width: 240px;">Thao Tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -176,38 +160,45 @@
                                     <small class="text-muted" th:text="'Kỳ đóng: ' + ${item.chuKyThanhToan} + ' tháng/lần'"></small>
                                 </td>
                                 <td>
-                                    <div class="fw-bold font-mono text-primary"
+                                    <div class="price-red-text"
                                          th:text="${#numbers.formatDecimal(item.giaThueThoaThuan, 0, 'POINT', 0, 'COMMA')} + ' đ'">3,000,000 đ</div>
                                     <small class="text-muted font-mono"
                                            th:text="'Cọc: ' + ${#numbers.formatDecimal(item.tienDatCoc, 0, 'POINT', 0, 'COMMA')} + ' đ'"></small>
                                 </td>
                                 <td>
-                                    <span th:if="${item.trangThai == 'HIEU_LUC'}" class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill">
-                                        <i class="fa-solid fa-circle-check me-1"></i> Hiệu Lực
+                                    <span th:if="${item.trangThai == 'HIEU_LUC'}" class="badge-status badge-trong">
+                                        <i class="fa-solid fa-circle-check"></i> Hiệu Lực
                                     </span>
-                                    <span th:if="${item.trangThai == 'HET_HAN'}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 rounded-pill">
-                                        <i class="fa-solid fa-clock me-1"></i> Hết Hạn
+                                    <span th:if="${item.trangThai == 'HET_HAN'}" class="badge-status badge-dadat">
+                                        <i class="fa-solid fa-clock"></i> Hết Hạn
                                     </span>
-                                    <span th:if="${item.trangThai == 'DA_THANH_LY'}" class="badge bg-secondary-subtle text-secondary border px-2 py-1 rounded-pill">
-                                        <i class="fa-solid fa-box-archive me-1"></i> Đã Thanh Lý
+                                    <span th:if="${item.trangThai == 'DA_THANH_LY'}" class="badge-status badge-datraphong">
+                                        <i class="fa-solid fa-box-archive"></i> Đã Thanh Lý
                                     </span>
                                 </td>
                                 <td class="text-end pe-3">
-                                    <div class="btn-group btn-group-sm">
-                                        <a th:href="@{'/hop-dong/' + ${item.id}}" class="btn btn-light border text-secondary" title="Xem chi tiết">
+                                    <div class="d-inline-flex gap-1 align-items-center">
+                                        <a th:if="${item.trangThai == 'HIEU_LUC'}"
+                                           th:href="@{/hoa-don/tao-moi(hopDongId=${item.id})}"
+                                           class="btn-quick" title="Lập hóa đơn kỳ này">
+                                            <i class="fa-solid fa-receipt"></i> Lập hóa đơn
+                                        </a>
+                                        <a th:href="@{'/hop-dong/' + ${item.id}}" class="btn-action action-view" title="Xem chi tiết">
                                             <i class="fa-regular fa-eye"></i>
                                         </a>
-                                        <a th:href="@{'/hop-dong/' + ${item.id} + '/xem-truoc'}" class="btn btn-light border text-primary" title="Xem trước &amp; Tải PDF">
+                                        <a th:href="@{'/hop-dong/' + ${item.id} + '/xem-truoc'}" class="btn-action action-view text-primary" title="Xem trước &amp; Tải PDF">
                                             <i class="fa-solid fa-file-pdf"></i>
                                         </a>
                                         <a th:if="${item.trangThai == 'HIEU_LUC' or item.trangThai == 'HET_HAN'}"
                                            th:href="@{'/hop-dong/' + ${item.id} + '/thanh-ly'}"
-                                           class="btn btn-light border text-warning"
+                                           class="btn-action action-edit"
                                            title="Quyết toán tiền cọc &amp; Thanh lý">
                                             <i class="fa-solid fa-handshake-slash"></i>
                                         </a>
-                                        <button type="button" class="btn btn-light border text-danger"
-                                                th:onclick="'moModalXoaHopDong(' + ${item.id} + ', \'' + ${item.maHopDong} + '\')'"
+                                        <button type="button" class="btn-action action-delete"
+                                                th:data-id="${item.id}"
+                                                th:data-mahopdong="${item.maHopDong}"
+                                                onclick="moModalXoaHopDong(this)"
                                                 title="Xóa hợp đồng">
                                             <i class="fa-regular fa-trash-can"></i>
                                         </button>
@@ -289,7 +280,10 @@
     <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
 
     <script>
-        function moModalThanhLy(id, maHopDong, maPhong) {
+        function moModalThanhLy(btn) {
+            const id = btn.dataset.id;
+            const maHopDong = btn.dataset.mahopdong;
+            const maPhong = btn.dataset.maphong;
             const form = document.getElementById('formThanhLy');
             const noiDung = document.getElementById('noiDungThanhLy');
             if (form && noiDung) {
@@ -300,7 +294,9 @@
             }
         }
 
-        function moModalXoaHopDong(id, maHopDong) {
+        function moModalXoaHopDong(btn) {
+            const id = btn.dataset.id;
+            const maHopDong = btn.dataset.mahopdong;
             const form = document.getElementById('formXoaHopDong');
             const noiDung = document.getElementById('noiDungXoa');
             if (form && noiDung) {

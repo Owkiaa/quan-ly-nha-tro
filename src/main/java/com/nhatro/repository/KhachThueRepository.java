@@ -17,6 +17,8 @@ public interface KhachThueRepository extends JpaRepository<KhachThue, Integer> {
 
     boolean existsByCccd(String cccd);
 
+    long countByTrangThai(String trangThai);
+
     @Query("SELECT k FROM KhachThue k WHERE " +
            "(:keyword IS NULL OR :keyword = '' OR LOWER(k.hoTen) LIKE LOWER(CONCAT('%', :keyword, '%')) OR k.cccd LIKE CONCAT('%', :keyword, '%') OR k.soDienThoai LIKE CONCAT('%', :keyword, '%')) AND " +
            "(:trangThai IS NULL OR :trangThai = '' OR k.trangThai = :trangThai)")

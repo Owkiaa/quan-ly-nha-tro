@@ -55,7 +55,7 @@
                     <div class="card-custom p-4 h-100">
                         <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
                             <h6 class="fw-bold text-dark text-uppercase small mb-0">
-                                <i class="fa-solid fa-door-open text-warning me-2"></i>Thông Tin Phòng Trọ
+                                <i class="fa-solid fa-door-open text-primary me-2"></i>Thông Tin Phòng Trọ
                             </h6>
                             <span class="badge bg-light text-dark font-mono border" th:text="${datCho.phongTro.maPhong}">P101</span>
                         </div>
@@ -70,7 +70,7 @@
                             <dd class="col-7 font-mono" th:text="${datCho.phongTro.dienTich != null ? datCho.phongTro.dienTich + ' m²' : '-'}">-</dd>
 
                             <dt class="col-5 text-secondary">Giá thuê niêm yết:</dt>
-                            <dd class="col-7 fw-bold text-primary font-mono"
+                            <dd class="col-7 price-red-text"
                                 th:text="${#numbers.formatDecimal(datCho.phongTro.giaThue, 0, 'POINT', 0, 'COMMA')} + ' đ/tháng'">2,500,000 đ</dd>
 
                             <dt class="col-5 text-secondary">Trạng thái phòng:</dt>
@@ -86,7 +86,7 @@
                     <div class="card-custom p-4 h-100">
                         <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
                             <h6 class="fw-bold text-dark text-uppercase small mb-0">
-                                <i class="fa-solid fa-user text-warning me-2"></i>Thông Tin Khách Hàng
+                                <i class="fa-solid fa-user text-primary me-2"></i>Thông Tin Khách Hàng
                             </h6>
                             <span class="badge bg-light text-secondary font-mono border" th:text="'ID: ' + ${datCho.khachThue.id}">ID: 1</span>
                         </div>
@@ -115,7 +115,7 @@
                 <div class="col-12">
                     <div class="card-custom p-4">
                         <h6 class="fw-bold text-dark text-uppercase small mb-3 pb-2 border-bottom">
-                            <i class="fa-solid fa-clock-rotate-left text-warning me-2"></i>Tiến Trình &amp; Thời Hạn Giữ Chỗ
+                            <i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Tiến Trình &amp; Thời Hạn Giữ Chỗ
                         </h6>
                         <div class="row g-3 small">
                             <div class="col-md-4 col-12">

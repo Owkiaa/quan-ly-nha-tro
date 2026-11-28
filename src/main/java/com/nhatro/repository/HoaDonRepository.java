@@ -33,4 +33,20 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
            "(:thangNam IS NULL OR :thangNam = '' OR hd.thangNam = :thangNam) AND " +
            "(:trangThai IS NULL OR :trangThai = '' OR hd.trangThai = :trangThai)")
     Page<HoaDon> search(@Param("keyword") String keyword, @Param("thangNam") String thangNam, @Param("trangThai") String trangThai, Pageable pageable);
+
+    java.util.Optional<HoaDon> findTopByHopDongIdOrderByNgayLapDesc(Integer hopDongId);
+
+    @Query("SELECT COALESCE(SUM(hd.tongTien), 0) FROM HoaDon hd WHERE hd.trangThai = 'DA_THANH_TOAN'")
+    java.math.BigDecimal sumTongDoanhThuDaThu();
+
+    @Query("SELECT COALESCE(SUM(hd.tongTien), 0) FROM HoaDon hd WHERE hd.trangThai = 'CHUA_THANH_TOAN'")
+    java.math.BigDecimal sumTongNoChuaThu();
+
+    @Query("SELECT COALESCE(SUM(hd.tongTien), 0) FROM HoaDon hd WHERE hd.thangNam = :thangNam AND hd.trangThai = 'DA_THANH_TOAN'")
+    java.math.BigDecimal sumDoanhThuTheoThang(@Param("thangNam") String thangNam);
+
+    @Query("SELECT COALESCE(SUM(hd.tongTien), 0) FROM HoaDon hd WHERE hd.thangNam = :thangNam AND hd.trangThai = 'CHUA_THANH_TOAN'")
+    java.math.BigDecimal sumNoTheoThang(@Param("thangNam") String thangNam);
+
+    long countByTrangThai(String trangThai);
 }

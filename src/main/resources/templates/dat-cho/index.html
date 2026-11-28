@@ -18,7 +18,14 @@
                     <h3 class="fw-bold mb-1">Quản Lý Đặt Giữ Chỗ Phòng Trọ</h3>
                     <p class="text-muted small mb-0">Theo dõi thông tin đặt chỗ, thời hạn giữ phòng và kích hoạt tác vụ giải phóng phòng quá hạn</p>
                 </div>
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <form th:action="@{/dat-cho/mo-phong-dong-bo}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-outline-warning btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2"
+                                title="Chạy 5 luồng Thread/Runnable so sánh Không đồng bộ vs synchronized Chương 4">
+                            <i class="fa-solid fa-code-branch"></i>
+                            <span>Mô Phỏng Đồng Bộ Chương 4 (synchronized)</span>
+                        </button>
+                    </form>
                     <form th:action="@{/dat-cho/quet-het-han}" method="POST" class="d-inline">
                         <button type="submit" class="btn btn-outline-secondary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2"
                                 title="Kích hoạt quét lập lịch giải phóng ngay lập tức các phòng quá hạn giữ chỗ">
@@ -33,60 +40,100 @@
                 </div>
             </div>
 
-            <!-- Quick Stat KPI Cards -->
-            <div class="row g-3 mb-4">
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #f59e0b;">
-                        <div class="d-flex align-items-center justify-content-between">
+            <!-- Quick Stat KPI Strip (1 hàng gọn gàng, Tổng độc lập bộ lọc) -->
+            <div class="kpi-bar"
+                 th:with="tongDatCho=${totalBookings != null ? totalBookings : (countDangGiu + countDaChuyen + countHetHan)}">
+                <div class="row g-2">
+                    <div class="col-xl-3 col-md-6 col-6">
+                        <div class="kpi-item" style="border-left: 3px solid var(--color-dadat);">
+                            <div class="kpi-icon" style="background: var(--bg-dadat); color: var(--color-dadat);"><i class="fa-solid fa-clock"></i></div>
                             <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">ĐANG GIỮ CHỖ</div>
-                                <h3 class="fw-bold mb-0 text-warning-emphasis font-mono mt-1" th:text="${countDangGiu}">0</h3>
+                                <div class="kpi-label">Đang giữ chỗ</div>
+                                <div class="kpi-val" style="color: var(--color-dadat);" th:text="${countDangGiu}">0</div>
                             </div>
-                            <div class="stat-icon bg-warning-subtle text-warning-emphasis">
-                                <i class="fa-solid fa-clock"></i>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6 col-6">
+                        <div class="kpi-item" style="border-left: 3px solid var(--color-trong);">
+                            <div class="kpi-icon" style="background: var(--bg-trong); color: var(--color-trong);"><i class="fa-solid fa-file-contract"></i></div>
+                            <div>
+                                <div class="kpi-label">Đã chuyển hợp đồng</div>
+                                <div class="kpi-val" style="color: var(--color-trong);" th:text="${countDaChuyen}">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6 col-6">
+                        <div class="kpi-item" style="border-left: 3px solid var(--color-baotri);">
+                            <div class="kpi-icon" style="background: var(--bg-baotri); color: var(--color-baotri);"><i class="fa-solid fa-ban"></i></div>
+                            <div>
+                                <div class="kpi-label">Hết hạn / Đã hủy</div>
+                                <div class="kpi-val" style="color: var(--color-baotri);" th:text="${countHetHan}">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6 col-6">
+                        <div class="kpi-item">
+                            <div class="kpi-icon" style="background: #eef2ff; color: #4f46e5;"><i class="fa-solid fa-list-check"></i></div>
+                            <div>
+                                <div class="kpi-label">Tổng phiếu toàn hệ thống</div>
+                                <div class="kpi-val" th:text="${tongDatCho}">0</div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #10b981;">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">ĐÃ CHUYỂN HỢP ĐỒNG</div>
-                                <h3 class="fw-bold mb-0 text-success font-mono mt-1" th:text="${countDaChuyen}">0</h3>
-                            </div>
-                            <div class="stat-icon bg-success-subtle text-success">
-                                <i class="fa-solid fa-file-contract"></i>
-                            </div>
-                        </div>
+            <!-- Khối Giám Sát Đa Luồng Chương 4 (Thu gọn mặc định, 1-click mở rộng khi vấn đáp) -->
+            <div class="card-custom p-3 mb-3 border-start border-4 border-primary">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">
+                            <i class="fa-solid fa-microchip text-primary me-2"></i>Giám Sát Liên Kết Đa Luồng &amp; Đồng Bộ Chương 4 (Monitor Lock)
+                        </h6>
+                        <small class="text-muted">Thu gọn mặc định giúp bảng làm việc thoáng mắt — bấm mở rộng khi demo Socket &amp; @Scheduled.</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light text-dark border font-mono px-2 py-1 d-none d-sm-inline-block">Socket :9999</span>
+                        <button type="button" class="btn btn-outline-primary btn-sm px-3" data-bs-toggle="collapse" data-bs-target="#collapseThreadMonitor" aria-expanded="false">
+                            <i class="fa-solid fa-chevron-down me-1"></i> Mở rộng / Thu gọn
+                        </button>
                     </div>
                 </div>
 
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #ef4444;">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">HẾT HẠN / ĐÃ HỦY</div>
-                                <h3 class="fw-bold mb-0 text-danger font-mono mt-1" th:text="${countHetHan}">0</h3>
+                <div class="collapse mt-3" id="collapseThreadMonitor">
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-3 col-6">
+                            <div class="p-2 rounded-3 bg-light border text-center">
+                                <div class="text-muted" style="font-size: 0.72rem;">SOCKET CLIENT ONLINE</div>
+                                <div class="fw-bold fs-5 text-primary font-mono" th:text="${soClientDangKetNoi}">0</div>
                             </div>
-                            <div class="stat-icon bg-danger-subtle text-danger">
-                                <i class="fa-solid fa-ban"></i>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="p-2 rounded-3 bg-light border text-center">
+                                <div class="text-muted" style="font-size: 0.72rem;">ĐẶT THÀNH CÔNG (LOCK)</div>
+                                <div class="fw-bold fs-5 text-success font-mono" th:text="${soLuotDatThanhCong}">0</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="p-2 rounded-3 bg-light border text-center">
+                                <div class="text-muted" style="font-size: 0.72rem;">ĐÃ CHẶN ĐẶT TRÙNG</div>
+                                <div class="fw-bold fs-5 text-danger font-mono" th:text="${soLuotBiTuChoi}">0</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="p-2 rounded-3 bg-light border text-center">
+                                <div class="text-muted" style="font-size: 0.72rem;">@SCHEDULED GIẢI PHÓNG</div>
+                                <div class="fw-bold fs-5 text-primary font-mono" th:text="${soPhongGiaiPhongQuaHan}">0</div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="col-xl-3 col-md-6 col-6">
-                    <div class="stat-card" style="border-top: 3px solid #78716c;">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small fw-semibold" style="font-size: 0.72rem;">TỔNG YÊU CẦU</div>
-                                <h3 class="fw-bold mb-0 text-dark font-mono mt-1" th:text="${pageData.totalElements}">0</h3>
-                            </div>
-                            <div class="stat-icon bg-light text-secondary">
-                                <i class="fa-solid fa-list-check"></i>
-                            </div>
+                    <div class="bg-dark text-light rounded-3 p-3 font-mono" style="font-size: 0.78rem; max-height: 185px; overflow-y: auto;">
+                        <div th:if="${#lists.isEmpty(nhatKyDaLuong)}" class="text-secondary">
+                            Chưa có sự kiện đa luồng nào được ghi nhận. Hãy bấm "Mô Phỏng Đồng Bộ Chương 4", đặt phòng hoặc kết nối Socket Client cổng 9999.
+                        </div>
+                        <div th:each="logLine : ${nhatKyDaLuong}" class="mb-1 text-break" th:text="${logLine}">
+                            12:00:00 [main] Nhật ký mẫu
                         </div>
                     </div>
                 </div>
@@ -134,8 +181,8 @@
             <!-- Table Card -->
             <div class="card-custom overflow-hidden mb-4">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
-                        <thead class="table-light text-secondary text-uppercase fw-semibold" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                    <table class="table table-custom align-middle mb-0">
+                        <thead>
                             <tr>
                                 <th class="ps-3 py-3" style="width: 50px;">#</th>
                                 <th>Phòng Trọ</th>
@@ -144,7 +191,7 @@
                                 <th>Hạn Giữ Chỗ</th>
                                 <th>Trạng Thái</th>
                                 <th>Ghi Chú</th>
-                                <th class="text-end pe-3" style="width: 150px;">Thao Tác</th>
+                                <th class="text-end pe-3" style="width: 240px;">Thao Tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -159,11 +206,11 @@
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="rounded-2 bg-light border d-flex align-items-center justify-content-center fw-bold text-dark font-mono"
-                                             style="width: 40px; height: 36px; font-size: 0.85rem;"
+                                             style="width: 44px; height: 36px; font-size: 0.85rem;"
                                              th:text="${item.phongTro.maPhong}">P101</div>
                                         <div>
                                             <div class="fw-bold text-dark" th:text="${item.phongTro.tenPhong}">Phòng 101</div>
-                                            <small class="text-muted" th:text="${#numbers.formatDecimal(item.phongTro.giaThue, 0, 'POINT', 0, 'COMMA')} + ' đ/tháng'"></small>
+                                            <small class="price-red-text" style="font-size: 0.8rem;" th:text="${#numbers.formatDecimal(item.phongTro.giaThue, 0, 'POINT', 0, 'COMMA')} + ' đ/tháng'"></small>
                                         </div>
                                     </div>
                                 </td>
@@ -184,32 +231,35 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span th:if="${item.trangThai == 'DANG_GIU'}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 rounded-pill">
-                                        <i class="fa-regular fa-clock me-1"></i> Đang Giữ Chỗ
+                                    <span th:if="${item.trangThai == 'DANG_GIU'}" class="badge-status badge-dadat">
+                                        <i class="fa-regular fa-clock"></i> Đang Giữ Chỗ
                                     </span>
-                                    <span th:if="${item.trangThai == 'DA_CHUYEN_HOP_DONG'}" class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill">
-                                        <i class="fa-solid fa-check me-1"></i> Đã Ký Hợp Đồng
+                                    <span th:if="${item.trangThai == 'DA_CHUYEN_HOP_DONG'}" class="badge-status badge-trong">
+                                        <i class="fa-solid fa-check"></i> Đã Ký Hợp Đồng
                                     </span>
-                                    <span th:if="${item.trangThai == 'HET_HAN'}" class="badge bg-secondary-subtle text-secondary border px-2 py-1 rounded-pill">
-                                        <i class="fa-solid fa-xmark me-1"></i> Hết Hạn / Đã Hủy
+                                    <span th:if="${item.trangThai == 'HET_HAN'}" class="badge-status badge-datraphong">
+                                        <i class="fa-solid fa-xmark"></i> Hết Hạn / Đã Hủy
                                     </span>
                                 </td>
                                 <td>
                                     <span class="text-muted small" th:text="${item.ghiChu != null and item.ghiChu != '' ? item.ghiChu : '-'}">-</span>
                                 </td>
                                 <td class="text-end pe-3">
-                                    <div class="btn-group btn-group-sm">
-                                        <a th:href="@{'/dat-cho/' + ${item.id}}" class="btn btn-light border text-secondary" title="Xem chi tiết">
-                                            <i class="fa-regular fa-eye"></i>
-                                        </a>
+                                    <div class="d-inline-flex gap-1 align-items-center">
                                         <a th:if="${item.trangThai == 'DANG_GIU'}"
                                            th:href="@{/hop-dong/them-moi(phongId=${item.phongTro.id}, khachId=${item.khachThue.id})}"
-                                           class="btn btn-light border text-success" title="Chuyển thành Hợp Đồng">
-                                            <i class="fa-solid fa-file-signature"></i>
+                                           class="btn-quick btn-quick-green" title="Chuyển thành Hợp Đồng">
+                                            <i class="fa-solid fa-file-signature"></i> Chuyển thành HĐ
+                                        </a>
+                                        <a th:href="@{'/dat-cho/' + ${item.id}}" class="btn-action action-view" title="Xem chi tiết">
+                                            <i class="fa-regular fa-eye"></i>
                                         </a>
                                         <button th:if="${item.trangThai == 'DANG_GIU'}"
-                                                type="button" class="btn btn-light border text-danger"
-                                                th:onclick="'moModalHuy(' + ${item.id} + ', \'' + ${item.phongTro.maPhong} + '\', \'' + ${item.khachThue.hoTen} + '\')'"
+                                                type="button" class="btn-action action-delete"
+                                                th:data-id="${item.id}"
+                                                th:data-maphong="${item.phongTro.maPhong}"
+                                                th:data-tenkhach="${item.khachThue.hoTen}"
+                                                onclick="moModalHuy(this)"
                                                 title="Hủy đặt chỗ">
                                             <i class="fa-solid fa-ban"></i>
                                         </button>
@@ -268,7 +318,10 @@
     <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
 
     <script>
-        function moModalHuy(id, maPhong, tenKhach) {
+        function moModalHuy(btn) {
+            const id = btn.dataset.id;
+            const maPhong = btn.dataset.maphong;
+            const tenKhach = btn.dataset.tenkhach;
             const form = document.getElementById('formHuyDatCho');
             const noiDung = document.getElementById('noiDungHuy');
             if (form && noiDung) {

@@ -5,6 +5,8 @@ import com.nhatro.entity.DatCho;
 import com.nhatro.entity.PhongTro;
 import com.nhatro.exception.BusinessException;
 import com.nhatro.exception.RoomAlreadyBookedException;
+import com.nhatro.service.DatChoMonitor;
+import com.nhatro.service.DatChoScheduler;
 import com.nhatro.service.DatChoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -13,10 +15,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Controller xử lý các yêu cầu Web MVC liên quan đến Quản lý Đặt giữ chỗ phòng trọ.
@@ -26,8 +30,18 @@ import java.util.List;
 @RequestMapping("/dat-cho")
 public class DatChoController {
 
+    private static final Pattern CCCD_PATTERN = Pattern.compile("^\\d{9,12}$");
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^0\\d{9,10}$");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+
     @Autowired
     private DatChoService datChoService;
+
+    @Autowired
+    private DatChoScheduler datChoScheduler;
+
+    @Autowired
+    private DatChoMonitor datChoMonitor;
 
     /**
      * Hiển thị danh sách đặt giữ chỗ có tìm kiếm, lọc theo trạng thái, sắp xếp và phân trang.
@@ -64,6 +78,13 @@ public class DatChoController {
         model.addAttribute("countHetHan", datChoService.demHetHan());
         model.addAttribute("countDaChuyen", datChoService.demDaChuyenHopDong());
 
+        // Thống kê & nhật ký liên kết đa luồng (Web, Socket, @Scheduled) từ Monitor Chương 4
+        model.addAttribute("soClientDangKetNoi", datChoMonitor.getSoClientDangKetNoi());
+        model.addAttribute("soLuotDatThanhCong", datChoMonitor.getSoLuotDatThanhCong());
+        model.addAttribute("soLuotBiTuChoi", datChoMonitor.getSoLuotBiTuChoi());
+        model.addAttribute("soPhongGiaiPhongQuaHan", datChoMonitor.getSoPhongGiaiPhongQuaHan());
+        model.addAttribute("nhatKyDaLuong", datChoMonitor.getNhatKyDaLuong());
+
         return "dat-cho/index";
     }
 
@@ -91,7 +112,15 @@ public class DatChoController {
      */
     @PostMapping("/luu")
     public String luuDatCho(@ModelAttribute("datChoRequest") DatChoRequestDTO requestDTO,
+                            BindingResult bindingResult,
+                            Model model,
                             RedirectAttributes redirectAttributes) {
+        validateDatChoRequest(requestDTO, bindingResult);
+        if (bindingResult.hasErrors()) {
+            prepareDatChoFormModel(model);
+            return "dat-cho/form";
+        }
+
         try {
             DatCho saved = datChoService.datCho(requestDTO);
             redirectAttributes.addFlashAttribute("successMessage",
@@ -100,14 +129,64 @@ public class DatChoController {
                             + " (Hạn giữ chỗ đến: " + saved.getHanGiuCho() + ").");
             return "redirect:/dat-cho";
         } catch (RoomAlreadyBookedException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/dat-cho/them-moi" + (requestDTO.getPhongId() != null ? "?phongId=" + requestDTO.getPhongId() : "");
+            bindingResult.rejectValue("phongId", "booked", e.getMessage());
+            model.addAttribute("errorMessage", e.getMessage());
+            prepareDatChoFormModel(model);
+            return "dat-cho/form";
         } catch (BusinessException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/dat-cho/them-moi" + (requestDTO.getPhongId() != null ? "?phongId=" + requestDTO.getPhongId() : "");
+            model.addAttribute("errorMessage", e.getMessage());
+            prepareDatChoFormModel(model);
+            return "dat-cho/form";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra: " + e.getMessage());
-            return "redirect:/dat-cho/them-moi";
+            model.addAttribute("errorMessage", "Có lỗi xảy ra: " + e.getMessage());
+            prepareDatChoFormModel(model);
+            return "dat-cho/form";
+        }
+    }
+
+    private void prepareDatChoFormModel(Model model) {
+        model.addAttribute("danhSachPhongTrong", datChoService.layDanhSachPhongTrong());
+        model.addAttribute("activeMenu", "dat-cho");
+    }
+
+    private void validateDatChoRequest(DatChoRequestDTO requestDTO, BindingResult bindingResult) {
+        if (!bindingResult.hasFieldErrors("phongId") && requestDTO.getPhongId() == null) {
+            bindingResult.rejectValue("phongId", "required", "Vui lòng chọn phòng trọ cần giữ chỗ.");
+        }
+
+        String hoTen = requestDTO.getHoTen() != null ? requestDTO.getHoTen().trim() : "";
+        if (hoTen.isEmpty()) {
+            bindingResult.rejectValue("hoTen", "required", "Họ và tên khách thuê không được để trống.");
+        } else if (hoTen.length() > 100) {
+            bindingResult.rejectValue("hoTen", "maxlength", "Họ và tên không được vượt quá 100 ký tự.");
+        }
+
+        String cccd = requestDTO.getCccd() != null ? requestDTO.getCccd().trim() : "";
+        if (cccd.isEmpty()) {
+            bindingResult.rejectValue("cccd", "required", "Số CCCD không được để trống.");
+        } else if (!CCCD_PATTERN.matcher(cccd).matches()) {
+            bindingResult.rejectValue("cccd", "invalid", "Số CCCD phải gồm từ 9 đến 12 chữ số.");
+        }
+
+        String soDienThoai = requestDTO.getSoDienThoai() != null ? requestDTO.getSoDienThoai().trim() : "";
+        if (soDienThoai.isEmpty()) {
+            bindingResult.rejectValue("soDienThoai", "required", "Số điện thoại không được để trống.");
+        } else if (!PHONE_PATTERN.matcher(soDienThoai).matches()) {
+            bindingResult.rejectValue("soDienThoai", "invalid", "Số điện thoại không hợp lệ (10–11 số, bắt đầu bằng 0).");
+        }
+
+        String email = requestDTO.getEmail() != null ? requestDTO.getEmail().trim() : "";
+        if (!email.isEmpty() && !EMAIL_PATTERN.matcher(email).matches()) {
+            bindingResult.rejectValue("email", "invalid", "Địa chỉ email không đúng định dạng.");
+        }
+
+        if (!bindingResult.hasFieldErrors("soGioGiuCho")
+                && (requestDTO.getSoGioGiuCho() == null || requestDTO.getSoGioGiuCho() <= 0)) {
+            bindingResult.rejectValue("soGioGiuCho", "invalid", "Thời gian giữ chỗ không hợp lệ.");
+        }
+
+        if (requestDTO.getGhiChu() != null && requestDTO.getGhiChu().length() > 255) {
+            bindingResult.rejectValue("ghiChu", "maxlength", "Ghi chú không được vượt quá 255 ký tự.");
         }
     }
 
@@ -152,7 +231,7 @@ public class DatChoController {
     @PostMapping("/quet-het-han")
     public String quetHetHan(RedirectAttributes redirectAttributes) {
         try {
-            int soLuong = datChoService.quetVaGiaiPhongDatChoQuaHan();
+            int soLuong = datChoScheduler.quetVaGiaiPhongDatChoQuaHan();
             if (soLuong > 0) {
                 redirectAttributes.addFlashAttribute("successMessage",
                         "Đã quét và tự động giải phóng thành công " + soLuong + " phòng quá hạn giữ chỗ về trạng thái TRỐNG.");
@@ -161,6 +240,20 @@ public class DatChoController {
             }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi thực hiện quét đặt chỗ quá hạn: " + e.getMessage());
+        }
+        return "redirect:/dat-cho";
+    }
+
+    /**
+     * Chạy trực tiếp mô phỏng đồng bộ Chương 4 (Không đồng bộ Race Condition vs synchronized Monitor Lock).
+     */
+    @PostMapping("/mo-phong-dong-bo")
+    public String moPhongDongBoChuong4(RedirectAttributes redirectAttributes) {
+        try {
+            String ketQua = datChoMonitor.chayMoPhongDongBoChuong4(5);
+            redirectAttributes.addFlashAttribute("successMessage", ketQua);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi chạy mô phỏng đồng bộ Chương 4: " + e.getMessage());
         }
         return "redirect:/dat-cho";
     }

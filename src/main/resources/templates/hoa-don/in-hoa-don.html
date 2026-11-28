@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'In Hóa Đơn - ' + ${hoaDon.maHoaDon}">In Hóa Đơn</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --primary: #4f46e5;
+            --card-border: #e2e8f0;
+            --bg-body: #f8fafc;
+        }
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-body);
+            color: #0f172a;
+            padding: 24px;
+        }
+        .font-mono {
+            font-family: var(--font-mono);
+        }
+        .invoice-card {
+            max-width: 820px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 44px;
+            border-radius: 14px;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+        .invoice-header {
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 24px;
+            margin-bottom: 24px;
+        }
+        .table-invoice th {
+            background-color: #f1f5f9;
+            color: #475569;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+        }
+        .stamp-paid {
+            display: inline-block;
+            padding: 6px 14px;
+            border: 2px dashed #10b981;
+            color: #059669;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            border-radius: 8px;
+            transform: rotate(-4deg);
+        }
+        .stamp-unpaid {
+            display: inline-block;
+            padding: 6px 14px;
+            border: 2px dashed #ef4444;
+            color: #dc2626;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            border-radius: 8px;
+            transform: rotate(-4deg);
+        }
+        @media print {
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .invoice-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+                max-width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Nút in & Quay lại -->
+    <div class="no-print text-center mb-4">
+        <a th:href="@{/hoa-don}" class="btn btn-outline-secondary btn-sm me-2 px-3">
+            <i class="fa-solid fa-arrow-left me-1"></i> Quay lại
+        </a>
+        <button onclick="window.print()" class="btn btn-primary btn-sm px-4 fw-semibold" style="background-color: #4f46e5; border-color: #4f46e5;">
+            <i class="fa-solid fa-print me-1"></i> In Phiếu Thu Này
+        </button>
+    </div>
+
+    <div class="invoice-card">
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-start invoice-header">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg,#4f46e5,#312e81); color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fa-solid fa-building-circle-check"></i>
+                    </div>
+                    <h5 class="fw-bold mb-0 text-dark">NHÀ TRỌ HUIT • HỆ THỐNG QUẢN LÝ</h5>
+                </div>
+                <div class="text-muted small">Cơ sở: 140 Lê Trọng Tấn, P. Tây Thạnh, Q. Tân Phú, TP. HCM</div>
+                <div class="text-muted small">Hotline: 0909.123.456 • Thu ngân: Trương Đỗ Minh Quân</div>
+            </div>
+            <div class="text-end">
+                <div class="fw-bold text-uppercase" style="font-size: 1.25rem; letter-spacing: 0.05em; color: #0f172a;">PHIẾU THU TIỀN PHÒNG</div>
+                <div class="font-mono fw-bold text-primary fs-6" th:text="${hoaDon.maHoaDon}">HD001</div>
+                <div class="text-muted small font-mono" th:text="'Ngày lập: ' + ${#temporals.format(hoaDon.ngayLap, 'dd/MM/yyyy HH:mm')}">01/10/2026</div>
+            </div>
+        </div>
+
+        <!-- Khách thuê & phòng -->
+        <div class="row mb-4">
+            <div class="col-6">
+                <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem;">KHÁCH THUÊ PHÒNG</div>
+                <h6 class="fw-bold mb-1 text-dark" th:text="${hoaDon.hopDong != null and hoaDon.hopDong.khachThue != null ? hoaDon.hopDong.khachThue.hoTen : '-'}">Nguyễn Văn An</h6>
+                <div class="small text-muted font-mono" th:text="'CCCD: ' + ${hoaDon.hopDong != null and hoaDon.hopDong.khachThue != null ? hoaDon.hopDong.khachThue.cccd : '-'}"></div>
+                <div class="small text-muted font-mono" th:text="'SĐT: ' + ${hoaDon.hopDong != null and hoaDon.hopDong.khachThue != null ? hoaDon.hopDong.khachThue.soDienThoai : '-'}"></div>
+            </div>
+            <div class="col-6 text-end">
+                <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem;">CHI TIẾT PHÒNG</div>
+                <h6 class="fw-bold mb-1 text-dark font-mono" th:text="'Phòng ' + ${hoaDon.hopDong != null and hoaDon.hopDong.phongTro != null ? hoaDon.hopDong.phongTro.maPhong : '-'}">Phòng P101</h6>
+                <div class="small text-muted font-mono" th:text="'HĐ: ' + ${hoaDon.hopDong != null ? hoaDon.hopDong.maHopDong : '-'}"></div>
+                <div class="small text-dark fw-bold">Kỳ thu: Tháng <span class="font-mono text-primary" th:text="${hoaDon.thangNam}">10/2026</span></div>
+            </div>
+        </div>
+
+        <!-- Bảng chi tiết -->
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered table-invoice align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 45px;" class="text-center">STT</th>
+                        <th>Khoản Mục Thu</th>
+                        <th class="text-center">Chỉ Số (Cũ &rarr; Mới)</th>
+                        <th class="text-center">Số Lượng</th>
+                        <th class="text-end">Đơn Giá</th>
+                        <th class="text-end">Thành Tiền (VNĐ)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-center font-mono">1</td>
+                        <td>
+                            <div class="fw-semibold text-dark">Tiền thuê phòng</div>
+                            <small class="text-muted">Theo thỏa thuận hợp đồng</small>
+                        </td>
+                        <td class="text-center text-muted">-</td>
+                        <td class="text-center">1 tháng</td>
+                        <td class="text-end font-mono" th:text="${#numbers.formatDecimal(hoaDon.tienPhong, 0, 'POINT', 0, 'COMMA')} + ' đ'">3,000,000 đ</td>
+                        <td class="text-end fw-bold font-mono" th:text="${#numbers.formatDecimal(hoaDon.tienPhong, 0, 'POINT', 0, 'COMMA')} + ' đ'">3,000,000 đ</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono">2</td>
+                        <td>
+                            <div class="fw-semibold text-dark">Tiền điện sinh hoạt</div>
+                            <small class="text-muted">Đo theo công tơ phòng</small>
+                        </td>
+                        <td class="text-center font-mono" th:text="${hoaDon.chiSoDienCu} + ' &rarr; ' + ${hoaDon.chiSoDienMoi}">0 &rarr; 50</td>
+                        <td class="text-center font-mono" th:text="${hoaDon.chiSoDienMoi - hoaDon.chiSoDienCu} + ' kWh'">50 kWh</td>
+                        <td class="text-end font-mono" th:text="${#numbers.formatDecimal(hoaDon.donGiaDien, 0, 'POINT', 0, 'COMMA')} + ' đ'">3,500 đ</td>
+                        <td class="text-end fw-bold font-mono" th:text="${#numbers.formatDecimal(hoaDon.tienDien, 0, 'POINT', 0, 'COMMA')} + ' đ'">175,000 đ</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono">3</td>
+                        <td>
+                            <div class="fw-semibold text-dark">Tiền nước sinh hoạt</div>
+                            <small class="text-muted">Đo theo đồng hồ nước</small>
+                        </td>
+                        <td class="text-center font-mono" th:text="${hoaDon.chiSoNuocCu} + ' &rarr; ' + ${hoaDon.chiSoNuocMoi}">0 &rarr; 5</td>
+                        <td class="text-center font-mono" th:text="${hoaDon.chiSoNuocMoi - hoaDon.chiSoNuocCu} + ' m³'">5 m³</td>
+                        <td class="text-end font-mono" th:text="${#numbers.formatDecimal(hoaDon.donGiaNuoc, 0, 'POINT', 0, 'COMMA')} + ' đ'">20,000 đ</td>
+                        <td class="text-end fw-bold font-mono" th:text="${#numbers.formatDecimal(hoaDon.tienNuoc, 0, 'POINT', 0, 'COMMA')} + ' đ'">100,000 đ</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-mono">4</td>
+                        <td>
+                            <div class="fw-semibold text-dark">Phí dịch vụ chung</div>
+                            <small class="text-muted">Rác sinh hoạt, wifi, vệ sinh</small>
+                        </td>
+                        <td class="text-center text-muted">-</td>
+                        <td class="text-center">1 tháng</td>
+                        <td class="text-end font-mono" th:text="${#numbers.formatDecimal(hoaDon.tienDichVu, 0, 'POINT', 0, 'COMMA')} + ' đ'">50,000 đ</td>
+                        <td class="text-end fw-bold font-mono" th:text="${#numbers.formatDecimal(hoaDon.tienDichVu, 0, 'POINT', 0, 'COMMA')} + ' đ'">50,000 đ</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr style="background-color: #fff1f2;">
+                        <th colspan="5" class="text-end text-uppercase" style="font-size: 0.8rem; color: #be123c;">TỔNG CỘNG THANH TOÁN:</th>
+                        <th class="text-end fs-5 fw-bold font-mono" style="color: #e11d48;" th:text="${#numbers.formatDecimal(hoaDon.tongTien, 0, 'POINT', 0, 'COMMA')} + ' VNĐ'">3,375,000 VNĐ</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Con dấu trạng thái -->
+        <div class="row align-items-center mb-5">
+            <div class="col-6">
+                <div th:if="${hoaDon.trangThai == 'DA_THANH_TOAN'}" class="stamp-paid">
+                    <i class="fa-solid fa-circle-check me-1"></i> ĐÃ THANH TOÁN
+                    <div class="font-mono" style="font-size: 0.68rem; font-weight: normal;" th:text="${#temporals.format(hoaDon.ngayThanhToan, 'dd/MM/yyyy HH:mm')}"></div>
+                </div>
+                <div th:if="${hoaDon.trangThai == 'CHUA_THANH_TOAN'}" class="stamp-unpaid">
+                    <i class="fa-solid fa-xmark me-1"></i> CHƯA THANH TOÁN
+                </div>
+            </div>
+            <div class="col-6 text-end text-muted small">
+                <em>Cảm ơn Quý khách đã thanh toán đúng hạn!</em>
+            </div>
+        </div>
+
+        <!-- Chữ ký -->
+        <div class="row text-center mt-4 pt-2">
+            <div class="col-6">
+                <div class="fw-bold text-uppercase small text-dark">Người Nộp Tiền</div>
+                <div class="text-muted small">(Ký và ghi rõ họ tên)</div>
+                <div style="height: 60px;"></div>
+                <div class="fw-semibold text-dark" th:text="${hoaDon.hopDong != null and hoaDon.hopDong.khachThue != null ? hoaDon.hopDong.khachThue.hoTen : ''}"></div>
+            </div>
+            <div class="col-6">
+                <div class="fw-bold text-uppercase small text-dark">Người Thu Tiền / Quản Lý</div>
+                <div class="text-muted small">(Ký và ghi rõ họ tên)</div>
+                <div style="height: 60px;"></div>
+                <div class="fw-semibold text-dark">Trương Đỗ Minh Quân</div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

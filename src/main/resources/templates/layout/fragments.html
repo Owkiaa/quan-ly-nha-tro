@@ -3,12 +3,12 @@
 <head th:fragment="head(title)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title} + ' • Nhà Trọ Thông Minh'">Hệ Thống Quản Lý Nhà Trọ</title>
+    <title th:text="${title} + ' • Nhà Trọ HUIT'">Hệ Thống Quản Lý Nhà Trọ</title>
 
-    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <!-- Google Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Bootstrap 5.3 CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -17,383 +17,1124 @@
 
     <style>
         :root {
-            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
-            /* Tông màu ấm cúng: Cam đất / Amber / Nâu gỗ */
-            --primary: #d97706;
-            --primary-hover: #b45309;
-            --primary-light: #fef3c7;
-            --primary-border: #fde68a;
-            --bg-body: #faf7f2;
-            --card-border: #ede8df;
-            --text-heading: #1c1917;
-            --text-body: #44403c;
-            --text-muted: #78716c;
+
+            /* Surfaces & Canvases */
+            --bg-canvas: #f8fafc;
+            --bg-body: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-surface-subtle: #f1f5f9;
+            --card-border: #e2e8f0;
+            --border-default: #e2e8f0;
+            --border-focus: #4f46e5;
+
+            /* Sidebar & Header */
+            --sidebar-width: 250px;
+            --sidebar-bg: #ffffff;
+            --sidebar-border: #e2e8f0;
+            --header-bg: #DDE3E8;
+            --header-border: #cbd5e1;
+
+            /* Typography */
+            --text-heading: #0f172a;
+            --text-body: #334155;
+            --text-muted: #64748b;
+            --text-subtle: #94a3b8;
+
+            /* Brand Accent: Royal Indigo */
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #eef2ff;
+            --primary-border: #c7d2fe;
+            --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
+            --primary-shadow: 0 4px 12px rgba(79, 70, 229, 0.28);
+
+            /* Prominent Red Price Tag */
+            --price-red: #e11d48;
+            --price-red-hover: #be123c;
+            --price-bg: #fff1f2;
+            --price-border: #fecdd3;
+
+            /* Status Tokens */
+            --color-trong: #059669;
+            --bg-trong: #ecfdf5;
+            --border-trong: #a7f3d0;
+
+            --color-dadat: #d97706;
+            --bg-dadat: #fffbeb;
+            --border-dadat: #fde68a;
+
+            --color-dathue: #4f46e5;
+            --bg-dathue: #eef2ff;
+            --border-dathue: #c7d2fe;
+
+            --color-baotri: #dc2626;
+            --bg-baotri: #fef2f2;
+            --border-baotri: #fecaca;
+
+            /* Radii & Shadows */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-subtle: 0 1px 3px 0 rgb(0 0 0 / 0.04);
+            --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --shadow-hover: 0 12px 24px -4px rgb(0 0 0 / 0.09), 0 4px 6px -2px rgb(0 0 0 / 0.03);
         }
 
         body {
             font-family: var(--font-sans);
-            background-color: var(--bg-body);
+            background-color: var(--bg-canvas);
             color: var(--text-body);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             -webkit-font-smoothing: antialiased;
+            letter-spacing: -0.011em;
+            overflow-x: hidden;
         }
 
-        /* Typography */
         h1, h2, h3, h4, h5, h6, .fw-bold {
             color: var(--text-heading);
             letter-spacing: -0.02em;
         }
+
         .font-mono {
             font-family: var(--font-mono);
         }
 
-        /* Top Navbar (Thanh điều hướng ngang sáng sủa, thoáng đãng) */
-        .top-navbar {
-            background-color: #ffffff;
-            border-bottom: 1px solid var(--card-border);
-            padding: 0.75rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 1020;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+        /* Pulse Indicator */
+        @keyframes livePulse {
+            0% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.5); }
+            70% { box-shadow: 0 0 0 7px rgba(5, 150, 105, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
         }
-        .navbar-brand-custom {
+        .pulse-indicator, .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #059669;
+            display: inline-block;
+            animation: livePulse 1.8s infinite;
+        }
+
+        /* ================= SIDEBAR (LEFT NAVIGATION) ================= */
+        .app-sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--sidebar-border);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1030;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.25s ease-in-out;
+        }
+
+        .sidebar-brand {
+            height: 64px;
+            padding: 0 1.25rem;
             display: flex;
             align-items: center;
             gap: 0.75rem;
             text-decoration: none;
-            color: var(--text-heading);
-            font-weight: 800;
-            font-size: 1.15rem;
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--header-border);
+            border-right: 1px solid var(--header-border);
+            box-sizing: border-box;
+            flex-shrink: 0;
         }
+
+        .sidebar-brand .brand-title {
+            color: #0f172a;
+            font-weight: 800;
+            font-size: 1.02rem;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+        }
+
+        .sidebar-brand .brand-sub {
+            color: #475569;
+            font-size: 0.71rem;
+            font-weight: 500;
+        }
+
         .brand-icon-box {
             width: 38px;
             height: 38px;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-            border-radius: 10px;
+            background: var(--primary-gradient);
+            color: #ffffff;
+            border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.1rem;
-            box-shadow: 0 4px 10px rgba(217, 119, 6, 0.25);
+            box-shadow: var(--primary-shadow);
+            flex-shrink: 0;
         }
 
-        /* Nav Links */
-        .nav-link-custom {
-            color: var(--text-body);
-            font-weight: 600;
-            font-size: 0.9rem;
-            padding: 0.55rem 0.95rem;
-            border-radius: 8px;
-            text-decoration: none;
-            display: inline-flex;
+        .badge-brand-pro {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            font-weight: 800;
+            background: var(--primary-light);
+            color: var(--primary);
+            border: 1px solid var(--primary-border);
+            padding: 0.08rem 0.38rem;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        .sidebar-content {
+            padding: 0.85rem 0.75rem;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-subtle);
+            padding: 0.55rem 0.75rem 0.3rem;
+            margin-top: 0.35rem;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.18rem;
+        }
+
+        .sidebar-link {
+            display: flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: space-between;
+            padding: 0.55rem 0.75rem;
+            color: var(--text-body);
+            font-weight: 500;
+            font-size: 0.88rem;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
             transition: all 0.15s ease;
         }
-        .nav-link-custom:hover {
-            color: var(--primary);
-            background-color: var(--primary-light);
-        }
-        .nav-link-custom.active {
-            color: var(--primary);
-            background-color: var(--primary-light);
-            box-shadow: inset 0 0 0 1px var(--primary-border);
-        }
-        .nav-link-custom i {
-            font-size: 1rem;
+
+        .sidebar-link-content {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
         }
 
-        /* Main Container */
+        .sidebar-link i {
+            width: 18px;
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            transition: color 0.15s ease;
+        }
+
+        .sidebar-link:hover {
+            color: var(--text-heading);
+            background-color: var(--bg-surface-subtle);
+        }
+
+        .sidebar-link:hover i {
+            color: var(--text-heading);
+        }
+
+        .sidebar-link.active {
+            color: var(--primary);
+            background-color: var(--primary-light);
+            font-weight: 600;
+        }
+
+        .sidebar-link.active i {
+            color: var(--primary);
+        }
+
+        .sidebar-footer {
+            padding: 0.85rem;
+            border-top: 1px solid var(--border-default);
+            background-color: var(--bg-surface);
+            flex-shrink: 0;
+        }
+
+        .role-switch-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: 1px dashed var(--primary-border);
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.82rem;
+            padding: 0.52rem 0.65rem;
+            border-radius: var(--radius-sm);
+            margin-bottom: 0.6rem;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+
+        .role-switch-btn:hover {
+            background: #e0e7ff;
+            color: var(--primary-hover);
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.5rem 0.65rem;
+            background: var(--bg-surface-subtle);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-default);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            color: #ffffff;
+            font-size: 0.78rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* ================= TOP BAR (HORIZONTAL HEADER) ================= */
+        .app-topbar {
+            height: 64px;
+            margin-left: var(--sidebar-width);
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--header-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.75rem;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            box-sizing: border-box;
+            transition: margin-left 0.25s ease-in-out;
+        }
+
+        .topbar-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .topbar-breadcrumb .crumb-parent {
+            color: #475569;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .topbar-breadcrumb .crumb-parent:hover {
+            color: #0f172a;
+        }
+
+        .topbar-breadcrumb .crumb-divider {
+            color: #94a3b8;
+            font-size: 0.65rem;
+        }
+
+        .topbar-breadcrumb .crumb-current {
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        .topbar-badge-socket {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            font-family: var(--font-mono);
+            font-size: 0.76rem;
+            font-weight: 500;
+            padding: 0.32rem 0.72rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .topbar-badge-online {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #059669;
+            font-size: 0.76rem;
+            font-weight: 600;
+            padding: 0.32rem 0.72rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .topbar-badge-greeting {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.32rem 0.85rem;
+            border-radius: 9999px;
+        }
+
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            z-index: 1025;
+        }
+
+        .sidebar-backdrop.show {
+            display: block;
+        }
+
+        /* ================= MAIN CONTENT & FOOTER ================= */
         .main-container {
             flex-grow: 1;
-            padding: 2rem 0;
+            padding: 1.5rem 1.75rem 2.5rem;
+            transition: margin-left 0.25s ease-in-out;
         }
 
-        /* Cards & Containers (Tối giản, viền mỏng, sáng sủa) */
-        .card-custom {
+        body:has(.app-sidebar) .main-container,
+        body:has(.app-sidebar) .footer-custom {
+            margin-left: var(--sidebar-width);
+        }
+
+        .footer-custom {
+            border-top: 1px solid var(--border-default);
             background-color: #ffffff;
-            border: 1px solid var(--card-border);
-            border-radius: 14px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            padding: 1rem 1.75rem;
+            margin-top: auto;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            transition: margin-left 0.25s ease-in-out;
+        }
+
+        /* ================= CARDS, BENTO KPI & WORKFLOW PILLS ================= */
+        .card-custom, .bento-header-card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-subtle);
             transition: all 0.2s ease;
         }
+
+        .kpi-bar {
+            background: #ffffff;
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            padding: 0.85rem;
+            box-shadow: var(--shadow-subtle);
+            margin-bottom: 1rem;
+        }
+
+        .kpi-item {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.55rem 0.65rem;
+            border-radius: var(--radius-sm);
+            background: var(--bg-surface-subtle);
+            border: 1px solid var(--border-default);
+            height: 100%;
+        }
+
+        .kpi-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.95rem;
+        }
+
+        .kpi-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            line-height: 1.2;
+        }
+
+        .kpi-val {
+            font-family: var(--font-mono);
+            font-weight: 800;
+            font-size: 1.05rem;
+            color: var(--text-heading);
+            line-height: 1.25;
+            margin-top: 0.1rem;
+        }
+
         .stat-card {
-            background-color: #ffffff;
-            border: 1px solid var(--card-border);
-            border-radius: 14px;
-            padding: 1.25rem 1.35rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            padding: 1.15rem 1.25rem;
+            box-shadow: var(--shadow-subtle);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
-            border-color: #d6cfc4;
+            box-shadow: var(--shadow-card);
+            border-color: #cbd5e1;
         }
         .stat-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
+            width: 42px;
+            height: 42px;
+            border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1.15rem;
+        }
+
+        /* Quick contextual action pills */
+        .btn-quick {
+            border: 1px solid var(--primary-border);
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.74rem;
+            padding: 0.24rem 0.58rem;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            text-decoration: none;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn-quick:hover {
+            background: #e0e7ff;
+            color: var(--primary-hover);
+        }
+        .btn-quick-green {
+            border-color: var(--border-trong);
+            background: var(--bg-trong);
+            color: var(--color-trong);
+        }
+        .btn-quick-green:hover {
+            background: #d1fae5;
+            color: #047857;
+        }
+        .btn-quick-amber {
+            border-color: var(--border-dadat);
+            background: var(--bg-dadat);
+            color: #b45309;
+        }
+        .btn-quick-amber:hover {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Occupancy bar */
+        .occupancy-bar-live {
+            height: 6px;
+            border-radius: 9999px;
+            display: flex;
+            overflow: hidden;
+            background: #e2e8f0;
+        }
+        .occupancy-segment {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        /* Prominent Red Price Tag */
+        .price-red-text {
+            color: var(--price-red) !important;
+            font-family: var(--font-mono);
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .room-red-price-tag {
+            background: var(--price-bg);
+            border: 1px solid var(--price-border);
+            border-radius: 8px;
+            padding: 0.42rem 0.65rem;
+            margin: 0.45rem 0;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+        }
+        .room-red-price-tag .price-amount {
+            color: var(--price-red);
+            font-family: var(--font-mono);
+            font-weight: 800;
+            font-size: 1.18rem;
+            letter-spacing: -0.02em;
+            line-height: 1;
+            white-space: nowrap;
+        }
+        .room-red-price-tag .price-currency {
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-left: 1px;
+        }
+        .room-red-price-tag .price-subtext {
+            color: #be123c;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Compact Area & Type Pills (No wrap, No ruler icon) */
+        .area-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            background: #ffffff;
+            border: 1px solid var(--border-default);
+            padding: 0.16rem 0.5rem;
+            border-radius: 6px;
+            line-height: 1.2;
+        }
+
+        .room-type-tag {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.18rem 0.55rem;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+        .room-type-tag.type-doi {
+            background: #e0f2fe;
+            color: #0369a1;
+            border-color: #7dd3fc;
+        }
+        .room-type-tag.type-vip, .room-type-tag.type-studio {
+            background: #f3e8ff;
+            color: #7e22ce;
+            border-color: #d8b4fe;
+        }
+        .room-type-tag.type-gac {
+            background: #fef3c7;
+            color: #b45309;
+            border-color: #fcd34d;
+        }
+
+        /* Photo Gallery Cards (Shared by Admin & Tenant) */
+        .photo-card-item {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-subtle);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .photo-card-item:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: #cbd5e1;
+        }
+        .photo-card-img-wrap {
+            height: 165px;
+            position: relative;
+            background: #e2e8f0;
+            overflow: hidden;
+        }
+        .photo-card-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.35s ease;
+        }
+        .photo-card-item:hover .photo-card-img-wrap img {
+            transform: scale(1.05);
+        }
+        .photo-status-floating {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 2;
+        }
+        .photo-price-floating {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.32rem 0.68rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: baseline;
+            gap: 3px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 2;
+        }
+        .photo-price-floating .num {
+            color: #fb7185;
+            font-family: var(--font-mono);
+            font-weight: 800;
+            font-size: 1.08rem;
+            letter-spacing: -0.02em;
+        }
+        .photo-price-floating .unit {
+            color: #cbd5e1;
+            font-size: 0.7rem;
+            font-weight: 600;
         }
 
         /* Status Badges */
-        .badge-status {
+        .badge-status, .status-badge-sm {
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
-            padding: 0.3rem 0.65rem;
-            border-radius: 6px;
-            font-size: 0.76rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
             font-weight: 600;
+            white-space: nowrap;
         }
-        .badge-trong {
-            background-color: #ecfdf5;
-            color: #047857;
-            border: 1px solid #a7f3d0;
+        .badge-trong, .status-badge-sm.status-trong {
+            background-color: var(--bg-trong);
+            color: var(--color-trong);
+            border: 1px solid var(--border-trong);
         }
-        .badge-dadat {
-            background-color: #fffbeb;
-            color: #b45309;
-            border: 1px solid #fde68a;
+        .badge-dadat, .status-badge-sm.status-dadat {
+            background-color: var(--bg-dadat);
+            color: var(--color-dadat);
+            border: 1px solid var(--border-dadat);
         }
-        .badge-dathue {
-            background-color: #eff6ff;
-            color: #1d4ed8;
-            border: 1px solid #bfdbfe;
+        .badge-dathue, .status-badge-sm.status-dathue {
+            background-color: var(--bg-dathue);
+            color: var(--color-dathue);
+            border: 1px solid var(--border-dathue);
         }
-        .badge-baotri {
-            background-color: #fff1f2;
-            color: #be123c;
-            border: 1px solid #fecdd3;
+        .badge-baotri, .status-badge-sm.status-baotri {
+            background-color: var(--bg-baotri);
+            color: var(--color-baotri);
+            border: 1px solid var(--border-baotri);
         }
         .badge-dangthue {
-            background-color: #ecfdf5;
-            color: #047857;
-            border: 1px solid #a7f3d0;
+            background-color: var(--bg-trong);
+            color: var(--color-trong);
+            border: 1px solid var(--border-trong);
         }
         .badge-datraphong {
-            background-color: #f5f5f4;
-            color: #57534e;
-            border: 1px solid #e7e5e4;
-        }
-
-        /* Pulse green dot */
-        .pulse-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background-color: #10b981;
-            display: inline-block;
-            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
-            animation: pulse-green 2s infinite;
-        }
-        @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
-            70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
         }
 
         /* Table Styling */
+        .table-custom {
+            margin-bottom: 0;
+        }
         .table-custom th {
-            background-color: #fbf9f5;
-            color: #78716c;
+            background-color: var(--bg-surface-subtle);
+            color: var(--text-muted);
             font-size: 0.72rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             font-weight: 700;
-            border-bottom: 1px solid var(--card-border);
-            padding: 0.85rem 1.15rem;
+            border-bottom: 1px solid var(--border-default);
+            padding: 0.85rem 1.05rem;
             white-space: nowrap;
         }
         .table-custom td {
-            padding: 0.95rem 1.15rem;
+            padding: 0.9rem 1.05rem;
             vertical-align: middle;
-            color: #292524;
-            border-bottom: 1px solid #f5f1eb;
+            color: var(--text-body);
+            border-bottom: 1px solid var(--border-default);
             font-size: 0.88rem;
         }
         .table-custom tbody tr:hover {
-            background-color: #fdfbf7;
+            background-color: #f8fafc;
         }
         .room-img-thumb {
             width: 52px;
             height: 38px;
             object-fit: cover;
             border-radius: 6px;
-            border: 1px solid var(--card-border);
-            background-color: #f5f1eb;
+            border: 1px solid var(--border-default);
+            background-color: var(--bg-surface-subtle);
         }
 
         /* Action Buttons */
-        .btn-action {
+        .btn-action, .btn-action-icon {
             width: 32px;
             height: 32px;
             padding: 0;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
-            border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-default);
             background-color: #ffffff;
-            color: #57534e;
+            color: var(--text-muted);
+            text-decoration: none;
             transition: all 0.15s ease;
+            cursor: pointer;
         }
-        .btn-action:hover {
-            border-color: #d6cfc4;
+        .btn-action:hover, .btn-action-icon:hover {
+            border-color: #cbd5e1;
+            background-color: var(--bg-surface-subtle);
+            color: var(--text-heading);
             transform: translateY(-1px);
         }
-        .btn-action.action-view:hover { background-color: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+        .btn-action.action-view:hover { background-color: #eef2ff; color: #4f46e5; border-color: #c7d2fe; }
         .btn-action.action-edit:hover { background-color: #fffbeb; color: #b45309; border-color: #fde68a; }
         .btn-action.action-delete:hover { background-color: #fff1f2; color: #e11d48; border-color: #fecdd3; }
+        .btn-action.action-ok:hover { background-color: var(--bg-trong); color: var(--color-trong); border-color: var(--border-trong); }
 
-        /* Buttons & Forms with Warm Theme */
+        /* Buttons & Forms (Royal Indigo Theme) */
         .btn-primary {
             background-color: var(--primary);
             border-color: var(--primary);
             font-weight: 600;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             transition: all 0.15s ease;
             color: #ffffff;
         }
-        .btn-primary:hover {
+        .btn-primary:hover, .btn-primary:focus {
             background-color: var(--primary-hover);
             border-color: var(--primary-hover);
-            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
+            box-shadow: var(--primary-shadow);
             color: #ffffff;
         }
+        .text-primary {
+            color: var(--primary) !important;
+        }
+        .bg-primary {
+            background-color: var(--primary) !important;
+        }
+        .page-item.active .page-link {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        .page-link {
+            color: var(--primary);
+        }
+
         .form-control, .form-select {
-            border: 1px solid #d6cfc4;
-            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius-sm);
             font-size: 0.88rem;
-            padding: 0.55rem 0.85rem;
+            padding: 0.5rem 0.85rem;
             transition: all 0.15s ease;
         }
         .form-control:focus, .form-select:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
         }
         .form-label {
-            color: #292524;
+            color: var(--text-heading);
             font-weight: 600;
             font-size: 0.825rem;
             margin-bottom: 0.35rem;
         }
 
-        /* Footer */
-        .footer-custom {
-            border-top: 1px solid var(--card-border);
-            background-color: #ffffff;
-            padding: 1.25rem 0;
-            margin-top: auto;
-            color: var(--text-muted);
-            font-size: 0.825rem;
+        /* Mobile Responsive */
+        @media (max-width: 991.98px) {
+            .app-sidebar {
+                transform: translateX(-100%);
+            }
+            .app-sidebar.show {
+                transform: translateX(0);
+                box-shadow: 0 0 30px rgba(15, 23, 42, 0.25);
+            }
+            .app-topbar,
+            body:has(.app-sidebar) .main-container,
+            body:has(.app-sidebar) .footer-custom {
+                margin-left: 0;
+            }
+            .main-container {
+                padding: 1.25rem 1rem 2rem;
+            }
+        }
+        @media print {
+            .app-sidebar, .app-topbar, .footer-custom, .no-print {
+                display: none !important;
+            }
+            body:has(.app-sidebar) .main-container {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
         }
     </style>
 </head>
 
 <body>
-    <!-- TOP NAVBAR FRAGMENT (Thanh điều hướng ngang toàn trang) -->
-    <nav th:fragment="navbar(activeMenu)" class="top-navbar">
-        <div class="container-xl">
-            <div class="d-flex align-items-center justify-content-between">
-                <!-- Brand / Logo -->
-                <a th:href="@{/phong-tro}" class="navbar-brand-custom">
+    <!-- SIDEBAR + TOPBAR NAVIGATION SHELL FRAGMENT -->
+    <th:block th:fragment="navbar(activeMenu)">
+        <!-- Mobile Backdrop -->
+        <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+        <!-- Left Sidebar -->
+        <aside class="app-sidebar" id="appSidebar">
+            <div class="d-flex flex-column overflow-hidden flex-grow-1">
+                <!-- Brand Logo Header (Soft Slate Mist #DDE3E8) -->
+                <a th:href="${session.SESSION_ROLE == 'TENANT'} ? @{/tenant/rooms} : @{/phong-tro}" class="sidebar-brand">
                     <div class="brand-icon-box">
-                        <i class="fa-solid fa-house-chimney"></i>
+                        <i class="fa-solid fa-building-circle-check"></i>
                     </div>
                     <div>
-                        <div style="line-height: 1.15;">QUẢN LÝ NHÀ TRỌ</div>
-                        <small style="font-size: 0.68rem; color: #78716c; font-weight: 500;">Phân hệ Nguyễn Minh Tâm</small>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="brand-title">Nhà Trọ HUIT</span>
+                            <span class="badge-brand-pro">PRO</span>
+                        </div>
+                        <div class="brand-sub" th:text="${session.SESSION_ROLE == 'TENANT'} ? 'Cổng Khách thuê' : 'Hệ thống quản lý trực quan'">Hệ thống quản lý trực quan</div>
                     </div>
                 </a>
 
-                <!-- Main Navigation Menu (Top Bar) -->
-                <div class="d-none d-md-flex align-items-center gap-1">
-                    <a th:href="@{/phong-tro}" th:classappend="${activeMenu == 'phong-tro'} ? 'active' : ''" class="nav-link-custom">
-                        <i class="fa-solid fa-door-open"></i>
-                        <span>Phòng Trọ</span>
-                    </a>
-                    <a th:href="@{/khach-thue}" th:classappend="${activeMenu == 'khach-thue'} ? 'active' : ''" class="nav-link-custom">
-                        <i class="fa-solid fa-users"></i>
-                        <span>Khách Thuê</span>
-                    </a>
-                    <a th:href="@{/dat-cho}" th:classappend="${activeMenu == 'dat-cho'} ? 'active' : ''" class="nav-link-custom">
-                        <i class="fa-solid fa-calendar-check"></i>
-                        <span>Đặt Chỗ</span>
-                    </a>
-                    <a th:href="@{/hop-dong}" th:classappend="${activeMenu == 'hop-dong'} ? 'active' : ''" class="nav-link-custom">
-                        <i class="fa-solid fa-file-contract"></i>
-                        <span>Hợp Đồng</span>
-                    </a>
-                    <a th:if="${session.SESSION_ROLE == 'ADMIN'}" th:href="@{/tai-khoan}" th:classappend="${activeMenu == 'tai-khoan'} ? 'active' : ''" class="nav-link-custom">
-                        <i class="fa-solid fa-user-shield"></i>
-                        <span>Tài Khoản</span>
-                    </a>
-
-                    <!-- Dropdown Các Phân Hệ Khác -->
-                    <div class="dropdown ms-1">
-                        <button class="nav-link-custom btn btn-link text-secondary border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fa-solid fa-shapes"></i>
-                            <span>Phân Hệ Khác</span>
-                            <i class="fa-solid fa-chevron-down small" style="font-size: 0.7rem;"></i>
-                        </button>
-                        <ul class="dropdown-menu shadow-sm border p-2 rounded-3" style="font-size: 0.85rem;">
-                            <li><span class="dropdown-header text-muted text-uppercase" style="font-size: 0.68rem;">Đang phát triển:</span></li>
-                            <li><a class="dropdown-item text-muted disabled py-1" href="#"><i class="fa-solid fa-file-contract me-2"></i>Hợp Đồng (TV2 - Tài)</a></li>
-                            <li><a class="dropdown-item text-muted disabled py-1" href="#"><i class="fa-solid fa-calendar-check me-2"></i>Đặt Chỗ (TV2 - Tài)</a></li>
-                            <li><a class="dropdown-item text-muted disabled py-1" href="#"><i class="fa-solid fa-house-chimney-window me-2"></i>Cổng Khách Thuê (TV3 - Trụ)</a></li>
-                            <li><a class="dropdown-item text-muted disabled py-1" href="#"><i class="fa-solid fa-screwdriver-wrench me-2"></i>Sự Cố &amp; Socket (TV4 - Mẩn)</a></li>
-                            <li><a class="dropdown-item text-muted disabled py-1" href="#"><i class="fa-solid fa-file-invoice-dollar me-2"></i>Hóa Đơn &amp; Điện Nước (TV5 - Quân)</a></li>
+                <!-- Sidebar Navigation Menu -->
+                <div class="sidebar-content">
+                    <th:block th:if="${session.SESSION_ROLE != 'TENANT'}">
+                        <div class="sidebar-section-title">Danh mục cơ bản</div>
+                        <ul class="sidebar-menu">
+                            <li>
+                                <a th:href="@{/phong-tro}" th:classappend="${activeMenu == 'phong-tro'} ? 'active' : ''" class="sidebar-link">
+                                    <span class="sidebar-link-content">
+                                        <i class="fa-solid fa-door-open"></i>
+                                        <span>Phòng trọ</span>
+                                    </span>
+                                </a>
+                            </li>
+                            <li>
+                                <a th:href="@{/khach-thue}" th:classappend="${activeMenu == 'khach-thue'} ? 'active' : ''" class="sidebar-link">
+                                    <span class="sidebar-link-content">
+                                        <i class="fa-solid fa-users"></i>
+                                        <span>Khách thuê</span>
+                                    </span>
+                                </a>
+                            </li>
+                            <li th:if="${session.SESSION_ROLE == 'ADMIN'}">
+                                <a th:href="@{/tai-khoan}" th:classappend="${activeMenu == 'tai-khoan'} ? 'active' : ''" class="sidebar-link">
+                                    <span class="sidebar-link-content">
+                                        <i class="fa-solid fa-user-shield"></i>
+                                        <span>Tài khoản</span>
+                                    </span>
+                                </a>
+                            </li>
                         </ul>
-                    </div>
+
+                        <div class="sidebar-section-title">Vận hành phòng</div>
+                        <ul class="sidebar-menu">
+                            <li>
+                                <a th:href="@{/dat-cho}" th:classappend="${activeMenu == 'dat-cho'} ? 'active' : ''" class="sidebar-link">
+                                    <span class="sidebar-link-content">
+                                        <i class="fa-solid fa-calendar-check"></i>
+                                        <span>Đặt giữ chỗ</span>
+                                    </span>
+                                </a>
+                            </li>
+                            <li>
+                                <a th:href="@{/hop-dong}" th:classappend="${activeMenu == 'hop-dong'} ? 'active' : ''" class="sidebar-link">
+                                    <span class="sidebar-link-content">
+                                        <i class="fa-solid fa-file-contract"></i>
+                                        <span>Hợp đồng thuê</span>
+                                    </span>
+                                </a>
+                            </li>
+                            <li>
+                                <a th:href="@{/yeu-cau-sua-chua}" th:classappend="${activeMenu == 'yeu-cau-sua-chua'} ? 'active' : ''" class="sidebar-link">
+                                    <span class="sidebar-link-content">
+                                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                                        <span>Báo sự cố</span>
+                                    </span>
+                                </a>
+                            </li>
+                        </ul>
+
+                        <div class="sidebar-section-title">Tài chính &amp; Báo cáo</div>
+                        <ul class="sidebar-menu">
+                            <li>
+                                <a th:href="@{/hoa-don}" th:classappend="${activeMenu == 'hoa-don'} ? 'active' : ''" class="sidebar-link">
+                                    <span class="sidebar-link-content">
+                                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                                        <span>Hóa đơn &amp; Điện nước</span>
+                                    </span>
+                                </a>
+                            </li>
+                            <li>
+                                <a th:href="@{/dashboard}" th:classappend="${activeMenu == 'dashboard'} ? 'active' : ''" class="sidebar-link">
+                                    <span class="sidebar-link-content">
+                                        <i class="fa-solid fa-chart-pie"></i>
+                                        <span>Thống kê doanh thu</span>
+                                    </span>
+                                </a>
+                            </li>
+                        </ul>
+                    </th:block>
+
+                    <!-- Menu dành riêng cho Khách thuê (TENANT) -->
+                    <th:block th:if="${session.SESSION_ROLE == 'TENANT'}">
+                        <div class="sidebar-section-title">Cổng khách thuê</div>
+                        <ul class="sidebar-menu">
+                            <li>
+                                <a th:href="@{/tenant/rooms}" th:classappend="${activeMenu == 'tenant-rooms' or activeMenu == 'tenant'} ? 'active' : ''" class="sidebar-link">
+                                    <span class="sidebar-link-content">
+                                        <i class="fa-solid fa-magnifying-glass-location"></i>
+                                        <span>Tìm phòng trống</span>
+                                    </span>
+                                </a>
+                            </li>
+                            <li>
+                                <a th:href="@{/tenant/contracts}" th:classappend="${activeMenu == 'tenant-contracts'} ? 'active' : ''" class="sidebar-link">
+                                    <span class="sidebar-link-content">
+                                        <i class="fa-solid fa-file-signature"></i>
+                                        <span>Hợp đồng của tôi</span>
+                                    </span>
+                                </a>
+                            </li>
+                            <li>
+                                <a th:href="@{/tenant/invoices}" th:classappend="${activeMenu == 'tenant-invoices'} ? 'active' : ''" class="sidebar-link">
+                                    <span class="sidebar-link-content">
+                                        <i class="fa-solid fa-receipt"></i>
+                                        <span>Hóa đơn của tôi</span>
+                                    </span>
+                                </a>
+                            </li>
+                            <li>
+                                <a th:href="@{/tenant/incidents/new}" th:classappend="${activeMenu == 'tenant-incidents'} ? 'active' : ''" class="sidebar-link">
+                                    <span class="sidebar-link-content">
+                                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                                        <span>Báo sự cố</span>
+                                    </span>
+                                </a>
+                            </li>
+                        </ul>
+                    </th:block>
                 </div>
+            </div>
 
-                <!-- Right: User Profile & Actions -->
-                <div class="d-flex align-items-center gap-2">
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-light border dropdown-toggle d-flex align-items-center gap-2 px-3 py-1 rounded-pill" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <div class="rounded-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center" style="width: 26px; height: 26px; font-size: 0.75rem;">
-                                <i class="fa-solid fa-user"></i>
-                            </div>
-                            <span class="fw-semibold text-dark small" th:text="${session.SESSION_FULLNAME != null ? session.SESSION_FULLNAME : 'Nguyễn Minh Tâm'}">Tâm</span>
-                            <span class="badge bg-warning-subtle text-warning-emphasis ms-1" style="font-size: 0.65rem;" th:text="${session.SESSION_ROLE != null ? session.SESSION_ROLE : 'ADMIN'}">ADMIN</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border rounded-3 p-2">
-                            <li class="px-3 py-2 border-bottom mb-1">
-                                <div class="fw-bold text-dark small" th:text="${session.SESSION_FULLNAME != null ? session.SESSION_FULLNAME : 'Nguyễn Minh Tâm'}">Nguyễn Minh Tâm</div>
-                                <div class="text-muted" style="font-size: 0.72rem;" th:text="'Quyền: ' + ${session.SESSION_ROLE != null ? session.SESSION_ROLE : 'ADMIN'}">Quyền: ADMIN</div>
-                            </li>
-                            <li>
-                                <a class="dropdown-item rounded-2 py-2 small d-flex align-items-center gap-2" th:href="@{/profile}">
-                                    <i class="fa-solid fa-shield-halved text-warning"></i>
-                                    <span>Hồ sơ &amp; Đổi mật khẩu</span>
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider my-1"></li>
-                            <li>
-                                <a class="dropdown-item text-danger rounded-2 py-2 small d-flex align-items-center gap-2" th:href="@{/logout}">
-                                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                                    <span>Đăng xuất</span>
-                                </a>
-                            </li>
-                        </ul>
+            <!-- Sidebar Footer: Role Preview Switch + User Card -->
+            <div class="sidebar-footer">
+                <th:block th:if="${session.SESSION_ROLE != 'TENANT'}">
+                    <a th:if="${#strings.startsWith(activeMenu, 'tenant')}" th:href="@{/phong-tro}" class="role-switch-btn">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Quay lại Giao diện Chủ trọ</span>
+                    </a>
+                    <a th:unless="${#strings.startsWith(activeMenu, 'tenant')}" th:href="@{/tenant/rooms}" class="role-switch-btn">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <span>Xem giao diện Khách thuê</span>
+                    </a>
+                </th:block>
+
+                <div class="user-card">
+                    <a th:href="@{/profile}" class="d-flex align-items-center gap-2 text-decoration-none overflow-hidden flex-grow-1" title="Hồ sơ &amp; Đổi mật khẩu">
+                        <div class="user-avatar">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="overflow-hidden">
+                            <div class="fw-bold text-dark small text-truncate" style="line-height: 1.2;"
+                                 th:text="${session.SESSION_FULLNAME != null ? session.SESSION_FULLNAME : 'Quản trị viên'}">Quản trị viên</div>
+                            <div class="text-muted text-truncate" style="font-size: 0.7rem;"
+                                 th:text="${session.SESSION_ROLE != null ? session.SESSION_ROLE : 'ADMIN'}">ADMIN</div>
+                        </div>
+                    </a>
+                    <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                        <a th:href="@{/profile}" class="btn-action-icon" style="width: 28px; height: 28px; font-size: 0.75rem;" title="Hồ sơ &amp; Đổi mật khẩu">
+                            <i class="fa-solid fa-gear"></i>
+                        </a>
+                        <a th:href="@{/logout}" class="btn-action-icon action-delete" style="width: 28px; height: 28px; font-size: 0.75rem;" title="Đăng xuất">
+                            <i class="fa-solid fa-power-off"></i>
+                        </a>
                     </div>
                 </div>
             </div>
-        </div>
-    </nav>
+        </aside>
+
+        <!-- Top Horizontal Header Bar (Soft Slate Mist #DDE3E8) -->
+        <header class="app-topbar">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn-action-icon d-lg-none" id="btnToggleSidebar" type="button" aria-label="Mở menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="topbar-breadcrumb d-none d-sm-flex">
+                    <a th:href="${session.SESSION_ROLE == 'TENANT'} ? @{/tenant/rooms} : @{/phong-tro}" class="crumb-parent">
+                        <i class="fa-solid fa-house-chimney me-1 text-primary"></i>
+                        <span th:text="${session.SESSION_ROLE == 'TENANT'} ? 'Cổng Khách Thuê' : 'Quản Lý'">Quản Lý</span>
+                    </a>
+                    <i class="fa-solid fa-chevron-right crumb-divider"></i>
+                    <span class="crumb-current" th:switch="${activeMenu}">
+                        <th:block th:case="'phong-tro'">Mặt Bằng &amp; Danh Mục Phòng Trọ</th:block>
+                        <th:block th:case="'khach-thue'">Hồ Sơ Khách Thuê</th:block>
+                        <th:block th:case="'dat-cho'">Đặt Giữ Chỗ</th:block>
+                        <th:block th:case="'hop-dong'">Hợp Đồng Thuê Phòng</th:block>
+                        <th:block th:case="'yeu-cau-sua-chua'">Sự Cố &amp; Sửa Chữa</th:block>
+                        <th:block th:case="'hoa-don'">Hóa Đơn &amp; Điện Nước</th:block>
+                        <th:block th:case="'dashboard'">Thống Kê Doanh Thu</th:block>
+                        <th:block th:case="'tai-khoan'">Quản Lý Tài Khoản</th:block>
+                        <th:block th:case="'tenant-rooms'">Tìm Phòng Trống</th:block>
+                        <th:block th:case="'tenant-contracts'">Hợp Đồng Của Tôi</th:block>
+                        <th:block th:case="'tenant-invoices'">Hóa Đơn Của Tôi</th:block>
+                        <th:block th:case="'tenant-incidents'">Báo Sự Cố</th:block>
+                        <th:block th:case="'tenant'">Cổng Khách Thuê</th:block>
+                        <th:block th:case="*">Hồ Sơ &amp; Cài Đặt</th:block>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Right Topbar: Technical status for Admin/Staff; Friendly greeting for Tenant -->
+            <div class="d-flex align-items-center gap-2">
+                <th:block th:if="${session.SESSION_ROLE != 'TENANT'}">
+                    <span class="topbar-badge-socket d-none d-md-inline-flex align-items-center">
+                        <i class="fa-solid fa-server me-1 text-primary"></i> Socket :9999 &bull; Web :8080
+                    </span>
+                    <span class="topbar-badge-online d-inline-flex align-items-center gap-1">
+                        <span class="pulse-indicator"></span>
+                        <span>Hệ Thống Trực Tuyến</span>
+                    </span>
+                </th:block>
+                <th:block th:if="${session.SESSION_ROLE == 'TENANT'}">
+                    <span class="topbar-badge-greeting d-inline-flex align-items-center gap-1">
+                        <i class="fa-solid fa-circle-user text-primary"></i>
+                        <span>Xin chào, <strong th:text="${session.SESSION_FULLNAME != null ? session.SESSION_FULLNAME : 'Quý khách'}">Quý khách</strong></span>
+                    </span>
+                </th:block>
+            </div>
+        </header>
+    </th:block>
 
     <!-- FLASH ALERTS FRAGMENT -->
     <div th:fragment="alerts">
+        <div th:if="${param.error != null and param.error[0] == 'access_denied'}" class="alert alert-warning alert-dismissible fade show d-flex align-items-center gap-2 mb-3 shadow-sm border-0 border-start border-warning border-4 rounded-3" role="alert">
+            <i class="fa-solid fa-shield-halved fs-5 text-warning"></i>
+            <div class="flex-grow-1 fw-medium">Bạn không có quyền truy cập khu vực vừa yêu cầu.</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         <div th:if="${successMessage != null}" class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-3 shadow-sm border-0 border-start border-success border-4 rounded-3" role="alert">
             <i class="fa-solid fa-circle-check fs-5 text-success"></i>
             <div class="flex-grow-1 fw-medium" th:text="${successMessage}">Thao tác thành công!</div>
@@ -411,21 +1152,24 @@
         </div>
     </div>
 
-    <!-- PAGINATION FRAGMENT -->
-    <nav th:fragment="pagination(pageData, baseUrl, keyword, trangThai, sort)" th:if="${pageData != null and pageData.totalPages > 1}" class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-3 border-top">
+    <!-- PAGINATION FRAGMENT (Preserves trangThai, vaiTro, thangNam, keyword, sort) -->
+    <nav th:fragment="pagination(pageData, baseUrl, keyword, trangThai, sort)" th:if="${pageData != null and pageData.totalPages > 1}"
+         th:with="tn=${param.thangNam != null ? param.thangNam[0] : null},
+                  vt=${param.vaiTro != null ? param.vaiTro[0] : null}"
+         class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-3 border-top">
         <div class="text-muted small">
             Hiển thị <span class="fw-bold text-dark font-mono" th:text="${pageData.numberOfElements}">10</span> /
             <span class="fw-bold text-dark font-mono" th:text="${pageData.totalElements}">20</span> bản ghi
-            (Trang <span class="fw-bold text-warning-emphasis font-mono" th:text="${pageData.number + 1}">1</span> / <span class="font-mono" th:text="${pageData.totalPages}">2</span>)
+            (Trang <span class="fw-bold text-primary font-mono" th:text="${pageData.number + 1}">1</span> / <span class="font-mono" th:text="${pageData.totalPages}">2</span>)
         </div>
         <ul class="pagination pagination-sm mb-0">
             <li class="page-item" th:classappend="${pageData.first} ? 'disabled' : ''">
-                <a class="page-link rounded-start-2" th:href="@{${baseUrl}(page=0, size=${pageData.size}, keyword=${keyword}, trangThai=${trangThai}, sort=${sort})}">
+                <a class="page-link rounded-start-2" th:href="@{${baseUrl}(page=0, size=${pageData.size}, keyword=${keyword}, trangThai=${trangThai}, vaiTro=${vt}, thangNam=${tn}, sort=${sort})}">
                     <i class="fa-solid fa-angles-left"></i>
                 </a>
             </li>
             <li class="page-item" th:classappend="${pageData.first} ? 'disabled' : ''">
-                <a class="page-link" th:href="@{${baseUrl}(page=${pageData.number - 1}, size=${pageData.size}, keyword=${keyword}, trangThai=${trangThai}, sort=${sort})}">
+                <a class="page-link" th:href="@{${baseUrl}(page=${pageData.number - 1}, size=${pageData.size}, keyword=${keyword}, trangThai=${trangThai}, vaiTro=${vt}, thangNam=${tn}, sort=${sort})}">
                     <i class="fa-solid fa-angle-left"></i>
                 </a>
             </li>
@@ -434,16 +1178,16 @@
                 th:if="${i >= pageData.number - 2 and i <= pageData.number + 2}"
                 class="page-item" th:classappend="${i == pageData.number} ? 'active' : ''">
                 <a class="page-link font-mono" th:text="${i + 1}"
-                   th:href="@{${baseUrl}(page=${i}, size=${pageData.size}, keyword=${keyword}, trangThai=${trangThai}, sort=${sort})}">1</a>
+                   th:href="@{${baseUrl}(page=${i}, size=${pageData.size}, keyword=${keyword}, trangThai=${trangThai}, vaiTro=${vt}, thangNam=${tn}, sort=${sort})}">1</a>
             </li>
 
             <li class="page-item" th:classappend="${pageData.last} ? 'disabled' : ''">
-                <a class="page-link" th:href="@{${baseUrl}(page=${pageData.number + 1}, size=${pageData.size}, keyword=${keyword}, trangThai=${trangThai}, sort=${sort})}">
+                <a class="page-link" th:href="@{${baseUrl}(page=${pageData.number + 1}, size=${pageData.size}, keyword=${keyword}, trangThai=${trangThai}, vaiTro=${vt}, thangNam=${tn}, sort=${sort})}">
                     <i class="fa-solid fa-angle-right"></i>
                 </a>
             </li>
             <li class="page-item" th:classappend="${pageData.last} ? 'disabled' : ''">
-                <a class="page-link rounded-end-2" th:href="@{${baseUrl}(page=${pageData.totalPages - 1}, size=${pageData.size}, keyword=${keyword}, trangThai=${trangThai}, sort=${sort})}">
+                <a class="page-link rounded-end-2" th:href="@{${baseUrl}(page=${pageData.totalPages - 1}, size=${pageData.size}, keyword=${keyword}, trangThai=${trangThai}, vaiTro=${vt}, thangNam=${tn}, sort=${sort})}">
                     <i class="fa-solid fa-angles-right"></i>
                 </a>
             </li>
@@ -479,12 +1223,12 @@
 
     <!-- FOOTER FRAGMENT -->
     <footer th:fragment="footer" class="footer-custom">
-        <div class="container-xl d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div class="container-fluid px-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div>
-                © 2026 Đồ Án Môn Công Nghệ Java • <strong>Hệ Thống Quản Lý Nhà Trọ</strong>
+                © 2026 Đồ Án Môn Công Nghệ Java • <strong>Hệ Thống Quản Lý Nhà Trọ HUIT</strong>
             </div>
             <div class="text-muted small">
-                Kiến trúc: Spring Boot 3.3.5 &amp; MS SQL Server
+                Spring Boot 3.3.5 &amp; MS SQL Server
             </div>
         </div>
     </footer>
@@ -503,6 +1247,27 @@
                     modal.show();
                 }
             }
+
+            // Toggle Mobile Sidebar
+            (function () {
+                const btnToggle = document.getElementById('btnToggleSidebar');
+                const sidebar = document.getElementById('appSidebar');
+                const backdrop = document.getElementById('sidebarBackdrop');
+                if (btnToggle && sidebar) {
+                    const closeSidebar = () => {
+                        sidebar.classList.remove('show');
+                        if (backdrop) backdrop.classList.remove('show');
+                    };
+                    btnToggle.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        sidebar.classList.toggle('show');
+                        if (backdrop) backdrop.classList.toggle('show');
+                    });
+                    if (backdrop) {
+                        backdrop.addEventListener('click', closeSidebar);
+                    }
+                }
+            })();
 
             setTimeout(() => {
                 const alerts = document.querySelectorAll('.alert-dismissible');

@@ -47,8 +47,13 @@ public class DatChoService {
     @Autowired
     private KhachThueRepository khachThueRepository;
 
+    @Autowired(required = false)
+    private DatChoMonitor datChoMonitor;
+
+    private final Object bookingLock = new Object();
+
     /**
-     * Quy trình đặt giữ chỗ phòng với cơ chế Pessimistic Write Lock (findByIdForUpdate).
+     * Quy trình đặt giữ chỗ phòng kết hợp Monitor Lock (synchronized Chương 4) và Pessimistic Write Lock (findByIdForUpdate).
      * Đảm bảo an toàn khi nhiều Client Web hoặc Socket gửi lệnh BOOK đồng thời.
      */
     @Transactional
@@ -70,72 +75,82 @@ public class DatChoService {
             throw new BusinessException("Số điện thoại khách thuê không được để trống.");
         }
 
-        // 1. Khóa dòng dữ liệu phòng trọ bằng Pessimistic Write Lock
-        PhongTro phong = phongTroRepository.findByIdForUpdate(phongId)
-                .orElseThrow(() -> new BusinessException("Không tìm thấy phòng trọ với ID: " + phongId));
+        // 1. Đồng bộ vùng găng bằng Monitor Lock Java (synchronized) và khóa dòng dữ liệu SQL Server bằng Pessimistic Write Lock
+        synchronized (bookingLock) {
+            PhongTro phong = phongTroRepository.findByIdForUpdate(phongId)
+                    .orElseThrow(() -> new BusinessException("Không tìm thấy phòng trọ với ID: " + phongId));
 
-        // 2. Kiểm tra trạng thái phòng: chỉ cho phép đặt phòng đang TRONG
-        if (!PHONG_TRONG.equalsIgnoreCase(phong.getTrangThai())) {
-            log.warn("[{}] Phòng {} (ID: {}) không ở trạng thái TRONG (hiện tại: {})",
-                    threadName, phong.getMaPhong(), phongId, phong.getTrangThai());
-            throw new RoomAlreadyBookedException("Phòng " + phong.getMaPhong() +
-                    " đã được đặt hoặc đang thuê (Trạng thái: " + phong.getTrangThai() + ").");
+            // 2. Kiểm tra trạng thái phòng: chỉ cho phép đặt phòng đang TRONG
+            if (!PHONG_TRONG.equalsIgnoreCase(phong.getTrangThai())) {
+                log.warn("[{}] Phòng {} (ID: {}) không ở trạng thái TRONG (hiện tại: {})",
+                        threadName, phong.getMaPhong(), phongId, phong.getTrangThai());
+                if (datChoMonitor != null) {
+                    datChoMonitor.ghiNhanDatPhongBiTuChoi(
+                            phong.getMaPhong(), "Phòng đang ở trạng thái " + phong.getTrangThai(), ghiChu);
+                }
+                throw new RoomAlreadyBookedException("Phòng " + phong.getMaPhong() +
+                        " đã được đặt hoặc đang thuê (Trạng thái: " + phong.getTrangThai() + ").");
+            }
+
+            // 3. Tìm hoặc tạo mới hồ sơ khách thuê theo CCCD
+            String cleanCccd = cccd.trim();
+            KhachThue khachThue = khachThueRepository.findByCccd(cleanCccd)
+                    .orElseGet(() -> {
+                        log.info("[{}] Khách thuê với CCCD {} chưa tồn tại trong CSDL, tiến hành tạo mới...", threadName, cleanCccd);
+                        KhachThue moi = new KhachThue();
+                        moi.setHoTen(hoTen.trim());
+                        moi.setCccd(cleanCccd);
+                        moi.setSoDienThoai(soDienThoai.trim());
+                        moi.setEmail(email != null ? email.trim() : null);
+                        moi.setTrangThai("DANG_THUE");
+                        return khachThueRepository.save(moi);
+                    });
+
+            // Cập nhật thông tin liên lạc nếu khách đã tồn tại
+            boolean changed = false;
+            if (hoTen != null && !hoTen.trim().isEmpty() && !hoTen.trim().equalsIgnoreCase(khachThue.getHoTen())) {
+                khachThue.setHoTen(hoTen.trim());
+                changed = true;
+            }
+            if (soDienThoai != null && !soDienThoai.trim().isEmpty() && !soDienThoai.trim().equalsIgnoreCase(khachThue.getSoDienThoai())) {
+                khachThue.setSoDienThoai(soDienThoai.trim());
+                changed = true;
+            }
+            if (email != null && !email.trim().isEmpty() && !email.trim().equalsIgnoreCase(khachThue.getEmail())) {
+                khachThue.setEmail(email.trim());
+                changed = true;
+            }
+            if (changed) {
+                khachThueRepository.save(khachThue);
+            }
+
+            // 4. Tạo bản ghi đặt chỗ trong bảng dat_cho
+            int holdingHours = (soGioGiuCho != null && soGioGiuCho > 0) ? soGioGiuCho : 24;
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime hanGiuCho = now.plusHours(holdingHours);
+
+            DatCho datCho = new DatCho();
+            datCho.setPhongTro(phong);
+            datCho.setKhachThue(khachThue);
+            datCho.setNgayDat(now);
+            datCho.setHanGiuCho(hanGiuCho);
+            datCho.setTrangThai(TRANG_THAI_DANG_GIU);
+            datCho.setGhiChu(ghiChu);
+            DatCho savedDatCho = datChoRepository.save(datCho);
+
+            // 5. Cập nhật trạng thái phòng sang DA_DAT
+            phong.setTrangThai(PHONG_DA_DAT);
+            phongTroRepository.save(phong);
+
+            if (datChoMonitor != null) {
+                datChoMonitor.ghiNhanDatPhongThanhCong(phong.getMaPhong(), khachThue.getHoTen(), cleanCccd, ghiChu);
+            }
+
+            log.info("[{}] Đặt giữ chỗ THÀNH CÔNG cho phòng {} (ID: {}) bởi khách {} (CCCD: {}), hạn giữ chỗ đến: {}",
+                    threadName, phong.getMaPhong(), phongId, khachThue.getHoTen(), cleanCccd, hanGiuCho);
+
+            return savedDatCho;
         }
-
-        // 3. Tìm hoặc tạo mới hồ sơ khách thuê theo CCCD
-        String cleanCccd = cccd.trim();
-        KhachThue khachThue = khachThueRepository.findByCccd(cleanCccd)
-                .orElseGet(() -> {
-                    log.info("[{}] Khách thuê với CCCD {} chưa tồn tại trong CSDL, tiến hành tạo mới...", threadName, cleanCccd);
-                    KhachThue moi = new KhachThue();
-                    moi.setHoTen(hoTen.trim());
-                    moi.setCccd(cleanCccd);
-                    moi.setSoDienThoai(soDienThoai.trim());
-                    moi.setEmail(email != null ? email.trim() : null);
-                    moi.setTrangThai("DANG_THUE");
-                    return khachThueRepository.save(moi);
-                });
-
-        // Cập nhật thông tin liên lạc nếu khách đã tồn tại
-        boolean changed = false;
-        if (hoTen != null && !hoTen.trim().isEmpty() && !hoTen.trim().equalsIgnoreCase(khachThue.getHoTen())) {
-            khachThue.setHoTen(hoTen.trim());
-            changed = true;
-        }
-        if (soDienThoai != null && !soDienThoai.trim().isEmpty() && !soDienThoai.trim().equalsIgnoreCase(khachThue.getSoDienThoai())) {
-            khachThue.setSoDienThoai(soDienThoai.trim());
-            changed = true;
-        }
-        if (email != null && !email.trim().isEmpty() && !email.trim().equalsIgnoreCase(khachThue.getEmail())) {
-            khachThue.setEmail(email.trim());
-            changed = true;
-        }
-        if (changed) {
-            khachThueRepository.save(khachThue);
-        }
-
-        // 4. Tạo bản ghi đặt chỗ trong bảng dat_cho
-        int holdingHours = (soGioGiuCho != null && soGioGiuCho > 0) ? soGioGiuCho : 24;
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime hanGiuCho = now.plusHours(holdingHours);
-
-        DatCho datCho = new DatCho();
-        datCho.setPhongTro(phong);
-        datCho.setKhachThue(khachThue);
-        datCho.setNgayDat(now);
-        datCho.setHanGiuCho(hanGiuCho);
-        datCho.setTrangThai(TRANG_THAI_DANG_GIU);
-        datCho.setGhiChu(ghiChu);
-        DatCho savedDatCho = datChoRepository.save(datCho);
-
-        // 5. Cập nhật trạng thái phòng sang DA_DAT
-        phong.setTrangThai(PHONG_DA_DAT);
-        phongTroRepository.save(phong);
-
-        log.info("[{}] Đặt giữ chỗ THÀNH CÔNG cho phòng {} (ID: {}) bởi khách {} (CCCD: {}), hạn giữ chỗ đến: {}",
-                threadName, phong.getMaPhong(), phongId, khachThue.getHoTen(), cleanCccd, hanGiuCho);
-
-        return savedDatCho;
     }
 
     /**
@@ -146,9 +161,9 @@ public class DatChoService {
         if (maPhong == null || maPhong.trim().isEmpty()) {
             throw new BusinessException("Mã phòng không được để trống.");
         }
-        PhongTro phong = phongTroRepository.findByMaPhong(maPhong.trim())
+        Integer phongId = phongTroRepository.findIdByMaPhong(maPhong.trim())
                 .orElseThrow(() -> new BusinessException("Không tìm thấy phòng trọ với mã: " + maPhong));
-        return datChoPhong(phong.getId(), hoTen, cccd, soDienThoai, null, "Đặt qua Socket Client", 24);
+        return datChoPhong(phongId, hoTen, cccd, soDienThoai, null, "Đặt qua Socket Client", 24);
     }
 
     /**
@@ -161,9 +176,8 @@ public class DatChoService {
         }
         Integer phongId = request.getPhongId();
         if (phongId == null && request.getMaPhong() != null && !request.getMaPhong().trim().isEmpty()) {
-            PhongTro phong = phongTroRepository.findByMaPhong(request.getMaPhong().trim())
+            phongId = phongTroRepository.findIdByMaPhong(request.getMaPhong().trim())
                     .orElseThrow(() -> new BusinessException("Không tìm thấy phòng trọ với mã: " + request.getMaPhong()));
-            phongId = phong.getId();
         }
         return datChoPhong(phongId, request.getHoTen(), request.getCccd(),
                 request.getSoDienThoai(), request.getEmail(), request.getGhiChu(), request.getSoGioGiuCho());
@@ -223,6 +237,9 @@ public class DatChoService {
             if (PHONG_DA_DAT.equals(phong.getTrangThai())) {
                 phong.setTrangThai(PHONG_TRONG);
                 phongTroRepository.save(phong);
+                if (datChoMonitor != null) {
+                    datChoMonitor.ghiNhanGiaiPhongQuaHan(phong.getMaPhong(), datChoId);
+                }
                 log.info("[{}] ĐÃ GIẢI PHÓNG PHÒNG {} (ID: {}) VỀ TRẠNG THÁI TRONG THÀNH CÔNG",
                         threadName, phong.getMaPhong(), phongId);
             } else {
@@ -233,25 +250,6 @@ public class DatChoService {
             log.info("[{}] Bỏ qua giải phóng đặt chỗ ID {}: không tồn tại hoặc không còn là DANG_GIU",
                     threadName, datChoId);
         }
-    }
-
-    /**
-     * Quét và giải phóng thủ công toàn bộ đặt chỗ quá hạn.
-     */
-    public int quetVaGiaiPhongDatChoQuaHan() {
-        String threadName = Thread.currentThread().getName();
-        List<DatCho> expiredList = datChoRepository.findExpiredBookings(LocalDateTime.now());
-        log.info("[{}] Bắt đầu quét đặt chỗ quá hạn, tìm thấy {} bản ghi", threadName, expiredList.size());
-        int count = 0;
-        for (DatCho dc : expiredList) {
-            try {
-                releaseSingleBooking(dc.getId(), dc.getPhongTro().getId());
-                count++;
-            } catch (Exception e) {
-                log.error("[{}] Lỗi khi giải phóng đặt chỗ ID {}: {}", threadName, dc.getId(), e.getMessage());
-            }
-        }
-        return count;
     }
 
     /**

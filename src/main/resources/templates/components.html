@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  FRAGMENT BỔ SUNG (TV3) - dùng cùng với fragments.html của TV1, cùng giao diện cam đất/amber.
+  Cách include:  ~{components :: tên(...)}
+
+  styles                              : nạp components.css (đặt ngay đầu <body>)
+  searchBar(action, keyword, ph)      : thanh tìm kiếm GET, tham số ?keyword=
+  sortTh(label, field, baseUrl)       : tiêu đề cột bấm để sắp xếp, tham số ?sort=field,asc|desc
+  fieldError(field)                   : lỗi cạnh ô nhập (trong form có th:object)
+  statusBadge(value)                  : nhãn trạng thái cho mọi enum trạng thái trong CSDL
+  tenantTabs(active)                  : thanh chuyển trang của Cổng Khách thuê
+-->
+
+<th:block th:fragment="styles">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+</th:block>
+
+<!-- Dùng: <form th:replace="~{components :: searchBar('/tenant/rooms', ${keyword}, 'Tìm theo mã hoặc tên phòng')}"></form> -->
+<form th:fragment="searchBar(action, keyword, placeholder)" method="get" th:action="@{${action}}"
+      role="search" class="mb-3" style="max-width: 560px;">
+    <input type="hidden" name="size" th:if="${param.size != null}" th:value="${param.size[0]}">
+    <input type="hidden" name="trangThai" th:if="${param.trangThai != null}" th:value="${param.trangThai[0]}">
+    <div class="input-group">
+        <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+        <input type="search" class="form-control" name="keyword" th:value="${keyword}"
+               th:placeholder="${placeholder}" aria-label="Từ khóa tìm kiếm">
+        <button class="btn btn-primary px-3" type="submit">Tìm kiếm</button>
+        <a class="btn btn-outline-secondary" th:if="${keyword != null and !#strings.isEmpty(keyword)}"
+           th:href="@{${action}}">Xóa lọc</a>
+    </div>
+</form>
+
+<!-- Dùng trong <thead><tr>:  <th th:replace="~{components :: sortTh('Giá thuê', 'giaThue', '/tenant/rooms')}"></th>
+     'giaThue' là TÊN THUỘC TÍNH trong Entity (không phải tên cột SQL). -->
+<th th:fragment="sortTh(label, field, baseUrl)" scope="col"
+    th:with="isCur=${param.sort != null and param.sort[0].startsWith(field + ',')},
+             isAsc=${param.sort != null and param.sort[0] == field + ',asc'},
+             kw=${param.keyword != null ? param.keyword[0] : ''},
+             size=${param.size != null ? param.size[0] : ''},
+             tt=${param.trangThai != null ? param.trangThai[0] : ''},
+             tn=${param.thangNam != null ? param.thangNam[0] : null},
+             vt=${param.vaiTro != null ? param.vaiTro[0] : null}"
+    th:attr="aria-sort=${isCur ? (isAsc ? 'ascending' : 'descending') : 'none'}">
+    <a class="sort-link"
+       th:href="@{${baseUrl}(sort=${field + ',' + (isAsc ? 'desc' : 'asc')}, keyword=${kw}, size=${size}, trangThai=${tt}, thangNam=${tn}, vaiTro=${vt})}">
+        <span th:text="${label}">Cột</span>
+        <i class="fa-solid"
+           th:classappend="${isCur ? (isAsc ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort sort-idle'}"></i>
+    </a>
+</th>
+
+<!-- Dùng sau ô nhập trong <form th:object>:
+     <div th:replace="~{components :: fieldError('noiDung')}"></div>
+     và thêm vào ô nhập: th:classappend="${#fields.hasErrors('noiDung')} ? 'is-invalid'" -->
+<div th:fragment="fieldError(field)" class="invalid-feedback d-block" th:if="${#fields.hasErrors(field)}">
+    <span class="d-block" th:each="err : ${#fields.errors(field)}" th:text="${err}">Thông báo lỗi</span>
+</div>
+
+<!-- Dùng: <th:block th:replace="~{components :: statusBadge(${r.trangThai})}"></th:block>
+     Tái sử dụng đúng các lớp badge-* trong fragments.html. Giá trị lạ hiện nguyên văn. -->
+<th:block th:fragment="statusBadge(value)" th:switch="${value}">
+    <span th:case="'TRONG'" class="badge-status badge-trong">Trống</span>
+    <span th:case="'DA_DAT'" class="badge-status badge-dadat">Đã đặt</span>
+    <span th:case="'DA_THUE'" class="badge-status badge-dathue">Đã thuê</span>
+    <span th:case="'BAO_TRI'" class="badge-status badge-baotri">Bảo trì</span>
+    <span th:case="'DANG_THUE'" class="badge-status badge-dangthue">Đang thuê</span>
+    <span th:case="'DA_TRA_PHONG'" class="badge-status badge-datraphong">Đã trả phòng</span>
+    <span th:case="'HIEU_LUC'" class="badge-status badge-dangthue">Còn hiệu lực</span>
+    <span th:case="'HET_HAN'" class="badge-status badge-datraphong">Hết hạn</span>
+    <span th:case="'DA_THANH_LY'" class="badge-status badge-datraphong">Đã thanh lý</span>
+    <span th:case="'CHUA_THANH_TOAN'" class="badge-status badge-dadat">Chưa thanh toán</span>
+    <span th:case="'DA_THANH_TOAN'" class="badge-status badge-dangthue">Đã thanh toán</span>
+    <span th:case="'CHO_TIEP_NHAN'" class="badge-status badge-dadat">Chờ tiếp nhận</span>
+    <span th:case="'DANG_SUA'" class="badge-status badge-dathue">Đang sửa</span>
+    <span th:case="'HOAN_THANH'" class="badge-status badge-dangthue">Hoàn thành</span>
+    <span th:case="'BINH_THUONG'" class="badge-status badge-datraphong">Bình thường</span>
+    <span th:case="'CAP_BACH'" class="badge-status badge-baotri">Cấp bách</span>
+    <span th:case="*" class="badge-status badge-datraphong" th:text="${value}">?</span>
+</th:block>
+
+<!-- Thanh ngữ cảnh cho Admin/Staff khi xem trước Cổng Khách thuê; ẩn hẳn với TENANT vì Sidebar đã có đủ 4 mục riêng -->
+<th:block th:fragment="tenantTabs(active)">
+    <div th:if="${session.SESSION_ROLE != 'TENANT'}"
+         class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 px-3 py-2 rounded-3"
+         style="background: var(--primary-light); border: 1px solid var(--primary-border);">
+        <div class="small fw-medium text-dark">
+            <i class="fa-solid fa-eye text-primary me-1"></i>
+            Bạn đang xem trước bảng tin phòng trống của <strong>Cổng Khách thuê</strong>.
+        </div>
+        <a th:href="@{/phong-tro}" class="btn-quick">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại Quản trị
+        </a>
+    </div>
+</th:block>
+</body>
+</html>

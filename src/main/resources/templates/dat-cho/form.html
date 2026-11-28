@@ -25,12 +25,12 @@
 
             <!-- Form Card -->
             <div class="card-custom p-4 p-md-5">
-                <form th:action="@{/dat-cho/luu}" th:object="${datChoRequest}" method="POST">
+                <form th:action="@{/dat-cho/luu}" th:object="${datChoRequest}" method="POST" novalidate>
                     
                     <!-- Section 1: Chọn phòng trọ -->
                     <div class="mb-4 pb-3 border-bottom">
                         <h6 class="fw-bold text-dark text-uppercase small mb-3" style="letter-spacing: 0.05em;">
-                            <i class="fa-solid fa-door-open text-warning me-2"></i>1. Thông Tin Phòng Trọ
+                            <i class="fa-solid fa-door-open text-primary me-2"></i>1. Thông Tin Phòng Trọ
                         </h6>
 
                         <div th:if="${#lists.isEmpty(danhSachPhongTrong)}" class="alert alert-warning py-3 rounded-3">
@@ -44,7 +44,8 @@
                                 <label class="form-label fw-semibold small text-secondary">
                                     Chọn phòng trọ cần giữ chỗ <span class="text-danger">*</span>
                                 </label>
-                                <select class="form-select" th:field="*{phongId}" required>
+                                <select class="form-select" th:field="*{phongId}"
+                                        th:classappend="${#fields.hasErrors('phongId')} ? 'is-invalid'" required>
                                     <option value="">-- Chọn phòng trọ còn trống --</option>
                                     <option th:each="p : ${danhSachPhongTrong}"
                                             th:value="${p.id}"
@@ -52,6 +53,7 @@
                                         P101 - Phòng 101 (2,500,000 đ/tháng)
                                     </option>
                                 </select>
+                                <div th:replace="~{components :: fieldError('phongId')}"></div>
                                 <div class="form-text small">
                                     <i class="fa-solid fa-shield-halved text-success me-1"></i>
                                     Hệ thống sử dụng cơ chế khóa bi quan (Pessimistic Lock) để chống đặt trùng khi có nhiều người cùng thao tác.
@@ -63,7 +65,7 @@
                     <!-- Section 2: Thông tin khách thuê -->
                     <div class="mb-4 pb-3 border-bottom">
                         <h6 class="fw-bold text-dark text-uppercase small mb-3" style="letter-spacing: 0.05em;">
-                            <i class="fa-solid fa-user text-warning me-2"></i>2. Thông Tin Khách Hàng Giữ Chỗ
+                            <i class="fa-solid fa-user text-primary me-2"></i>2. Thông Tin Khách Hàng Giữ Chỗ
                         </h6>
 
                         <div class="row g-3">
@@ -72,7 +74,9 @@
                                     Họ và tên khách thuê <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" class="form-control" th:field="*{hoTen}"
+                                       th:classappend="${#fields.hasErrors('hoTen')} ? 'is-invalid'"
                                        placeholder="Ví dụ: Nguyễn Văn An" required maxlength="100">
+                                <div th:replace="~{components :: fieldError('hoTen')}"></div>
                             </div>
 
                             <div class="col-md-6 col-12">
@@ -80,7 +84,9 @@
                                     Số Căn cước công dân (CCCD) <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" class="form-control font-mono" th:field="*{cccd}"
+                                       th:classappend="${#fields.hasErrors('cccd')} ? 'is-invalid'"
                                        placeholder="12 chữ số CCCD" required maxlength="20">
+                                <div th:replace="~{components :: fieldError('cccd')}"></div>
                                 <div class="form-text small">Nếu CCCD chưa có trong hệ thống, hồ sơ khách sẽ được tự động tạo mới.</div>
                             </div>
 
@@ -89,7 +95,9 @@
                                     Số điện thoại liên lạc <span class="text-danger">*</span>
                                 </label>
                                 <input type="tel" class="form-control font-mono" th:field="*{soDienThoai}"
+                                       th:classappend="${#fields.hasErrors('soDienThoai')} ? 'is-invalid'"
                                        placeholder="Ví dụ: 0912345678" required maxlength="15">
+                                <div th:replace="~{components :: fieldError('soDienThoai')}"></div>
                             </div>
 
                             <div class="col-md-6 col-12">
@@ -97,7 +105,9 @@
                                     Địa chỉ Email (nếu có)
                                 </label>
                                 <input type="email" class="form-control" th:field="*{email}"
+                                       th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
                                        placeholder="nguyenvanan@gmail.com" maxlength="100">
+                                <div th:replace="~{components :: fieldError('email')}"></div>
                             </div>
                         </div>
                     </div>
@@ -105,7 +115,7 @@
                     <!-- Section 3: Thời hạn giữ chỗ & Ghi chú -->
                     <div class="mb-4">
                         <h6 class="fw-bold text-dark text-uppercase small mb-3" style="letter-spacing: 0.05em;">
-                            <i class="fa-solid fa-clock text-warning me-2"></i>3. Thời Hạn Giữ Chỗ &amp; Ghi Chú
+                            <i class="fa-solid fa-clock text-primary me-2"></i>3. Thời Hạn Giữ Chỗ &amp; Ghi Chú
                         </h6>
 
                         <div class="row g-3">
@@ -113,12 +123,14 @@
                                 <label class="form-label fw-semibold small text-secondary">
                                     Thời gian giữ phòng (Giờ) <span class="text-danger">*</span>
                                 </label>
-                                <select class="form-select font-mono" th:field="*{soGioGiuCho}">
+                                <select class="form-select font-mono" th:field="*{soGioGiuCho}"
+                                        th:classappend="${#fields.hasErrors('soGioGiuCho')} ? 'is-invalid'">
                                     <option value="12">12 Giờ (Nửa ngày)</option>
                                     <option value="24" selected>24 Giờ (1 Ngày - Mặc định)</option>
                                     <option value="48">48 Giờ (2 Ngày)</option>
                                     <option value="72">72 Giờ (3 Ngày)</option>
                                 </select>
+                                <div th:replace="~{components :: fieldError('soGioGiuCho')}"></div>
                                 <div class="form-text small">
                                     Hết thời gian này, tác vụ nền <code>@Scheduled</code> sẽ tự động thu hồi phòng về trạng thái <strong>TRỐNG</strong>.
                                 </div>
@@ -127,7 +139,9 @@
                             <div class="col-12">
                                 <label class="form-label fw-semibold small text-secondary">Ghi chú thêm</label>
                                 <textarea class="form-control" th:field="*{ghiChu}" rows="3"
+                                          th:classappend="${#fields.hasErrors('ghiChu')} ? 'is-invalid'"
                                           placeholder="Nhập ghi chú yêu cầu thêm của khách (tiền cọc giữ chân, ngày hẹn ký hợp đồng...)" maxlength="255"></textarea>
+                                <div th:replace="~{components :: fieldError('ghiChu')}"></div>
                             </div>
                         </div>
                     </div>

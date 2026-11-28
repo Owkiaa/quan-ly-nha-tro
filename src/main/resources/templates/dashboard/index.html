@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/fragments :: head('Dashboard Thống Kê & Doanh Thu')}"></head>
+<body>
+<th:block th:replace="~{components :: styles}"></th:block>
+
+    <!-- Top Navbar Ngang -->
+    <nav th:replace="~{layout/fragments :: navbar('dashboard')}"></nav>
+
+    <!-- Main Content Area -->
+    <main class="main-container">
+        <div class="container-xl">
+            <div th:replace="~{layout/fragments :: alerts}"></div>
+
+            <!-- Page Title & Header Actions -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1">Thống Kê Doanh Thu</h3>
+                </div>
+            </div>
+
+            <!-- 4 KPI Tài Chính & Vận Hành (1-row KPI strip) -->
+            <div class="kpi-bar mb-4">
+                <div class="kpi-item">
+                    <div class="kpi-num text-success" th:text="${#numbers.formatDecimal(stats.tongDoanhThuDaThu, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</div>
+                    <div class="kpi-lbl">Doanh thu đã thu (<span th:text="${stats.soHoaDonDaThanhToan}">0</span> HĐ)</div>
+                </div>
+                <div class="kpi-item">
+                    <div class="kpi-num price-red-text" th:text="${#numbers.formatDecimal(stats.tongNoChuaThu, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</div>
+                    <div class="kpi-lbl">Khoản nợ chưa thu (<span th:text="${stats.soHoaDonChuaThanhToan}">0</span> HĐ)</div>
+                </div>
+                <div class="kpi-item">
+                    <div class="kpi-num text-primary" th:text="${stats.tiLeLapDay} + '%'">0%</div>
+                    <div class="kpi-lbl">Lấp đầy (<span th:text="${stats.soPhongDangThue} + '/' + ${stats.tongSoPhong}">0/0</span> phòng)</div>
+                </div>
+                <div class="kpi-item">
+                    <div class="kpi-num text-dark" th:text="${stats.soPhongTrong}">0</div>
+                    <div class="kpi-lbl">Phòng trống sẵn sàng</div>
+                </div>
+            </div>
+
+            <!-- Khu vực 2 Biểu Đồ (Doanh thu cột chồng/kép & Donut trạng thái phòng) -->
+            <div class="row g-4 mb-4">
+                <!-- Biểu đồ 1: Doanh thu & Nợ đọng theo tháng -->
+                <div class="col-lg-8">
+                    <div class="card card-custom p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">
+                                    <i class="fa-solid fa-chart-simple text-primary me-2"></i>Biểu Đồ Doanh Thu &amp; Nợ Đọng 6 Tháng Gần Nhất
+                                </h6>
+                                <p class="text-muted small mb-0">Đối soát số tiền đã thu thực tế và số tiền nợ còn đọng qua từng kỳ</p>
+                            </div>
+                            <span class="badge bg-light text-secondary border font-mono">Đơn vị: VNĐ</span>
+                        </div>
+                        <div style="position: relative; height: 320px; width: 100%;">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Biểu đồ 2: Cơ cấu trạng thái phòng (Donut Chart) -->
+                <div class="col-lg-4">
+                    <div class="card card-custom p-4 h-100">
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-dark mb-1">
+                                <i class="fa-solid fa-chart-pie text-primary me-2"></i>Cơ Cấu Trạng Thái Phòng
+                            </h6>
+                            <p class="text-muted small mb-0">Tỷ trọng công suất lấp đầy nhà trọ</p>
+                        </div>
+                        <div style="position: relative; height: 240px; width: 100%;">
+                            <canvas id="roomStatusChart"></canvas>
+                        </div>
+                        <div class="row g-2 text-center mt-3 pt-2 border-top">
+                            <div class="col-6">
+                                <div class="text-muted small" style="font-size: 0.72rem;">ĐANG THUÊ</div>
+                                <div class="fw-bold font-mono text-success" th:text="${stats.soPhongDangThue}">11</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small" style="font-size: 0.72rem;">PHÒNG TRỐNG</div>
+                                <div class="fw-bold font-mono text-primary" th:text="${stats.soPhongTrong}">4</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small" style="font-size: 0.72rem;">ĐÃ ĐẶT CỌC</div>
+                                <div class="fw-bold font-mono" style="color: #d97706;" th:text="${stats.soPhongDaDat}">3</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small" style="font-size: 0.72rem;">BẢO TRÌ</div>
+                                <div class="fw-bold font-mono text-danger" th:text="${stats.soPhongBaoTri}">2</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng tóm tắt thông số tài chính -->
+            <div class="card card-custom p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <h6 class="fw-bold text-dark mb-0">
+                        <i class="fa-solid fa-circle-info text-primary me-2"></i>Tóm Tắt Báo Cáo Tài Chính &amp; Vận Hành
+                    </h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Chỉ Số</th>
+                                <th>Giá Trị Ghi Nhận</th>
+                                <th>Đánh Giá Nghiệp Vụ</th>
+                                <th class="text-end">Hành Động Khuyến Nghị</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="fw-semibold text-dark">Tỷ lệ lấp đầy phòng</td>
+                                <td class="fw-bold font-mono" th:text="${stats.tiLeLapDay} + '%'">0%</td>
+                                <td>
+                                    <span th:if="${stats.tiLeLapDay >= 70}" class="text-success small fw-semibold"><i class="fa-solid fa-circle-check me-1"></i>Công suất khai thác rất tốt</span>
+                                    <span th:if="${stats.tiLeLapDay < 70}" class="text-primary small fw-semibold"><i class="fa-solid fa-triangle-exclamation me-1"></i>Đẩy mạnh tiếp thị phòng trống</span>
+                                </td>
+                                <td class="text-end">
+                                    <a th:href="@{/phong-tro(trangThai='TRONG')}" class="btn btn-outline-secondary btn-sm py-1 px-2" style="font-size: 0.75rem;">Xem phòng trống</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold text-dark">Nợ đọng tiền phòng</td>
+                                <td class="fw-bold font-mono text-danger" th:text="${#numbers.formatDecimal(stats.tongNoChuaThu, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</td>
+                                <td>
+                                    <span th:if="${stats.soHoaDonChuaThanhToan > 0}" class="text-danger small fw-semibold" th:text="'Còn ' + ${stats.soHoaDonChuaThanhToan} + ' hóa đơn chưa hoàn tất thu tiền'"></span>
+                                    <span th:if="${stats.soHoaDonChuaThanhToan == 0}" class="text-success small fw-semibold"><i class="fa-solid fa-circle-check me-1"></i>Đã thu đủ 100% hóa đơn</span>
+                                </td>
+                                <td class="text-end">
+                                    <a th:href="@{/hoa-don(trangThai='CHUA_THANH_TOAN')}" class="btn btn-sm btn-danger py-1 px-2" style="font-size: 0.75rem;">Mở danh sách nợ</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{layout/fragments :: footer}"></footer>
+
+    <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const thangLabels = /*[[${stats.bieuDoThangLabels}]]*/ [];
+        const doanhThuValues = /*[[${stats.bieuDoDoanhThuValues}]]*/ [];
+        const noValues = /*[[${stats.bieuDoNoValues}]]*/ [];
+
+        const phongLabels = /*[[${stats.bieuDoPhongLabels}]]*/ [];
+        const phongValues = /*[[${stats.bieuDoPhongValues}]]*/ [];
+
+        // 1. Biểu đồ Doanh thu & Nợ (Grouped Bar Chart)
+        const ctxRev = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctxRev, {
+            type: 'bar',
+            data: {
+                labels: thangLabels,
+                datasets: [
+                    {
+                        label: 'Đã thu (VNĐ)',
+                        data: doanhThuValues,
+                        backgroundColor: '#10b981',
+                        borderRadius: 6,
+                        maxBarThickness: 32
+                    },
+                    {
+                        label: 'Nợ đọng (VNĐ)',
+                        data: noValues,
+                        backgroundColor: '#ef4444',
+                        borderRadius: 6,
+                        maxBarThickness: 32
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: { family: "'Inter', sans-serif", size: 12, weight: '600' }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let val = context.raw || 0;
+                                return context.dataset.label + ': ' + new Intl.NumberFormat('vi-VN').format(val) + ' đ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.NumberFormat('vi-VN', { notation: 'compact' }).format(value) + ' đ';
+                            },
+                            font: { family: "'JetBrains Mono', monospace", size: 11 }
+                        },
+                        grid: { color: '#e2e8f0' }
+                    },
+                    x: {
+                        ticks: {
+                            font: { family: "'JetBrains Mono', monospace", size: 11 }
+                        },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // 2. Biểu đồ tròn Trạng thái phòng (Doughnut Chart)
+        const ctxRoom = document.getElementById('roomStatusChart').getContext('2d');
+        new Chart(ctxRoom, {
+            type: 'doughnut',
+            data: {
+                labels: phongLabels,
+                datasets: [{
+                    data: phongValues,
+                    backgroundColor: [
+                        '#10b981', // Đang thuê
+                        '#4f46e5', // Trống
+                        '#f59e0b', // Đã cọc
+                        '#ef4444'  // Bảo trì
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: { family: "'Inter', sans-serif", size: 11, weight: '500' },
+                            boxWidth: 12
+                        }
+                    }
+                },
+                cutout: '68%'
+            }
+        });
+        /*]]>*/
+    </script>
+</body>
+</html>

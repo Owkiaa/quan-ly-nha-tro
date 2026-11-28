@@ -13,6 +13,7 @@ target/
 .settings/
 *.sublime-project
 *.sublime-workspace
+.agents/
 
 # Logs
 *.log
@@ -30,3 +31,8 @@ passwords.txt
 # OS Generated files
 .DS_Store
 Thumbs.db
+~$*.docx
+
+# Runtime uploads & local UI preview
+uploads/
+preview-giao-dien-moi.html

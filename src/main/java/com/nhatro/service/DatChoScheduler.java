@@ -39,25 +39,43 @@ public class DatChoScheduler {
      */
     @Scheduled(fixedDelay = 60000, initialDelay = 10000)
     public void autoReleaseExpiredBookings() {
+        runScanAndRelease(false);
+    }
+
+    /**
+     * Quét và giải phóng thủ công toàn bộ đặt chỗ quá hạn thông qua DatChoService Bean
+     * để đảm bảo Spring AOP Proxy kích hoạt @Transactional và Pessimistic Lock (findByIdForUpdate).
+     */
+    public int quetVaGiaiPhongDatChoQuaHan() {
+        return runScanAndRelease(true);
+    }
+
+    private int runScanAndRelease(boolean logWhenEmpty) {
         String threadName = Thread.currentThread().getName();
-        LocalDateTime now = LocalDateTime.now();
-
-        List<DatCho> expiredList = datChoRepository.findExpiredBookings(now);
-        if (!expiredList.isEmpty()) {
-            log.info("[{}] [DatChoScheduler] Phát hiện {} bản ghi đặt giữ chỗ quá hạn cần giải phóng",
-                    threadName, expiredList.size());
-
-            for (DatCho dc : expiredList) {
-                try {
-                    // Gọi qua Spring Bean DatChoService để @Transactional và findByIdForUpdate hoạt động
-                    datChoService.releaseSingleBooking(dc.getId(), dc.getPhongTro().getId());
-                } catch (Exception e) {
-                    log.error("[{}] [DatChoScheduler] Lỗi khi giải phóng đặt chỗ ID {}: {}",
-                            threadName, dc.getId(), e.getMessage(), e);
-                }
+        List<DatCho> expiredList = datChoRepository.findExpiredBookings(LocalDateTime.now());
+        if (expiredList.isEmpty()) {
+            if (logWhenEmpty) {
+                log.info("[{}] [DatChoScheduler] Bắt đầu quét đặt chỗ quá hạn: không tìm thấy bản ghi nào", threadName);
             }
-
-            log.info("[{}] [DatChoScheduler] Hoàn tất đợt quét và xử lý đặt chỗ quá hạn", threadName);
+            return 0;
         }
+
+        log.info("[{}] [DatChoScheduler] Phát hiện {} bản ghi đặt giữ chỗ quá hạn cần giải phóng",
+                threadName, expiredList.size());
+
+        int count = 0;
+        for (DatCho dc : expiredList) {
+            try {
+                // Gọi qua Spring Bean DatChoService để @Transactional và findByIdForUpdate hoạt động
+                datChoService.releaseSingleBooking(dc.getId(), dc.getPhongTro().getId());
+                count++;
+            } catch (Exception e) {
+                log.error("[{}] [DatChoScheduler] Lỗi khi giải phóng đặt chỗ ID {}: {}",
+                        threadName, dc.getId(), e.getMessage(), e);
+            }
+        }
+
+        log.info("[{}] [DatChoScheduler] Hoàn tất đợt quét và xử lý {} đặt chỗ quá hạn", threadName, count);
+        return count;
     }
 }

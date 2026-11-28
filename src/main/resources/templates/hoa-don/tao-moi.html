@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/fragments :: head('Chốt Số Điện Nước & Lập Hóa Đơn')}"></head>
+<body>
+<th:block th:replace="~{components :: styles}"></th:block>
+
+    <!-- Top Navbar Ngang -->
+    <nav th:replace="~{layout/fragments :: navbar('hoa-don')}"></nav>
+
+    <!-- Main Content Area -->
+    <main class="main-container">
+        <div class="container-xl" style="max-width: 1050px;">
+            <div th:replace="~{layout/fragments :: alerts}"></div>
+
+            <!-- Breadcrumb / Back link -->
+            <div class="mb-3">
+                <a th:href="@{/hoa-don}" class="text-decoration-none text-muted small fw-semibold d-inline-flex align-items-center gap-1">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Quay lại danh sách hóa đơn</span>
+                </a>
+            </div>
+
+            <!-- Page Title -->
+            <div class="mb-4">
+                <h3 class="fw-bold mb-1">Chốt Số Điện Nước &amp; Lập Hóa Đơn Định Kỳ</h3>
+                <p class="text-muted small mb-0">Hệ thống tự động gợi ý số cũ từ kỳ trước và bảo đảm ràng buộc duy nhất không lập trùng</p>
+            </div>
+
+            <form th:action="@{/hoa-don/tao-moi}" th:object="${hoaDonDTO}" method="post" novalidate>
+                <div class="row g-4">
+                    
+                    <!-- Form bên trái -->
+                    <div class="col-lg-8">
+                        <div class="card card-custom p-4">
+                            
+                            <!-- 1. Hợp đồng & Tháng năm -->
+                            <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                                <span class="badge bg-primary-subtle text-primary rounded-circle p-2" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">1</span>
+                                <h6 class="fw-bold mb-0 text-dark">Thông Tin Hợp Đồng &amp; Kỳ Thu</h6>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-8">
+                                    <label class="form-label small fw-semibold text-dark">Chọn Hợp Đồng / Phòng Thuê <span class="text-danger">*</span></label>
+                                    <select id="selectHopDong" th:field="*{hopDongId}" class="form-select form-select-sm"
+                                            th:classappend="${#fields.hasErrors('hopDongId')} ? 'is-invalid'" required>
+                                        <option value="">-- Chọn hợp đồng đang có hiệu lực --</option>
+                                        <option th:each="hd : ${danhSachHopDong}" 
+                                                th:value="${hd.id}" 
+                                                th:text="${(hd.phongTro != null ? hd.phongTro.maPhong : '') + ' - ' + (hd.khachThue != null ? hd.khachThue.hoTen : '') + ' (HĐ: ' + hd.maHopDong + ')'}">
+                                            P101 - Nguyễn Văn An (HĐ: HD-202610-01)
+                                        </option>
+                                    </select>
+                                    <div th:replace="~{components :: fieldError('hopDongId')}"></div>
+                                    <div class="form-text small" id="infoKhachThue">Chọn hợp đồng để tự động tải giá thuê và chỉ số cũ.</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-dark">Tháng / Năm (MM/yyyy) <span class="text-danger">*</span></label>
+                                    <input type="text" th:field="*{thangNam}" id="inputThangNam" class="form-control form-control-sm font-mono"
+                                           th:classappend="${#fields.hasErrors('thangNam')} ? 'is-invalid'" placeholder="11/2026" required>
+                                    <div th:replace="~{components :: fieldError('thangNam')}"></div>
+                                    <div class="form-text small">Ví dụ: 11/2026</div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Chỉ số Điện -->
+                            <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                                <span class="badge bg-primary-subtle text-primary rounded-circle p-2" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">2</span>
+                                <h6 class="fw-bold mb-0 text-dark">Chốt Chỉ Số Điện (kWh)</h6>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted">Chỉ số cũ</label>
+                                    <input type="number" th:field="*{chiSoDienCu}" id="chiSoDienCu" class="form-control form-control-sm font-mono bg-light"
+                                           th:classappend="${#fields.hasErrors('chiSoDienCu')} ? 'is-invalid'" min="0" required>
+                                    <div th:replace="~{components :: fieldError('chiSoDienCu')}"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-primary">Chỉ số mới <span class="text-danger">*</span></label>
+                                    <input type="number" th:field="*{chiSoDienMoi}" id="chiSoDienMoi" class="form-control form-control-sm font-mono"
+                                           th:classappend="${#fields.hasErrors('chiSoDienMoi')} ? 'is-invalid'" min="0" required>
+                                    <div th:replace="~{components :: fieldError('chiSoDienMoi')}"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted">Đơn giá điện (đ/kWh)</label>
+                                    <input type="number" th:field="*{donGiaDien}" id="donGiaDien" class="form-control form-control-sm font-mono"
+                                           th:classappend="${#fields.hasErrors('donGiaDien')} ? 'is-invalid'" min="0" step="100" required>
+                                    <div th:replace="~{components :: fieldError('donGiaDien')}"></div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="p-2 rounded bg-light small d-flex justify-content-between align-items-center font-mono">
+                                        <span>Lượng điện tiêu thụ: <strong id="lblSoDien">0</strong> kWh</span>
+                                        <span>Thành tiền: <strong id="lblTienDien" class="text-danger">0 đ</strong></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. Chỉ số Nước -->
+                            <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                                <span class="badge bg-primary-subtle text-primary rounded-circle p-2" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">3</span>
+                                <h6 class="fw-bold mb-0 text-dark">Chốt Chỉ Số Nước (m³)</h6>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted">Chỉ số cũ</label>
+                                    <input type="number" th:field="*{chiSoNuocCu}" id="chiSoNuocCu" class="form-control form-control-sm font-mono bg-light"
+                                           th:classappend="${#fields.hasErrors('chiSoNuocCu')} ? 'is-invalid'" min="0" required>
+                                    <div th:replace="~{components :: fieldError('chiSoNuocCu')}"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold text-primary">Chỉ số mới <span class="text-danger">*</span></label>
+                                    <input type="number" th:field="*{chiSoNuocMoi}" id="chiSoNuocMoi" class="form-control form-control-sm font-mono"
+                                           th:classappend="${#fields.hasErrors('chiSoNuocMoi')} ? 'is-invalid'" min="0" required>
+                                    <div th:replace="~{components :: fieldError('chiSoNuocMoi')}"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted">Đơn giá nước (đ/m³)</label>
+                                    <input type="number" th:field="*{donGiaNuoc}" id="donGiaNuoc" class="form-control form-control-sm font-mono"
+                                           th:classappend="${#fields.hasErrors('donGiaNuoc')} ? 'is-invalid'" min="0" step="500" required>
+                                    <div th:replace="~{components :: fieldError('donGiaNuoc')}"></div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="p-2 rounded bg-light small d-flex justify-content-between align-items-center font-mono">
+                                        <span>Lượng nước tiêu thụ: <strong id="lblSoNuoc">0</strong> m³</span>
+                                        <span>Thành tiền: <strong id="lblTienNuoc" class="text-danger">0 đ</strong></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. Tiền phòng & Phí dịch vụ -->
+                            <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                                <span class="badge bg-primary-subtle text-primary rounded-circle p-2" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">4</span>
+                                <h6 class="fw-bold mb-0 text-dark">Tiền Phòng &amp; Phí Dịch Vụ</h6>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-dark">Tiền thuê phòng (VNĐ)</label>
+                                    <input type="number" th:field="*{tienPhong}" id="tienPhong" class="form-control form-control-sm font-mono"
+                                           th:classappend="${#fields.hasErrors('tienPhong')} ? 'is-invalid'" min="0" step="1000" required>
+                                    <div th:replace="~{components :: fieldError('tienPhong')}"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-dark">Phí dịch vụ chung / rác / wifi (VNĐ)</label>
+                                    <input type="number" th:field="*{tienDichVu}" id="tienDichVu" class="form-control form-control-sm font-mono"
+                                           th:classappend="${#fields.hasErrors('tienDichVu')} ? 'is-invalid'" min="0" step="1000" required>
+                                    <div th:replace="~{components :: fieldError('tienDichVu')}"></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Panel xem trước bên phải (Hallmark Clean Style) -->
+                    <div class="col-lg-4">
+                        <div class="card card-custom p-4 sticky-top" style="top: 80px;">
+                            <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">TỔNG TIỀN DỰ KIẾN</div>
+                            <h2 class="price-red-text mt-1 mb-3" style="font-size: 1.85rem;" id="lblTongTien">0 đ</h2>
+
+                            <hr class="my-3" style="border-color: var(--card-border);">
+
+                            <div class="d-flex justify-content-between small mb-2">
+                                <span class="text-muted">Tiền phòng:</span>
+                                <span id="previewTienPhong" class="fw-semibold font-mono text-dark">0 đ</span>
+                            </div>
+                            <div class="d-flex justify-content-between small mb-2">
+                                <span class="text-muted">Tiền điện:</span>
+                                <span id="previewTienDien" class="fw-semibold font-mono text-dark">0 đ</span>
+                            </div>
+                            <div class="d-flex justify-content-between small mb-2">
+                                <span class="text-muted">Tiền nước:</span>
+                                <span id="previewTienNuoc" class="fw-semibold font-mono text-dark">0 đ</span>
+                            </div>
+                            <div class="d-flex justify-content-between small mb-4">
+                                <span class="text-muted">Phí dịch vụ:</span>
+                                <span id="previewTienDichVu" class="fw-semibold font-mono text-dark">100,000 đ</span>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold d-inline-flex align-items-center justify-content-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                                <span>Lập &amp; Xuất Hóa Đơn</span>
+                            </button>
+                            <a th:href="@{/hoa-don}" class="btn btn-outline-secondary w-100 mt-2 py-2 small">Hủy bỏ</a>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{layout/fragments :: footer}"></footer>
+
+    <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+
+    <script>
+        const formatMoney = (amount) => {
+            return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
+        };
+
+        const selectHopDong = document.getElementById('selectHopDong');
+        const inputThangNam = document.getElementById('inputThangNam');
+        const chiSoDienCu = document.getElementById('chiSoDienCu');
+        const chiSoDienMoi = document.getElementById('chiSoDienMoi');
+        const donGiaDien = document.getElementById('donGiaDien');
+        const chiSoNuocCu = document.getElementById('chiSoNuocCu');
+        const chiSoNuocMoi = document.getElementById('chiSoNuocMoi');
+        const donGiaNuoc = document.getElementById('donGiaNuoc');
+        const tienPhong = document.getElementById('tienPhong');
+        const tienDichVu = document.getElementById('tienDichVu');
+
+        const lblSoDien = document.getElementById('lblSoDien');
+        const lblTienDien = document.getElementById('lblTienDien');
+        const lblSoNuoc = document.getElementById('lblSoNuoc');
+        const lblTienNuoc = document.getElementById('lblTienNuoc');
+        const lblTongTien = document.getElementById('lblTongTien');
+
+        const previewTienPhong = document.getElementById('previewTienPhong');
+        const previewTienDien = document.getElementById('previewTienDien');
+        const previewTienNuoc = document.getElementById('previewTienNuoc');
+        const previewTienDichVu = document.getElementById('previewTienDichVu');
+        const infoKhachThue = document.getElementById('infoKhachThue');
+
+        function calculate() {
+            const dienCu = parseInt(chiSoDienCu.value) || 0;
+            const dienMoi = parseInt(chiSoDienMoi.value) || 0;
+            const giaDien = parseFloat(donGiaDien.value) || 0;
+            const soDien = Math.max(0, dienMoi - dienCu);
+            const totalDien = soDien * giaDien;
+
+            const nuocCu = parseInt(chiSoNuocCu.value) || 0;
+            const nuocMoi = parseInt(chiSoNuocMoi.value) || 0;
+            const giaNuoc = parseFloat(donGiaNuoc.value) || 0;
+            const soNuoc = Math.max(0, nuocMoi - nuocCu);
+            const totalNuoc = soNuoc * giaNuoc;
+
+            const totalPhong = parseFloat(tienPhong.value) || 0;
+            const totalDichVu = parseFloat(tienDichVu.value) || 0;
+            const tongCong = totalPhong + totalDien + totalNuoc + totalDichVu;
+
+            lblSoDien.textContent = soDien;
+            lblTienDien.textContent = formatMoney(totalDien);
+            lblSoNuoc.textContent = soNuoc;
+            lblTienNuoc.textContent = formatMoney(totalNuoc);
+            lblTongTien.textContent = formatMoney(tongCong);
+
+            previewTienPhong.textContent = formatMoney(totalPhong);
+            previewTienDien.textContent = formatMoney(totalDien);
+            previewTienNuoc.textContent = formatMoney(totalNuoc);
+            previewTienDichVu.textContent = formatMoney(totalDichVu);
+        }
+
+        selectHopDong.addEventListener('change', function() {
+            const hopDongId = this.value;
+            if (!hopDongId) {
+                infoKhachThue.textContent = "Chọn hợp đồng để tự động tải giá thuê và chỉ số cũ.";
+                return;
+            }
+
+            fetch('/hoa-don/api/chi-so-cu/' + hopDongId)
+                .then(res => res.json())
+                .then(data => {
+                    infoKhachThue.innerHTML = `Phòng: <strong class="text-primary font-mono">${data.maPhong}</strong> | Khách thuê: <strong>${data.tenKhachThue}</strong>`;
+                    tienPhong.value = data.giaThue || 0;
+                    chiSoDienCu.value = data.chiSoDienCu || 0;
+                    chiSoNuocCu.value = data.chiSoNuocCu || 0;
+                    if (parseInt(chiSoDienMoi.value) < data.chiSoDienCu) {
+                        chiSoDienMoi.value = data.chiSoDienCu;
+                    }
+                    if (parseInt(chiSoNuocMoi.value) < data.chiSoNuocCu) {
+                        chiSoNuocMoi.value = data.chiSoNuocCu;
+                    }
+                    calculate();
+                })
+                .catch(err => {
+                    console.error("Lỗi khi tải thông tin hợp đồng:", err);
+                });
+        });
+
+        [chiSoDienCu, chiSoDienMoi, donGiaDien, chiSoNuocCu, chiSoNuocMoi, donGiaNuoc, tienPhong, tienDichVu].forEach(el => {
+            el.addEventListener('input', calculate);
+        });
+
+        // Tự động chọn hợp đồng nếu đi từ link ?hopDongId=...
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            const preId = params.get('hopDongId');
+            if (preId && !selectHopDong.value) {
+                selectHopDong.value = preId;
+                if (selectHopDong.value === preId) {
+                    selectHopDong.dispatchEvent(new Event('change'));
+                }
+            }
+        })();
+
+        calculate();
+    </script>
+</body>
+</html>

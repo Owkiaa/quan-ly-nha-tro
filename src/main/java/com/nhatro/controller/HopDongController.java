@@ -18,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.servlet.http.HttpServletRequest;
@@ -127,7 +128,15 @@ public class HopDongController {
      */
     @PostMapping("/luu")
     public String luuHopDong(@ModelAttribute("hopDongRequest") HopDongRequestDTO requestDTO,
+                             BindingResult bindingResult,
+                             Model model,
                              RedirectAttributes redirectAttributes) {
+        validateHopDongRequest(requestDTO, bindingResult);
+        if (bindingResult.hasErrors()) {
+            prepareHopDongFormModel(model, requestDTO.getPhongId());
+            return "hop-dong/form";
+        }
+
         try {
             HopDong saved = hopDongService.taoHopDong(requestDTO);
             redirectAttributes.addFlashAttribute("successMessage",
@@ -136,18 +145,69 @@ public class HopDongController {
                             + ", Khách: " + saved.getKhachThue().getHoTen() + ").");
             return "redirect:/hop-dong/" + saved.getId();
         } catch (BusinessException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            String redirectUrl = "/hop-dong/them-moi";
-            if (requestDTO.getPhongId() != null) {
-                redirectUrl += "?phongId=" + requestDTO.getPhongId();
-                if (requestDTO.getKhachId() != null) {
-                    redirectUrl += "&khachId=" + requestDTO.getKhachId();
-                }
+            String msg = e.getMessage() != null ? e.getMessage() : "Không thể lập hợp đồng.";
+            if (msg.contains("giữ chỗ")) {
+                bindingResult.rejectValue("khachId", "mismatch", msg);
+            } else if (msg.contains("Mã hợp đồng")) {
+                bindingResult.rejectValue("maHopDong", "duplicate", msg);
             }
-            return "redirect:" + redirectUrl;
+            model.addAttribute("errorMessage", msg);
+            prepareHopDongFormModel(model, requestDTO.getPhongId());
+            return "hop-dong/form";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi tạo hợp đồng: " + e.getMessage());
-            return "redirect:/hop-dong/them-moi";
+            model.addAttribute("errorMessage", "Lỗi tạo hợp đồng: " + e.getMessage());
+            prepareHopDongFormModel(model, requestDTO.getPhongId());
+            return "hop-dong/form";
+        }
+    }
+
+    private void prepareHopDongFormModel(Model model, Integer phongId) {
+        if (phongId != null) {
+            hopDongService.timDatChoDangGiuCuaPhong(phongId)
+                    .ifPresent(dc -> model.addAttribute("thongTinDatCho", dc));
+        }
+        model.addAttribute("danhSachPhong", hopDongService.layDanhSachPhongCoTheLapHopDong());
+        model.addAttribute("danhSachKhach", hopDongService.layDanhSachKhachThue());
+        model.addAttribute("activeMenu", "hop-dong");
+    }
+
+    private void validateHopDongRequest(HopDongRequestDTO requestDTO, BindingResult bindingResult) {
+        if (!bindingResult.hasFieldErrors("phongId") && requestDTO.getPhongId() == null) {
+            bindingResult.rejectValue("phongId", "required", "Vui lòng chọn phòng trọ.");
+        }
+        if (!bindingResult.hasFieldErrors("khachId") && requestDTO.getKhachId() == null) {
+            bindingResult.rejectValue("khachId", "required", "Vui lòng chọn khách thuê đứng tên hợp đồng.");
+        }
+        if (!bindingResult.hasFieldErrors("ngayBatDau") && requestDTO.getNgayBatDau() == null) {
+            bindingResult.rejectValue("ngayBatDau", "required", "Ngày bắt đầu hợp đồng không được để trống.");
+        }
+        if (!bindingResult.hasFieldErrors("ngayKetThuc") && requestDTO.getNgayKetThuc() == null) {
+            bindingResult.rejectValue("ngayKetThuc", "required", "Ngày kết thúc hợp đồng không được để trống.");
+        }
+        if (!bindingResult.hasFieldErrors("ngayBatDau") && !bindingResult.hasFieldErrors("ngayKetThuc")
+                && requestDTO.getNgayBatDau() != null && requestDTO.getNgayKetThuc() != null
+                && !requestDTO.getNgayKetThuc().isAfter(requestDTO.getNgayBatDau())) {
+            bindingResult.rejectValue("ngayKetThuc", "invalid", "Ngày kết thúc hợp đồng phải sau ngày bắt đầu.");
+        }
+        if (!bindingResult.hasFieldErrors("chuKyThanhToan")
+                && (requestDTO.getChuKyThanhToan() == null || requestDTO.getChuKyThanhToan() <= 0)) {
+            bindingResult.rejectValue("chuKyThanhToan", "invalid", "Chu kỳ thanh toán không hợp lệ.");
+        }
+        if (!bindingResult.hasFieldErrors("giaThueThoaThuan")
+                && (requestDTO.getGiaThueThoaThuan() == null || requestDTO.getGiaThueThoaThuan().compareTo(BigDecimal.ZERO) <= 0)) {
+            bindingResult.rejectValue("giaThueThoaThuan", "invalid", "Giá thuê thỏa thuận phải lớn hơn 0.");
+        }
+        if (!bindingResult.hasFieldErrors("tienDatCoc")
+                && (requestDTO.getTienDatCoc() == null || requestDTO.getTienDatCoc().compareTo(BigDecimal.ZERO) < 0)) {
+            bindingResult.rejectValue("tienDatCoc", "invalid", "Tiền đặt cọc không được nhỏ hơn 0.");
+        }
+        if (requestDTO.getMaHopDong() != null && !requestDTO.getMaHopDong().trim().isEmpty()) {
+            String maHopDong = requestDTO.getMaHopDong().trim();
+            if (maHopDong.length() > 30) {
+                bindingResult.rejectValue("maHopDong", "maxlength", "Mã hợp đồng không được vượt quá 30 ký tự.");
+            } else if (hopDongService.timTheoMaHopDong(maHopDong).isPresent()) {
+                bindingResult.rejectValue("maHopDong", "duplicate", "Mã hợp đồng đã tồn tại trong hệ thống.");
+            }
         }
     }
 

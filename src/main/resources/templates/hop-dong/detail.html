@@ -44,14 +44,19 @@
                         </span>
                     </div>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:if="${hopDong.trangThai == 'HIEU_LUC'}"
+                       th:href="@{/hoa-don/tao-moi(hopDongId=${hopDong.id})}"
+                       class="btn-quick px-3 py-2">
+                        <i class="fa-solid fa-receipt"></i> Lập hóa đơn kỳ này
+                    </a>
+
                     <!-- Nút Xem trước & Lưu PDF -->
                     <a th:href="@{'/hop-dong/' + ${hopDong.id} + '/xem-truoc'}"
                        class="btn btn-primary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2">
                         <i class="fa-solid fa-file-pdf"></i>
                         <span>Xem Trước &amp; Lưu PDF</span>
                     </a>
-
                     <!-- Nút Gia hạn -->
                     <button th:if="${hopDong.trangThai == 'HIEU_LUC' or hopDong.trangThai == 'HET_HAN'}"
                             type="button" class="btn btn-outline-primary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2"
@@ -84,7 +89,7 @@
                     <div class="card-custom p-4 h-100">
                         <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
                             <h6 class="fw-bold text-dark text-uppercase small mb-0">
-                                <i class="fa-solid fa-door-open text-warning me-2"></i>Thông Tin Phòng Trọ
+                                <i class="fa-solid fa-door-open text-primary me-2"></i>Thông Tin Phòng Trọ
                             </h6>
                             <span class="badge bg-light text-dark font-mono border" th:text="${hopDong.phongTro.maPhong}">P101</span>
                         </div>
@@ -115,7 +120,7 @@
                     <div class="card-custom p-4 h-100">
                         <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
                             <h6 class="fw-bold text-dark text-uppercase small mb-0">
-                                <i class="fa-solid fa-user text-warning me-2"></i>Thông Tin Khách Thuê
+                                <i class="fa-solid fa-user text-primary me-2"></i>Thông Tin Khách Thuê
                             </h6>
                             <span class="badge bg-light text-secondary font-mono border" th:text="'ID: ' + ${hopDong.khachThue.id}">ID: 1</span>
                         </div>
@@ -142,7 +147,7 @@
                 <div class="col-12">
                     <div class="card-custom p-4">
                         <h6 class="fw-bold text-dark text-uppercase small mb-3 pb-2 border-bottom">
-                            <i class="fa-solid fa-file-contract text-warning me-2"></i>Chi Tiết Điều Khoản Hợp Đồng
+                            <i class="fa-solid fa-file-contract text-primary me-2"></i>Chi Tiết Điều Khoản Hợp Đồng
                         </h6>
                         <div class="row g-3">
                             <div class="col-md-3 col-6">
@@ -162,7 +167,7 @@
                             <div class="col-md-3 col-6">
                                 <div class="p-3 rounded-3 bg-light border">
                                     <div class="text-secondary small mb-1">Giá thuê thỏa thuận:</div>
-                                    <div class="fw-bold font-mono text-primary fs-6"
+                                    <div class="price-red-text fs-6"
                                          th:text="${#numbers.formatDecimal(hopDong.giaThueThoaThuan, 0, 'POINT', 0, 'COMMA')} + ' đ/tháng'">3,000,000 đ</div>
                                 </div>
                             </div>
