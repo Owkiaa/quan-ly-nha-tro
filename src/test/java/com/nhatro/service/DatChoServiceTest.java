@@ -144,4 +144,37 @@ class DatChoServiceTest {
         assertEquals(hanCu.plusHours(24), updated.getHanGiuCho());
         assertTrue(updated.getGhiChu().contains("Gia hạn +24h"));
     }
+
+    @Test
+    void huyDatCho_WhenDangGiu_UpdatesStatusAndFreesRoom() {
+        phongTrong.setTrangThai(DatChoService.PHONG_DA_DAT);
+        DatCho datCho = new DatCho();
+        datCho.setId(5);
+        datCho.setPhongTro(phongTrong);
+        datCho.setKhachThue(khachThue);
+        datCho.setTrangThai(DatChoService.TRANG_THAI_DANG_GIU);
+
+        when(datChoRepository.findById(5)).thenReturn(Optional.of(datCho));
+        when(phongTroRepository.findByIdForUpdate(1)).thenReturn(Optional.of(phongTrong));
+
+        datChoService.huyDatCho(5, "Khách đổi ý");
+
+        assertEquals(DatChoService.TRANG_THAI_HET_HAN, datCho.getTrangThai());
+        assertEquals(DatChoService.PHONG_TRONG, phongTrong.getTrangThai());
+        assertTrue(datCho.getGhiChu().contains("Khách đổi ý"));
+        verify(datChoRepository).save(datCho);
+        verify(phongTroRepository).save(phongTrong);
+    }
+
+    @Test
+    void huyDatCho_WhenNotDangGiu_ThrowsBusinessException() {
+        DatCho datCho = new DatCho();
+        datCho.setId(5);
+        datCho.setTrangThai(DatChoService.TRANG_THAI_HET_HAN);
+
+        when(datChoRepository.findById(5)).thenReturn(Optional.of(datCho));
+
+        assertThrows(BusinessException.class, () -> datChoService.huyDatCho(5, "Hủy lại"));
+        verify(phongTroRepository, never()).findByIdForUpdate(any());
+    }
 }
