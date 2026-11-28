@@ -38,6 +38,8 @@ public class DatChoService {
     public static final String PHONG_DA_DAT = "DA_DAT";
     public static final String PHONG_DA_THUE = "DA_THUE";
 
+    public static final int MAX_ACTIVE_BOOKINGS_PER_CCCD = 2;
+
     @Autowired
     private PhongTroRepository phongTroRepository;
 
@@ -92,8 +94,17 @@ public class DatChoService {
                         " đã được đặt hoặc đang thuê (Trạng thái: " + phong.getTrangThai() + ").");
             }
 
-            // 3. Tìm hoặc tạo mới hồ sơ khách thuê theo CCCD
+            // 2b. Chống spam giữ chỗ theo CCCD: mỗi CCCD chỉ được giữ tối đa 2 phòng đang DANG_GIU cùng lúc
             String cleanCccd = cccd.trim();
+            long activeBookings = datChoRepository.countByKhachThueCccdAndTrangThai(cleanCccd, TRANG_THAI_DANG_GIU);
+            if (activeBookings >= MAX_ACTIVE_BOOKINGS_PER_CCCD) {
+                log.warn("[{}] Từ chối đặt phòng {}: CCCD {} đang giữ {} phiếu DANG_GIU (tối đa {})",
+                        threadName, phong.getMaPhong(), cleanCccd, activeBookings, MAX_ACTIVE_BOOKINGS_PER_CCCD);
+                throw new BusinessException("Khách thuê với CCCD " + cleanCccd + " hiện đang giữ tối đa "
+                        + MAX_ACTIVE_BOOKINGS_PER_CCCD + " phòng. Vui lòng ký hợp đồng hoặc hủy bớt phiếu giữ chỗ cũ.");
+            }
+
+            // 3. Tìm hoặc tạo mới hồ sơ khách thuê theo CCCD
             KhachThue khachThue = khachThueRepository.findByCccd(cleanCccd)
                     .orElseGet(() -> {
                         log.info("[{}] Khách thuê với CCCD {} chưa tồn tại trong CSDL, tiến hành tạo mới...", threadName, cleanCccd);
@@ -209,6 +220,38 @@ public class DatChoService {
         phong.setTrangThai(PHONG_TRONG);
         phongTroRepository.save(phong);
         log.info("[{}] Đã hủy đặt chỗ ID: {}, phòng {} trở về trạng thái TRONG", threadName, datChoId, phong.getMaPhong());
+    }
+
+    /**
+     * Gia hạn thêm thời gian giữ chỗ (tối đa +72 giờ mỗi lần) cho phiếu đang DANG_GIU.
+     */
+    @Transactional
+    public DatCho giaHanDatCho(Integer datChoId, int soGioThem) {
+        String threadName = Thread.currentThread().getName();
+        if (soGioThem <= 0 || soGioThem > 72) {
+            throw new BusinessException("Số giờ gia hạn giữ chỗ phải từ 1 đến 72 giờ.");
+        }
+
+        DatCho datCho = datChoRepository.findById(datChoId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy bản ghi đặt chỗ ID: " + datChoId));
+
+        if (!TRANG_THAI_DANG_GIU.equals(datCho.getTrangThai())) {
+            throw new BusinessException("Chỉ có thể gia hạn cho phiếu đặt chỗ đang ở trạng thái ĐANG GIỮ.");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime mocTinh = (datCho.getHanGiuCho() != null && datCho.getHanGiuCho().isAfter(now))
+                ? datCho.getHanGiuCho() : now;
+        LocalDateTime hanMoi = mocTinh.plusHours(soGioThem);
+
+        datCho.setHanGiuCho(hanMoi);
+        String oldGhiChu = datCho.getGhiChu() != null ? datCho.getGhiChu() + " | " : "";
+        datCho.setGhiChu(oldGhiChu + "Gia hạn +" + soGioThem + "h");
+        DatCho saved = datChoRepository.save(datCho);
+
+        log.info("[{}] Đã gia hạn giữ chỗ ID: {} (Phòng {}) thêm {}h, hạn mới: {}",
+                threadName, datChoId, datCho.getPhongTro().getMaPhong(), soGioThem, hanMoi);
+        return saved;
     }
 
     /**

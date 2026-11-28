@@ -226,6 +226,26 @@ public class DatChoController {
     }
 
     /**
+     * Gia hạn thêm thời gian giữ chỗ cho phiếu đặt phòng đang ở trạng thái DANG_GIU.
+     */
+    @PostMapping("/{id}/gia-han")
+    public String giaHanDatCho(@PathVariable Integer id,
+                               @RequestParam(defaultValue = "24") int soGioThem,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            DatCho updated = datChoService.giaHanDatCho(id, soGioThem);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Đã gia hạn giữ chỗ phòng " + updated.getPhongTro().getMaPhong()
+                            + " thêm " + soGioThem + " giờ (Hạn mới: " + updated.getHanGiuCho() + ").");
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi gia hạn giữ chỗ: " + e.getMessage());
+        }
+        return "redirect:/dat-cho/" + id;
+    }
+
+    /**
      * Kích hoạt quét thủ công các bản ghi đặt chỗ quá hạn để giải phóng phòng.
      */
     @PostMapping("/quet-het-han")
