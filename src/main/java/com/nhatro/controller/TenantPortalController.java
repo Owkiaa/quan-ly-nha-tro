@@ -1,6 +1,7 @@
 package com.nhatro.controller;
 
 import com.nhatro.dto.IncidentForm;
+import com.nhatro.entity.DatCho;
 import com.nhatro.entity.HoaDon;
 import com.nhatro.entity.HopDong;
 import com.nhatro.entity.PhongTro;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,6 +44,7 @@ public class TenantPortalController {
      * Nếu TV1 đặt tên khác (ví dụ "khachId"), chỉ cần sửa hằng số này.
      */
     private static final String SESSION_KHACH_ID = "SESSION_KHACH_ID";
+    private static final DateTimeFormatter GIO_PHUT = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
     private final TenantPortalService service;
 
@@ -104,6 +107,47 @@ public class TenantPortalController {
         }
         model.addAttribute("room", room.get());
         return "tenant/room-detail";
+    }
+
+    // ------------------------------------------------------------ Đặt giữ chỗ trực tuyến
+
+    /** Giữ chỗ phòng {id} cho khách đang đăng nhập (khachId lấy từ session, không nhận từ request). */
+    @PostMapping("/rooms/{id}/book")
+    public String bookRoom(@PathVariable Integer id,
+                           @RequestParam(required = false) Integer soGioGiuCho,
+                           @RequestParam(required = false) String ghiChu,
+                           HttpSession session, RedirectAttributes redirect) {
+        Integer khachId = currentKhachId(session);
+        if (khachId == null) {
+            return "redirect:/login";
+        }
+        try {
+            DatCho datCho = service.bookRoomForTenant(khachId, id, soGioGiuCho, ghiChu);
+            String han = (datCho != null && datCho.getHanGiuCho() != null)
+                    ? " Phiếu có hiệu lực đến " + datCho.getHanGiuCho().format(GIO_PHUT) + "."
+                    : "";
+            redirect.addFlashAttribute("successMessage", "Đã giữ chỗ phòng thành công." + han);
+            return "redirect:/tenant/rooms";
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirect.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/tenant/rooms/" + id;
+        }
+    }
+
+    /** Hủy phiếu giữ chỗ {id}; chỉ hủy được phiếu của chính khách đang đăng nhập. */
+    @PostMapping("/bookings/{id}/cancel")
+    public String cancelBooking(@PathVariable Integer id, HttpSession session, RedirectAttributes redirect) {
+        Integer khachId = currentKhachId(session);
+        if (khachId == null) {
+            return "redirect:/login";
+        }
+        try {
+            service.cancelBookingByKhach(khachId, id);
+            redirect.addFlashAttribute("successMessage", "Đã hủy phiếu giữ chỗ.");
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirect.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/tenant/rooms";
     }
 
     // ------------------------------------------------------------ Hợp đồng
