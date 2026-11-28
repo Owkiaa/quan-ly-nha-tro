@@ -1,15 +1,20 @@
 package com.nhatro.service;
 
+import com.nhatro.entity.DatCho;
 import com.nhatro.entity.HoaDon;
 import com.nhatro.entity.HopDong;
 import com.nhatro.entity.KhachThue;
 import com.nhatro.entity.PhongTro;
 import com.nhatro.entity.YeuCauSuaChua;
+import com.nhatro.repository.DatChoRepository;
 import com.nhatro.repository.KhachThueRepository;
 import com.nhatro.repository.PhongTroRepository;
+import com.nhatro.repository.TenantBookingRepository;
 import com.nhatro.repository.TenantContractRepository;
 import com.nhatro.repository.TenantIncidentRepository;
 import com.nhatro.repository.TenantInvoiceRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +39,8 @@ import java.util.Set;
 @Service
 public class TenantPortalService {
 
+    private static final Logger log = LoggerFactory.getLogger(TenantPortalService.class);
+
     // ------------------------------------------------------------------ Hằng số nghiệp vụ
 
     public static final int NOI_DUNG_TOI_DA = 255;
@@ -40,6 +48,19 @@ public class TenantPortalService {
     public static final String MSG_KHONG_CO_HOP_DONG =
             "Bạn chỉ có thể gửi phản ánh cho phòng đang có hợp đồng còn hiệu lực của mình.";
     public static final String MSG_KHONG_TIM_THAY_KHACH = "Không tìm thấy hồ sơ khách thuê của bạn.";
+
+    /** Số phiếu DANG_GIU tối đa của một khách. */
+    public static final int SO_PHONG_GIU_TOI_DA = 2;
+    public static final int SO_GIO_GIU_MAC_DINH = 24;
+    public static final int SO_GIO_GIU_TOI_THIEU = 1;
+    public static final int SO_GIO_GIU_TOI_DA = 72;
+    public static final int GHI_CHU_TOI_DA = 255;
+    public static final String MSG_KHONG_TIM_THAY_PHIEU = "Không tìm thấy phiếu đặt chỗ của bạn.";
+
+    private static final String DANG_GIU = "DANG_GIU";
+    /** Bảng dat_cho chỉ cho 3 trạng thái (DANG_GIU, HET_HAN, DA_CHUYEN_HOP_DONG) nên khách hủy = HET_HAN + ghi chú. */
+    private static final String DA_KET_THUC = "HET_HAN";
+    private static final DateTimeFormatter GIO_PHUT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     private static final Set<String> ROOM_SORT_FIELDS = Set.of("giaThue", "dienTich", "tenPhong", "maPhong");
     private static final Set<String> INVOICE_SORT_FIELDS = Set.of("ngayLap", "tongTien");
@@ -52,17 +73,26 @@ public class TenantPortalService {
     private final TenantContractRepository contractRepository;
     private final TenantInvoiceRepository invoiceRepository;
     private final TenantIncidentRepository incidentRepository;
+    private final DatChoRepository datChoRepository;
+    private final TenantBookingRepository bookingRepository;
+    private final DatChoService datChoService;
 
     public TenantPortalService(PhongTroRepository phongTroRepository,
                                KhachThueRepository khachThueRepository,
                                TenantContractRepository contractRepository,
                                TenantInvoiceRepository invoiceRepository,
-                               TenantIncidentRepository incidentRepository) {
+                               TenantIncidentRepository incidentRepository,
+                               DatChoRepository datChoRepository,
+                               TenantBookingRepository bookingRepository,
+                               DatChoService datChoService) {
         this.phongTroRepository = phongTroRepository;
         this.khachThueRepository = khachThueRepository;
         this.contractRepository = contractRepository;
         this.invoiceRepository = invoiceRepository;
         this.incidentRepository = incidentRepository;
+        this.datChoRepository = datChoRepository;
+        this.bookingRepository = bookingRepository;
+        this.datChoService = datChoService;
     }
 
     // ------------------------------------------------------------------ Phòng trống
@@ -175,6 +205,126 @@ public class TenantPortalService {
         yc.setChiPhi(BigDecimal.ZERO);
         yc.setNgayTao(LocalDateTime.now());
         return incidentRepository.save(yc);
+    }
+
+    // ------------------------------------------------------------------ Đặt giữ chỗ trực tuyến
+
+    /**
+     * Khách tự đặt giữ chỗ một phòng TRONG. Tối đa {@value #SO_PHONG_GIU_TOI_DA} phiếu DANG_GIU mỗi khách.
+     * Việc khóa phòng (bi quan) và đổi trạng thái phòng do {@code DatChoService.datChoPhong} của TV2 đảm nhiệm.
+     *
+     * @param soGioGiuCho null = {@value #SO_GIO_GIU_MAC_DINH} giờ; hợp lệ từ 1 đến 72 giờ
+     * @throws IllegalArgumentException dữ liệu không hợp lệ hoặc vượt hạn mức
+     * @throws IllegalStateException    phòng không thể giữ chỗ lúc này (đã có người giữ, đã thuê...)
+     */
+    @Transactional
+    public DatCho bookRoomForTenant(Integer khachId, Integer phongId, Integer soGioGiuCho, String ghiChu) {
+        if (khachId == null || phongId == null) {
+            throw new IllegalArgumentException("Thiếu thông tin khách thuê hoặc phòng cần giữ chỗ.");
+        }
+        int soGio = (soGioGiuCho == null) ? SO_GIO_GIU_MAC_DINH : soGioGiuCho;
+        if (soGio < SO_GIO_GIU_TOI_THIEU || soGio > SO_GIO_GIU_TOI_DA) {
+            throw new IllegalArgumentException("Thời gian giữ chỗ phải từ " + SO_GIO_GIU_TOI_THIEU
+                    + " đến " + SO_GIO_GIU_TOI_DA + " giờ.");
+        }
+        String note = blankToNull(ghiChu);
+        if (note != null && note.length() > GHI_CHU_TOI_DA) {
+            throw new IllegalArgumentException("Ghi chú tối đa " + GHI_CHU_TOI_DA + " ký tự.");
+        }
+        if (!khachThueRepository.existsById(khachId)) {
+            throw new IllegalArgumentException(MSG_KHONG_TIM_THAY_KHACH);
+        }
+
+        long dangGiu = bookingRepository.countByKhachThueIdAndTrangThai(khachId, DANG_GIU);
+        if (dangGiu >= SO_PHONG_GIU_TOI_DA) {
+            throw new IllegalArgumentException("Bạn đang giữ chỗ tối đa " + SO_PHONG_GIU_TOI_DA
+                    + " phòng. Hãy hủy một phiếu hoặc chờ phiếu hết hạn rồi đặt tiếp.");
+        }
+
+        try {
+            return goiDatChoService(khachId, phongId, soGio, note);
+        } catch (RuntimeException ex) {
+            if (laLoiNghiepVu(ex)) {
+                throw new IllegalStateException(ex.getMessage(), ex);
+            }
+            log.warn("Đặt giữ chỗ thất bại (khachId={}, phongId={})", khachId, phongId, ex);
+            throw new IllegalStateException("Không thể giữ chỗ phòng này lúc này. Vui lòng thử lại sau.", ex);
+        }
+    }
+
+    /**
+     * >>> ĐIỂM GHÉP DUY NHẤT với DatChoService của TV2 (khóa bi quan findByIdForUpdate nằm trong đó).
+     * Giả định chữ ký: DatCho datChoPhong(Integer khachId, Integer phongId, int soGioGiuCho, String ghiChu).
+     * Nếu chữ ký thật khác, chỉ cần sửa đúng dòng gọi bên dưới.
+     */
+    private DatCho goiDatChoService(Integer khachId, Integer phongId, int soGio, String ghiChu) {
+        return datChoService.datChoPhong(khachId, phongId, soGio, ghiChu);
+    }
+
+    /** Lỗi nghiệp vụ (thông báo an toàn để hiện cho khách) khác lỗi hạ tầng (SQL, khóa...) cần ẩn chi tiết. */
+    private static boolean laLoiNghiepVu(RuntimeException ex) {
+        return ex.getMessage() != null
+                && (ex instanceof IllegalArgumentException
+                || ex instanceof IllegalStateException
+                || ex.getClass().getName().startsWith("com.nhatro."));
+    }
+
+    @Transactional(readOnly = true)
+    public List<DatCho> getBookingsByKhach(Integer khachId) {
+        return bookingRepository.findAllByKhach(khachId);
+    }
+
+    /**
+     * Khách hủy phiếu giữ chỗ CỦA CHÍNH MÌNH. Chống IDOR: phiếu của người khác và phiếu không tồn tại cho
+     * cùng một thông báo, truy vấn luôn ràng buộc khachId.
+     *
+     * <p>Thứ tự khóa: phòng trước, phiếu sau (giống DatChoService) để không bị khóa chéo.
+     */
+    @Transactional
+    public void cancelBookingByKhach(Integer khachId, Integer bookingId) {
+        if (khachId == null || bookingId == null) {
+            throw new IllegalArgumentException(MSG_KHONG_TIM_THAY_PHIEU);
+        }
+        // Chỉ lấy id phòng (không nạp entity phiếu) để lần nạp phiếu bên dưới đọc trạng thái mới nhất sau khi khóa phòng.
+        Integer phongId = bookingRepository.findPhongIdByIdAndKhach(bookingId, khachId)
+                .orElseThrow(() -> new IllegalArgumentException(MSG_KHONG_TIM_THAY_PHIEU));
+        PhongTro phong = phongTroRepository.findByIdForUpdate(phongId)
+                .orElseThrow(() -> new IllegalArgumentException(MSG_KHONG_TIM_THAY_PHIEU));
+        DatCho datCho = bookingRepository.findByIdAndKhach(bookingId, khachId)
+                .orElseThrow(() -> new IllegalArgumentException(MSG_KHONG_TIM_THAY_PHIEU));
+
+        if (!DANG_GIU.equals(datCho.getTrangThai())) {
+            throw new IllegalStateException("Phiếu đặt chỗ này không còn ở trạng thái đang giữ nên không thể hủy.");
+        }
+
+        datCho.setTrangThai(DA_KET_THUC);
+        datCho.setGhiChu(noiGhiChu(datCho.getGhiChu(),
+                "Khách tự hủy lúc " + LocalDateTime.now().format(GIO_PHUT)));
+        bookingRepository.save(datCho);
+
+        // Chỉ trả phòng về TRONG khi không còn phiếu DANG_GIU nào khác giữ phòng này.
+        if ("DA_DAT".equals(phong.getTrangThai())
+                && !datChoRepository.existsByPhongTroIdAndTrangThai(phongId, DANG_GIU)) {
+            phong.setTrangThai("TRONG");
+            phongTroRepository.save(phong);
+        }
+    }
+
+    private static String noiGhiChu(String cu, String them) {
+        if (cu == null || cu.isBlank()) {
+            return cat(them);
+        }
+        String sep = " | ";
+        int conLai = GHI_CHU_TOI_DA - them.length() - sep.length();
+        if (conLai <= 0) {
+            return cat(them);
+        }
+        String dau = cu.length() > conLai ? cu.substring(0, conLai) : cu;
+        return dau + sep + them;
+    }
+
+    private static String cat(String s) {
+        return s.length() > GHI_CHU_TOI_DA ? s.substring(0, GHI_CHU_TOI_DA) : s;
     }
 
     // ------------------------------------------------------------------ Tiện ích
