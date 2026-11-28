@@ -1,20 +1,25 @@
 package com.nhatro.service;
 
+import com.nhatro.dto.TenantRegisterDTO;
 import com.nhatro.entity.DatCho;
 import com.nhatro.entity.HoaDon;
 import com.nhatro.entity.HopDong;
 import com.nhatro.entity.KhachThue;
 import com.nhatro.entity.PhongTro;
+import com.nhatro.entity.TaiKhoan;
 import com.nhatro.entity.YeuCauSuaChua;
 import com.nhatro.repository.DatChoRepository;
 import com.nhatro.repository.KhachThueRepository;
 import com.nhatro.repository.PhongTroRepository;
+import com.nhatro.repository.TaiKhoanRepository;
 import com.nhatro.repository.TenantBookingRepository;
 import com.nhatro.repository.TenantContractRepository;
 import com.nhatro.repository.TenantIncidentRepository;
 import com.nhatro.repository.TenantInvoiceRepository;
+import com.nhatro.util.PasswordUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,9 +31,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Nghiệp vụ Cổng Khách thuê (TV3).
@@ -62,6 +70,20 @@ public class TenantPortalService {
     private static final String DA_KET_THUC = "HET_HAN";
     private static final DateTimeFormatter GIO_PHUT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
+    public static final int MAT_KHAU_TOI_THIEU = 6;
+    /** Thông báo chung cho mọi trường hợp CCCD đã có: tránh lộ CCCD nào đã tồn tại trong hệ thống. */
+    public static final String MSG_KHONG_THE_DANG_KY =
+            "Không thể đăng ký với thông tin này. Nếu bạn đã từng thuê trọ hoặc đã có tài khoản, "
+                    + "vui lòng liên hệ quản lý để được hỗ trợ.";
+    public static final String MSG_TEN_DANG_NHAP_TRUNG = "Tên đăng nhập đã tồn tại, vui lòng chọn tên khác.";
+    public static final String MSG_TRUNG_DU_LIEU =
+            "Tên đăng nhập hoặc CCCD đã được sử dụng. Vui lòng thử lại hoặc liên hệ quản lý.";
+
+    private static final Pattern CCCD = Pattern.compile("^\\d{9,12}$");
+    private static final Pattern SO_DIEN_THOAI = Pattern.compile("^0\\d{9}$");
+    private static final Pattern EMAIL = Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+    private static final Pattern TEN_DANG_NHAP = Pattern.compile("^[A-Za-z0-9._]{4,50}$");
+
     private static final Set<String> ROOM_SORT_FIELDS = Set.of("giaThue", "dienTich", "tenPhong", "maPhong");
     private static final Set<String> INVOICE_SORT_FIELDS = Set.of("ngayLap", "tongTien");
     private static final int MAX_PAGE_SIZE = 50;
@@ -70,6 +92,7 @@ public class TenantPortalService {
 
     private final PhongTroRepository phongTroRepository;
     private final KhachThueRepository khachThueRepository;
+    private final TaiKhoanRepository taiKhoanRepository;
     private final TenantContractRepository contractRepository;
     private final TenantInvoiceRepository invoiceRepository;
     private final TenantIncidentRepository incidentRepository;
@@ -79,6 +102,7 @@ public class TenantPortalService {
 
     public TenantPortalService(PhongTroRepository phongTroRepository,
                                KhachThueRepository khachThueRepository,
+                               TaiKhoanRepository taiKhoanRepository,
                                TenantContractRepository contractRepository,
                                TenantInvoiceRepository invoiceRepository,
                                TenantIncidentRepository incidentRepository,
@@ -87,6 +111,7 @@ public class TenantPortalService {
                                DatChoService datChoService) {
         this.phongTroRepository = phongTroRepository;
         this.khachThueRepository = khachThueRepository;
+        this.taiKhoanRepository = taiKhoanRepository;
         this.contractRepository = contractRepository;
         this.invoiceRepository = invoiceRepository;
         this.incidentRepository = incidentRepository;
@@ -325,6 +350,112 @@ public class TenantPortalService {
 
     private static String cat(String s) {
         return s.length() > GHI_CHU_TOI_DA ? s.substring(0, GHI_CHU_TOI_DA) : s;
+    }
+
+    // ------------------------------------------------------------------ Tự đăng ký tài khoản khách thuê
+
+    /**
+     * Kiểm tra dữ liệu đăng ký. Trả về map tên trường (tenDangNhap, matKhau, xacNhanMatKhau, hoTen, cccd,
+     * soDienThoai, email) -> thông báo lỗi; rỗng nghĩa là hợp lệ. Không truy cập CSDL.
+     */
+    public Map<String, String> validateRegistration(TenantRegisterDTO dto) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        if (dto == null) {
+            errors.put("tenDangNhap", "Thiếu thông tin đăng ký.");
+            return errors;
+        }
+        String tenDangNhap = trim(dto.getTenDangNhap());
+        if (tenDangNhap.isEmpty()) {
+            errors.put("tenDangNhap", "Vui lòng nhập tên đăng nhập.");
+        } else if (!TEN_DANG_NHAP.matcher(tenDangNhap).matches()) {
+            errors.put("tenDangNhap", "Tên đăng nhập gồm 4-50 ký tự chữ không dấu, số, dấu chấm hoặc gạch dưới.");
+        }
+
+        String hoTen = trim(dto.getHoTen());
+        if (hoTen.isEmpty()) {
+            errors.put("hoTen", "Vui lòng nhập họ tên.");
+        } else if (hoTen.length() > 100) {
+            errors.put("hoTen", "Họ tên tối đa 100 ký tự.");
+        }
+
+        if (!CCCD.matcher(trim(dto.getCccd())).matches()) {
+            errors.put("cccd", "CCCD phải gồm từ 9 đến 12 chữ số.");
+        }
+        if (!SO_DIEN_THOAI.matcher(trim(dto.getSoDienThoai())).matches()) {
+            errors.put("soDienThoai", "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0.");
+        }
+
+        String email = trim(dto.getEmail());
+        if (!email.isEmpty() && (email.length() > 100 || !EMAIL.matcher(email).matches())) {
+            errors.put("email", "Email không đúng định dạng.");
+        }
+
+        String matKhau = dto.getMatKhau();
+        if (matKhau == null || matKhau.length() < MAT_KHAU_TOI_THIEU) {
+            errors.put("matKhau", "Mật khẩu phải có ít nhất " + MAT_KHAU_TOI_THIEU + " ký tự.");
+        } else if (!matKhau.equals(dto.getXacNhanMatKhau())) {
+            errors.put("xacNhanMatKhau", "Mật khẩu xác nhận không khớp.");
+        }
+        return errors;
+    }
+
+    /**
+     * Khách tự đăng ký tài khoản (vai trò TENANT). Toàn bộ trong một giao dịch: lỗi ở bước nào cũng hoàn tác hết.
+     *
+     * <ul>
+     *   <li>CCCD chưa có trong hệ thống: tạo hồ sơ KhachThue mới (trạng thái DA_TRA_PHONG = chưa thuê phòng nào).</li>
+     *   <li>CCCD đã có: chỉ liên kết khi hồ sơ CHƯA có tài khoản VÀ số điện thoại khớp hồ sơ. Mọi trường hợp
+     *       còn lại trả cùng một thông báo chung, tránh người lạ dùng CCCD của người khác để xem hợp đồng, hóa đơn.</li>
+     * </ul>
+     *
+     * @throws IllegalArgumentException thông báo tiếng Việt, hiển thị thẳng cho người dùng
+     */
+    @Transactional
+    public TaiKhoan registerTenantAccount(TenantRegisterDTO dto) {
+        Map<String, String> errors = validateRegistration(dto);
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException(errors.values().iterator().next());
+        }
+        String tenDangNhap = trim(dto.getTenDangNhap());
+        String cccd = trim(dto.getCccd());
+        String soDienThoai = trim(dto.getSoDienThoai());
+
+        if (taiKhoanRepository.existsByTenDangNhap(tenDangNhap)) {
+            throw new IllegalArgumentException(MSG_TEN_DANG_NHAP_TRUNG);
+        }
+
+        try {
+            KhachThue khach;
+            Optional<KhachThue> daCo = khachThueRepository.findByCccd(cccd);
+            if (daCo.isPresent()) {
+                KhachThue hoSo = daCo.get();
+                boolean sdtKhop = soDienThoai.equals(chuanHoaSdt(hoSo.getSoDienThoai()));
+                boolean daCoTaiKhoan = taiKhoanRepository.existsByKhachThueId(hoSo.getId());
+                if (!sdtKhop || daCoTaiKhoan) {
+                    throw new IllegalArgumentException(MSG_KHONG_THE_DANG_KY);
+                }
+                khach = hoSo;
+            } else {
+                String email = blankToNull(dto.getEmail());
+                khach = khachThueRepository.saveAndFlush(new KhachThue(trim(dto.getHoTen()), cccd,
+                        soDienThoai, email, null, null, null, null, "DA_TRA_PHONG"));
+            }
+
+            TaiKhoan taiKhoan = new TaiKhoan(tenDangNhap, PasswordUtil.hash(dto.getMatKhau()), "TENANT",
+                    khach, true, LocalDateTime.now());
+            return taiKhoanRepository.saveAndFlush(taiKhoan);
+        } catch (DataIntegrityViolationException ex) {
+            // Hai người đăng ký cùng lúc cùng tên đăng nhập / CCCD: ràng buộc UNIQUE của CSDL là chốt chặn cuối.
+            throw new IllegalArgumentException(MSG_TRUNG_DU_LIEU, ex);
+        }
+    }
+
+    private static String trim(String s) {
+        return s == null ? "" : s.trim();
+    }
+
+    private static String chuanHoaSdt(String s) {
+        return s == null ? "" : s.replaceAll("[\\s.\\-]", "");
     }
 
     // ------------------------------------------------------------------ Tiện ích
