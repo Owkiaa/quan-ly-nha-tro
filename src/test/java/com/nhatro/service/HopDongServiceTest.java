@@ -198,4 +198,84 @@ class HopDongServiceTest {
         assertEquals(HopDongService.TRANG_THAI_HET_HAN, hd.getTrangThai());
         verify(hopDongRepository).save(hd);
     }
+
+    @Test
+    void taoHopDong_WithTrongRoom_Success() {
+        phong.setTrangThai(HopDongService.PHONG_TRONG);
+        when(phongTroRepository.findByIdForUpdate(1)).thenReturn(Optional.of(phong));
+        when(khachThueRepository.findById(10)).thenReturn(Optional.of(khachDat));
+        when(hopDongRepository.existsByMaHopDong("HD-P201-TRONG")).thenReturn(false);
+        when(hopDongRepository.save(any(HopDong.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        HopDongRequestDTO req = new HopDongRequestDTO(
+                null, "HD-P201-TRONG", 1, 10,
+                LocalDate.now(), LocalDate.now().plusMonths(6),
+                new BigDecimal("3000000"), new BigDecimal("3000000"), 1, null
+        );
+
+        HopDong result = hopDongService.taoHopDong(req);
+
+        assertNotNull(result);
+        assertEquals("HD-P201-TRONG", result.getMaHopDong());
+        assertEquals(HopDongService.TRANG_THAI_HIEU_LUC, result.getTrangThai());
+        assertEquals(HopDongService.PHONG_DA_THUE, phong.getTrangThai());
+        assertEquals("DANG_THUE", khachDat.getTrangThai());
+        verify(phongTroRepository).save(phong);
+        verify(hopDongRepository).save(any(HopDong.class));
+    }
+
+    @Test
+    void giaHanHopDong_WhenNewEndDateNotAfterCurrent_ThrowsBusinessException() {
+        HopDong hd = new HopDong();
+        hd.setId(1);
+        hd.setMaHopDong("HD-P201-01");
+        hd.setTrangThai(HopDongService.TRANG_THAI_HIEU_LUC);
+        hd.setNgayKetThuc(LocalDate.of(2026, 12, 31));
+
+        when(hopDongRepository.findById(1)).thenReturn(Optional.of(hd));
+
+        LocalDate ngaySai = LocalDate.of(2026, 12, 31);
+        assertThrows(BusinessException.class, () -> hopDongService.giaHanHopDong(1, ngaySai));
+        verify(hopDongRepository, never()).save(any());
+    }
+
+    @Test
+    void giaHanHopDong_WhenLiquidated_ThrowsBusinessException() {
+        HopDong hd = new HopDong();
+        hd.setId(1);
+        hd.setTrangThai(HopDongService.TRANG_THAI_DA_THANH_LY);
+        hd.setNgayKetThuc(LocalDate.of(2026, 12, 31));
+
+        when(hopDongRepository.findById(1)).thenReturn(Optional.of(hd));
+
+        assertThrows(BusinessException.class,
+                () -> hopDongService.giaHanHopDong(1, LocalDate.of(2027, 6, 30)));
+        verify(hopDongRepository, never()).save(any());
+    }
+
+    @Test
+    void thanhLyHopDong_ReturnsRoomTrongAndCustomerDaTraPhong() {
+        phong.setTrangThai(HopDongService.PHONG_DA_THUE);
+        khachDat.setTrangThai("DANG_THUE");
+        HopDong hd = new HopDong();
+        hd.setId(1);
+        hd.setMaHopDong("HD-P201-01");
+        hd.setPhongTro(phong);
+        hd.setKhachThue(khachDat);
+        hd.setTrangThai(HopDongService.TRANG_THAI_HIEU_LUC);
+
+        when(hopDongRepository.findById(1)).thenReturn(Optional.of(hd));
+        when(phongTroRepository.findByIdForUpdate(1)).thenReturn(Optional.of(phong));
+        when(hopDongRepository.save(any(HopDong.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(hopDongRepository.existsByKhachThueIdAndTrangThai(10, HopDongService.TRANG_THAI_HIEU_LUC))
+                .thenReturn(false);
+
+        HopDong result = hopDongService.thanhLyHopDong(1);
+
+        assertEquals(HopDongService.TRANG_THAI_DA_THANH_LY, result.getTrangThai());
+        assertEquals(HopDongService.PHONG_TRONG, phong.getTrangThai());
+        assertEquals("DA_TRA_PHONG", khachDat.getTrangThai());
+        verify(phongTroRepository).save(phong);
+        verify(khachThueRepository).save(khachDat);
+    }
 }
