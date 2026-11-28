@@ -28,6 +28,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Controller xử lý các yêu cầu Web MVC cho phân hệ Quản lý Hợp đồng thuê phòng.
@@ -36,6 +37,10 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/hop-dong")
 public class HopDongController {
+
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+            "id", "maHopDong", "ngayBatDau", "ngayKetThuc", "tienDatCoc", "giaThueThoaThuan", "trangThai"
+    );
 
     @Autowired
     private HopDongService hopDongService;
@@ -54,25 +59,30 @@ public class HopDongController {
                         @RequestParam(defaultValue = "id,desc") String sort,
                         Model model) {
 
+        String safeSort = "id,desc";
         Sort sortObj = Sort.by(Sort.Direction.DESC, "id");
         if (sort != null && sort.contains(",")) {
             String[] parts = sort.split(",");
-            String field = parts[0];
-            Sort.Direction direction = (parts.length > 1 && "asc".equalsIgnoreCase(parts[1]))
-                    ? Sort.Direction.ASC : Sort.Direction.DESC;
-            sortObj = Sort.by(direction, field);
+            String field = parts[0].trim();
+            if (ALLOWED_SORT_FIELDS.contains(field)) {
+                String dirStr = (parts.length > 1 && "asc".equalsIgnoreCase(parts[1].trim())) ? "asc" : "desc";
+                Sort.Direction direction = "asc".equals(dirStr) ? Sort.Direction.ASC : Sort.Direction.DESC;
+                sortObj = Sort.by(direction, field);
+                safeSort = field + "," + dirStr;
+            }
         }
 
-        Pageable pageable = PageRequest.of(page, size, sortObj);
+        Pageable pageable = PageRequest.of(Math.max(page, 0), size > 0 ? size : 10, sortObj);
         Page<HopDong> pageData = hopDongService.timKiem(keyword, trangThai, pageable);
 
         model.addAttribute("pageData", pageData);
         model.addAttribute("keyword", keyword != null ? keyword : "");
         model.addAttribute("trangThai", trangThai != null ? trangThai : "");
-        model.addAttribute("sort", sort);
+        model.addAttribute("sort", safeSort);
         model.addAttribute("activeMenu", "hop-dong");
 
-        // Số liệu KPI
+        // Số liệu KPI (tổng độc lập bộ lọc)
+        model.addAttribute("totalContracts", hopDongService.demTongHopDong());
         model.addAttribute("countHieuLuc", hopDongService.demHieuLuc());
         model.addAttribute("countHetHan", hopDongService.demHetHan());
         model.addAttribute("countDaThanhLy", hopDongService.demDaThanhLy());

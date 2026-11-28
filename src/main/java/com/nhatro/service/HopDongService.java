@@ -382,6 +382,10 @@ public class HopDongService {
         return hopDongRepository.countByTrangThai(TRANG_THAI_DA_THANH_LY);
     }
 
+    public long demTongHopDong() {
+        return hopDongRepository.count();
+    }
+
     /**
      * Tính toán chuỗi băm SHA-256 toàn vẹn cho hợp đồng.
      */
