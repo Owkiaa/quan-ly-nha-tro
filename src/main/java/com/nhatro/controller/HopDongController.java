@@ -222,6 +222,39 @@ public class HopDongController {
     }
 
     /**
+     * Xem trước văn bản hợp đồng chuẩn khổ A4 kèm chức năng xuất file PDF.
+     */
+    @GetMapping("/{id}/xem-truoc")
+    public String xemTruocHopDong(@PathVariable Integer id,
+                                  HttpServletRequest request,
+                                  Model model,
+                                  RedirectAttributes redirectAttributes) {
+        return hopDongService.timTheoId(id)
+                .map(hd -> {
+                    String hash = hopDongService.tinhMaBamToanVen(hd);
+                    String scheme = request.getScheme();
+                    String serverName = request.getServerName();
+                    int serverPort = request.getServerPort();
+                    String contextPath = request.getContextPath();
+                    String portStr = (("http".equals(scheme) && serverPort == 80) || ("https".equals(scheme) && serverPort == 443)) ? "" : ":" + serverPort;
+                    String baseUrl = scheme + "://" + serverName + portStr + contextPath;
+
+                    String linkXacThuc = baseUrl + "/hop-dong/xac-thuc/" + hd.getMaHopDong();
+                    String qrUrl = ContractHashUtil.buildQrCodeUrl(linkXacThuc);
+
+                    model.addAttribute("hopDong", hd);
+                    model.addAttribute("maBamToanVen", hash);
+                    model.addAttribute("linkXacThuc", linkXacThuc);
+                    model.addAttribute("qrCodeUrl", qrUrl);
+                    return "hop-dong/preview";
+                })
+                .orElseGet(() -> {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy hợp đồng với ID: " + id);
+                    return "redirect:/hop-dong";
+                });
+    }
+
+    /**
      * Gia hạn hợp đồng thuê phòng.
      */
     @PostMapping("/{id}/gia-han")

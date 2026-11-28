@@ -197,6 +197,9 @@
                                         <a th:href="@{'/hop-dong/' + ${item.id}}" class="btn btn-light border text-secondary" title="Xem chi tiết">
                                             <i class="fa-regular fa-eye"></i>
                                         </a>
+                                        <a th:href="@{'/hop-dong/' + ${item.id} + '/xem-truoc'}" class="btn btn-light border text-primary" title="Xem trước &amp; Tải PDF">
+                                            <i class="fa-solid fa-file-pdf"></i>
+                                        </a>
                                         <button th:if="${item.trangThai == 'HIEU_LUC' or item.trangThai == 'HET_HAN'}"
                                                 type="button" class="btn btn-light border text-warning"
                                                 th:onclick="'moModalThanhLy(' + ${item.id} + ', \'' + ${item.maHopDong} + '\', \'' + ${item.phongTro.maPhong} + '\')'"

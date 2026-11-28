@@ -45,6 +45,13 @@
                     </div>
                 </div>
                 <div class="d-flex gap-2">
+                    <!-- Nút Xem trước & Lưu PDF -->
+                    <a th:href="@{'/hop-dong/' + ${hopDong.id} + '/xem-truoc'}"
+                       class="btn btn-primary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2">
+                        <i class="fa-solid fa-file-pdf"></i>
+                        <span>Xem Trước &amp; Lưu PDF</span>
+                    </a>
+
                     <!-- Nút Gia hạn -->
                     <button th:if="${hopDong.trangThai == 'HIEU_LUC' or hopDong.trangThai == 'HET_HAN'}"
                             type="button" class="btn btn-outline-primary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2"
