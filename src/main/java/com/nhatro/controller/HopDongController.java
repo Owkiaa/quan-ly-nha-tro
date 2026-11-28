@@ -1,7 +1,9 @@
 package com.nhatro.controller;
 
 import com.nhatro.dto.HopDongRequestDTO;
+import com.nhatro.dto.QuyetToanHopDongDTO;
 import com.nhatro.entity.DatCho;
+import com.nhatro.entity.HoaDon;
 import com.nhatro.entity.HopDong;
 import com.nhatro.entity.KhachThue;
 import com.nhatro.entity.PhongTro;
@@ -274,21 +276,60 @@ public class HopDongController {
     }
 
     /**
-     * Thanh lý hợp đồng thuê phòng và tự động giải phóng phòng về TRONG.
+     * Hiển thị màn hình Bảng quyết toán tiền cọc trước khi thanh lý hợp đồng.
      */
-    @PostMapping("/{id}/thanh-ly")
-    public String thanhLyHopDong(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+    @GetMapping("/{id}/thanh-ly")
+    public String hienThiBangQuyetToan(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
         try {
-            HopDong hd = hopDongService.thanhLyHopDong(id);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "Đã thanh lý thành công hợp đồng " + hd.getMaHopDong()
-                            + ". Phòng " + hd.getPhongTro().getMaPhong() + " đã được trả về trạng thái TRỐNG.");
+            HopDong hopDong = hopDongService.timTheoId(id)
+                    .orElseThrow(() -> new BusinessException("Không tìm thấy hợp đồng ID: " + id));
+            if (HopDongService.TRANG_THAI_DA_THANH_LY.equals(hopDong.getTrangThai())) {
+                redirectAttributes.addFlashAttribute("infoMessage", "Hợp đồng " + hopDong.getMaHopDong() + " đã được thanh lý.");
+                return "redirect:/hop-dong/" + id;
+            }
+
+            QuyetToanHopDongDTO quyetToan = hopDongService.tinhQuyetToanHopDong(id);
+            List<HoaDon> hoaDonChuaThanhToan = hopDongService.layHoaDonChuaThanhToan(id);
+
+            model.addAttribute("hopDong", hopDong);
+            model.addAttribute("quyetToan", quyetToan);
+            model.addAttribute("hoaDonChuaThanhToan", hoaDonChuaThanhToan);
+            model.addAttribute("activeMenu", "hop-dong");
+            return "hop-dong/quyet-toan";
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/hop-dong";
+        }
+    }
+
+    /**
+     * Thanh lý hợp đồng thuê phòng kèm quyết toán tiền cọc và giải phóng phòng về TRONG.
+     */
+    @PostMapping("/{id}/thanh-ly")
+    public String thanhLyHopDong(@PathVariable Integer id,
+                                 @ModelAttribute("quyetToan") QuyetToanHopDongDTO quyetToanRequest,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            QuyetToanHopDongDTO ketQua = hopDongService.thanhLyKemQuyetToan(id, quyetToanRequest);
+            String msg = String.format(
+                    "Đã thanh lý hợp đồng %s và trả phòng %s về trạng thái TRỐNG. "
+                            + "Quyết toán cọc: Cọc ban đầu %,d đ | Nợ HĐ đã trừ: %,d đ | Khấu trừ hư hại: %,d đ | Thực hoàn khách: %,d đ.",
+                    ketQua.getMaHopDong(),
+                    ketQua.getMaPhong(),
+                    ketQua.getTienDatCocBanDau().longValue(),
+                    ketQua.getTongNoHoaDon().longValue(),
+                    ketQua.getChiPhiKhauTru().longValue(),
+                    ketQua.getTienThucHoan().longValue()
+            );
+            redirectAttributes.addFlashAttribute("successMessage", msg);
+            return "redirect:/hop-dong/" + id;
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/hop-dong/" + id + "/thanh-ly";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi thanh lý hợp đồng: " + e.getMessage());
+            return "redirect:/hop-dong";
         }
-        return "redirect:/hop-dong";
     }
 
     /**

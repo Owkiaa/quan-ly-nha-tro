@@ -1,7 +1,9 @@
 package com.nhatro.service;
 
 import com.nhatro.dto.HopDongRequestDTO;
+import com.nhatro.dto.QuyetToanHopDongDTO;
 import com.nhatro.entity.DatCho;
+import com.nhatro.entity.HoaDon;
 import com.nhatro.entity.HopDong;
 import com.nhatro.entity.KhachThue;
 import com.nhatro.entity.PhongTro;
@@ -394,5 +396,103 @@ public class HopDongService {
         return hopDongRepository.findById(hopDongId)
                 .map(hd -> com.nhatro.util.ContractHashUtil.verifyContractHash(hd, expectedHash))
                 .orElse(false);
+    }
+
+    /**
+     * Lấy danh sách hóa đơn chưa thanh toán của hợp đồng.
+     */
+    public List<HoaDon> layHoaDonChuaThanhToan(Integer hopDongId) {
+        return hoaDonRepository.findByHopDongIdAndTrangThai(hopDongId, "CHUA_THANH_TOAN");
+    }
+
+    /**
+     * Tính toán bảng kê quyết toán tiền cọc dự kiến trước khi thanh lý hợp đồng.
+     */
+    public QuyetToanHopDongDTO tinhQuyetToanHopDong(Integer hopDongId) {
+        HopDong hopDong = hopDongRepository.findById(hopDongId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy hợp đồng ID: " + hopDongId));
+
+        List<HoaDon> hoaDonNo = layHoaDonChuaThanhToan(hopDongId);
+        BigDecimal tongNo = hoaDonNo.stream()
+                .map(hd -> hd.getTongTien() != null ? hd.getTongTien() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal tienCoc = hopDong.getTienDatCoc() != null ? hopDong.getTienDatCoc() : BigDecimal.ZERO;
+        BigDecimal thucHoan = tienCoc.subtract(tongNo);
+
+        return new QuyetToanHopDongDTO(
+                hopDong.getId(),
+                hopDong.getMaHopDong(),
+                hopDong.getPhongTro().getMaPhong(),
+                hopDong.getKhachThue().getHoTen(),
+                tienCoc,
+                tongNo,
+                hoaDonNo.size(),
+                BigDecimal.ZERO,
+                null,
+                thucHoan,
+                Boolean.TRUE,
+                LocalDate.now()
+        );
+    }
+
+    /**
+     * Thanh lý hợp đồng kèm quyết toán tiền cọc minh bạch (tự động trừ công nợ hóa đơn & khấu trừ hư hại).
+     */
+    @Transactional
+    public QuyetToanHopDongDTO thanhLyKemQuyetToan(Integer hopDongId, QuyetToanHopDongDTO request) {
+        String threadName = Thread.currentThread().getName();
+        HopDong hopDong = hopDongRepository.findById(hopDongId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy hợp đồng ID: " + hopDongId));
+
+        if (TRANG_THAI_DA_THANH_LY.equals(hopDong.getTrangThai())) {
+            throw new BusinessException("Hợp đồng " + hopDong.getMaHopDong() + " đã được thanh lý trước đó.");
+        }
+
+        BigDecimal chiPhiKhauTru = (request != null && request.getChiPhiKhauTru() != null)
+                ? request.getChiPhiKhauTru() : BigDecimal.ZERO;
+        if (chiPhiKhauTru.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessException("Chi phí khấu trừ không được nhỏ hơn 0.");
+        }
+
+        boolean gachNo = request == null || Boolean.TRUE.equals(request.getGachNoHoaDon());
+        List<HoaDon> hoaDonNo = layHoaDonChuaThanhToan(hopDongId);
+        BigDecimal tongNo = BigDecimal.ZERO;
+
+        if (gachNo && !hoaDonNo.isEmpty()) {
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            for (HoaDon hd : hoaDonNo) {
+                tongNo = tongNo.add(hd.getTongTien() != null ? hd.getTongTien() : BigDecimal.ZERO);
+                hd.setTrangThai("DA_THANH_TOAN");
+                hd.setNgayThanhToan(now);
+                hoaDonRepository.save(hd);
+            }
+            log.info("[{}] Đã khấu trừ và gạch nợ {} hóa đơn (tổng: {} đ) khi thanh lý hợp đồng {}",
+                    threadName, hoaDonNo.size(), tongNo, hopDong.getMaHopDong());
+        }
+
+        // Thực hiện thanh lý hợp đồng & trả phòng về TRONG
+        thanhLyHopDong(hopDongId);
+
+        BigDecimal tienCoc = hopDong.getTienDatCoc() != null ? hopDong.getTienDatCoc() : BigDecimal.ZERO;
+        BigDecimal thucHoan = tienCoc.subtract(tongNo).subtract(chiPhiKhauTru);
+
+        log.info("[{}] Quyết toán hợp đồng {}: Cọc={}, Nợ HĐ={}, Khấu trừ={}, Thực hoàn={}",
+                threadName, hopDong.getMaHopDong(), tienCoc, tongNo, chiPhiKhauTru, thucHoan);
+
+        return new QuyetToanHopDongDTO(
+                hopDong.getId(),
+                hopDong.getMaHopDong(),
+                hopDong.getPhongTro().getMaPhong(),
+                hopDong.getKhachThue().getHoTen(),
+                tienCoc,
+                tongNo,
+                hoaDonNo.size(),
+                chiPhiKhauTru,
+                request != null ? request.getLyDoKhauTru() : null,
+                thucHoan,
+                gachNo,
+                LocalDate.now()
+        );
     }
 }

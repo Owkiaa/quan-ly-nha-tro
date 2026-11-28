@@ -200,12 +200,12 @@
                                         <a th:href="@{'/hop-dong/' + ${item.id} + '/xem-truoc'}" class="btn btn-light border text-primary" title="Xem trước &amp; Tải PDF">
                                             <i class="fa-solid fa-file-pdf"></i>
                                         </a>
-                                        <button th:if="${item.trangThai == 'HIEU_LUC' or item.trangThai == 'HET_HAN'}"
-                                                type="button" class="btn btn-light border text-warning"
-                                                th:onclick="'moModalThanhLy(' + ${item.id} + ', \'' + ${item.maHopDong} + '\', \'' + ${item.phongTro.maPhong} + '\')'"
-                                                title="Thanh lý hợp đồng">
+                                        <a th:if="${item.trangThai == 'HIEU_LUC' or item.trangThai == 'HET_HAN'}"
+                                           th:href="@{'/hop-dong/' + ${item.id} + '/thanh-ly'}"
+                                           class="btn btn-light border text-warning"
+                                           title="Quyết toán tiền cọc &amp; Thanh lý">
                                             <i class="fa-solid fa-handshake-slash"></i>
-                                        </button>
+                                        </a>
                                         <button type="button" class="btn btn-light border text-danger"
                                                 th:onclick="'moModalXoaHopDong(' + ${item.id} + ', \'' + ${item.maHopDong} + '\')'"
                                                 title="Xóa hợp đồng">

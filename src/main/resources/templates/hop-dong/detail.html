@@ -60,13 +60,13 @@
                         <span>Gia Hạn</span>
                     </button>
 
-                    <!-- Nút Thanh lý -->
-                    <button th:if="${hopDong.trangThai == 'HIEU_LUC' or hopDong.trangThai == 'HET_HAN'}"
-                            type="button" class="btn btn-outline-warning btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2 text-dark"
-                            data-bs-toggle="modal" data-bs-target="#modalThanhLy">
+                    <!-- Nút Thanh lý (chuyển sang màn hình Quyết toán tiền cọc) -->
+                    <a th:if="${hopDong.trangThai == 'HIEU_LUC' or hopDong.trangThai == 'HET_HAN'}"
+                       th:href="@{'/hop-dong/' + ${hopDong.id} + '/thanh-ly'}"
+                       class="btn btn-outline-warning btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2 text-dark">
                         <i class="fa-solid fa-handshake-slash"></i>
-                        <span>Thanh Lý</span>
-                    </button>
+                        <span>Thanh Lý &amp; Quyết Toán</span>
+                    </a>
 
                     <!-- Nút Xóa -->
                     <button type="button" class="btn btn-outline-danger btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2"
