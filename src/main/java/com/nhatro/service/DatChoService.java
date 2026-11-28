@@ -334,4 +334,8 @@ public class DatChoService {
     public long demDaChuyenHopDong() {
         return datChoRepository.countByTrangThai(TRANG_THAI_DA_CHUYEN_HOP_DONG);
     }
+
+    public long demTongDatCho() {
+        return datChoRepository.count();
+    }
 }

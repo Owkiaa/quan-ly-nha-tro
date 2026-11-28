@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -30,6 +31,7 @@ import java.util.regex.Pattern;
 @RequestMapping("/dat-cho")
 public class DatChoController {
 
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("id", "ngayDat", "hanGiuCho", "trangThai");
     private static final Pattern CCCD_PATTERN = Pattern.compile("^\\d{9,12}$");
     private static final Pattern PHONE_PATTERN = Pattern.compile("^0\\d{9,10}$");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
@@ -54,26 +56,31 @@ public class DatChoController {
                         @RequestParam(defaultValue = "id,desc") String sort,
                         Model model) {
 
-        // Xử lý tham số sắp xếp (field,direction)
+        // Xử lý tham số sắp xếp (field,direction) an toàn qua ALLOWED_SORT_FIELDS, chống lỗi 500
+        String safeSort = "id,desc";
         Sort sortObj = Sort.by(Sort.Direction.DESC, "id");
         if (sort != null && sort.contains(",")) {
             String[] parts = sort.split(",");
-            String field = parts[0];
-            Sort.Direction direction = (parts.length > 1 && "asc".equalsIgnoreCase(parts[1]))
-                    ? Sort.Direction.ASC : Sort.Direction.DESC;
-            sortObj = Sort.by(direction, field);
+            String field = parts[0].trim();
+            if (ALLOWED_SORT_FIELDS.contains(field)) {
+                String dirStr = (parts.length > 1 && "asc".equalsIgnoreCase(parts[1].trim())) ? "asc" : "desc";
+                Sort.Direction direction = "asc".equals(dirStr) ? Sort.Direction.ASC : Sort.Direction.DESC;
+                sortObj = Sort.by(direction, field);
+                safeSort = field + "," + dirStr;
+            }
         }
 
-        Pageable pageable = PageRequest.of(page, size, sortObj);
+        Pageable pageable = PageRequest.of(Math.max(page, 0), size > 0 ? size : 10, sortObj);
         Page<DatCho> pageData = datChoService.timKiem(keyword, trangThai, pageable);
 
         model.addAttribute("pageData", pageData);
         model.addAttribute("keyword", keyword != null ? keyword : "");
         model.addAttribute("trangThai", trangThai != null ? trangThai : "");
-        model.addAttribute("sort", sort);
+        model.addAttribute("sort", safeSort);
         model.addAttribute("activeMenu", "dat-cho");
 
-        // Thống kê nhanh số lượng
+        // Thống kê nhanh số lượng (tổng độc lập bộ lọc)
+        model.addAttribute("totalBookings", datChoService.demTongDatCho());
         model.addAttribute("countDangGiu", datChoService.demDangGiu());
         model.addAttribute("countHetHan", datChoService.demHetHan());
         model.addAttribute("countDaChuyen", datChoService.demDaChuyenHopDong());
