@@ -26,17 +26,26 @@ import java.util.Set;
 
 /**
  * Nghiệp vụ Cổng Khách thuê (TV3).
- * Mọi hàm dữ liệu cá nhân đều nhận khachId và truy vấn ràng buộc theo khachId đó.
+ *
+ * <p>Nguyên tắc cô lập dữ liệu: mọi hàm đọc/ghi dữ liệu cá nhân đều nhận {@code khachId} (lấy từ session ở
+ * Controller, KHÔNG BAO GIỜ lấy từ tham số request) và đưa thẳng vào điều kiện truy vấn.
  */
 @Service
 public class TenantPortalService {
 
+    // ------------------------------------------------------------------ Hằng số nghiệp vụ
+
     public static final int NOI_DUNG_TOI_DA = 255;
     public static final Set<String> MUC_DO_HOP_LE = Set.of("BINH_THUONG", "CAP_BACH");
+    public static final String MSG_KHONG_CO_HOP_DONG =
+            "Bạn chỉ có thể gửi phản ánh cho phòng đang có hợp đồng còn hiệu lực của mình.";
+    public static final String MSG_KHONG_TIM_THAY_KHACH = "Không tìm thấy hồ sơ khách thuê của bạn.";
 
     private static final Set<String> ROOM_SORT_FIELDS = Set.of("giaThue", "dienTich", "tenPhong", "maPhong");
     private static final Set<String> INVOICE_SORT_FIELDS = Set.of("ngayLap", "tongTien");
     private static final int MAX_PAGE_SIZE = 50;
+    /** decimal(12,2) tối đa 9.999.999.999,99: dùng làm cận trên khi khách không nhập "giá đến". */
+    private static final BigDecimal GIA_TOI_DA = new BigDecimal("9999999999");
 
     private final PhongTroRepository phongTroRepository;
     private final KhachThueRepository khachThueRepository;
@@ -56,12 +65,41 @@ public class TenantPortalService {
         this.incidentRepository = incidentRepository;
     }
 
-    // ---------------------------------------------------------------- Phòng trống
+    // ------------------------------------------------------------------ Phòng trống
 
     @Transactional(readOnly = true)
     public Page<PhongTro> searchAvailableRooms(String keyword, Pageable pageable) {
+        return searchAvailableRooms(keyword, null, null, null, null, pageable);
+    }
+
+    /**
+     * Lọc nâng cao phòng TRONG. Mọi tham số lọc đều có thể null (= không lọc).
+     * Quy ước: giaTu &lt; 0 coi như 0; giaDen &lt;= 0 coi như không giới hạn; giaTu &gt; giaDen thì đổi chỗ;
+     * dienTichToiThieu âm/NaN coi như 0 (phòng chưa có diện tích được tính là 0 m²).
+     */
+    @Transactional(readOnly = true)
+    public Page<PhongTro> searchAvailableRooms(String keyword, String loaiPhong,
+                                               BigDecimal giaTu, BigDecimal giaDen,
+                                               Double dienTichToiThieu, Pageable pageable) {
+        BigDecimal from = (giaTu == null || giaTu.signum() < 0) ? BigDecimal.ZERO : giaTu;
+        BigDecimal to = (giaDen == null || giaDen.signum() <= 0) ? GIA_TOI_DA : giaDen.min(GIA_TOI_DA);
+        if (from.compareTo(to) > 0) {
+            BigDecimal tmp = from;
+            from = to;
+            to = tmp;
+        }
+        double minArea = (dienTichToiThieu == null || dienTichToiThieu.isNaN()
+                || dienTichToiThieu.isInfinite() || dienTichToiThieu < 0) ? 0.0 : dienTichToiThieu;
+
         Pageable safe = sanitize(pageable, ROOM_SORT_FIELDS, Sort.by("giaThue").ascending());
-        return phongTroRepository.search(blankToNull(keyword), "TRONG", safe);
+        return phongTroRepository.searchAvailable(blankToNull(keyword), blankToNull(loaiPhong),
+                from, to, minArea, safe);
+    }
+
+    /** Danh sách loại phòng hiện có, để Controller đưa ra ô chọn lọc. */
+    @Transactional(readOnly = true)
+    public List<String> getRoomTypes() {
+        return phongTroRepository.findDistinctLoaiPhong();
     }
 
     @Transactional(readOnly = true)
@@ -69,7 +107,7 @@ public class TenantPortalService {
         return phongTroRepository.findById(id);
     }
 
-    // ---------------------------------------------------------------- Hợp đồng
+    // ------------------------------------------------------------------ Hợp đồng
 
     @Transactional(readOnly = true)
     public List<HopDong> getContracts(Integer khachId) {
@@ -81,7 +119,7 @@ public class TenantPortalService {
         return contractRepository.findActiveByKhach(khachId);
     }
 
-    // ---------------------------------------------------------------- Hóa đơn
+    // ------------------------------------------------------------------ Hóa đơn
 
     @Transactional(readOnly = true)
     public Page<HoaDon> getInvoices(Integer khachId, String trangThai, Pageable pageable) {
@@ -105,7 +143,7 @@ public class TenantPortalService {
         return sum == null ? BigDecimal.ZERO : sum;
     }
 
-    // ---------------------------------------------------------------- Sự cố
+    // ------------------------------------------------------------------ Sự cố
 
     @Transactional(readOnly = true)
     public List<YeuCauSuaChua> getIncidents(Integer khachId) {
@@ -120,16 +158,16 @@ public class TenantPortalService {
     @Transactional
     public YeuCauSuaChua createIncident(Integer khachId, Integer phongId, String noiDung, String mucDo) {
         KhachThue khach = khachThueRepository.findById(khachId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ khách thuê của bạn."));
+                .orElseThrow(() -> new IllegalArgumentException(MSG_KHONG_TIM_THAY_KHACH));
 
         List<HopDong> contracts = contractRepository.findActiveByKhachAndPhong(khachId, phongId);
         if (contracts.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Bạn chỉ có thể gửi phản ánh cho phòng đang có hợp đồng còn hiệu lực của mình.");
+            throw new IllegalArgumentException(MSG_KHONG_CO_HOP_DONG);
         }
+        PhongTro phong = contracts.get(0).getPhongTro();
 
         YeuCauSuaChua yc = new YeuCauSuaChua();
-        yc.setPhongTro(contracts.get(0).getPhongTro());
+        yc.setPhongTro(phong);
         yc.setKhachThue(khach);
         yc.setNoiDung(noiDung.trim());
         yc.setMucDo(mucDo);
@@ -139,7 +177,7 @@ public class TenantPortalService {
         return incidentRepository.save(yc);
     }
 
-    // ---------------------------------------------------------------- Tiện ích
+    // ------------------------------------------------------------------ Tiện ích
 
     private static String blankToNull(String s) {
         return (s == null || s.isBlank()) ? null : s.trim();
