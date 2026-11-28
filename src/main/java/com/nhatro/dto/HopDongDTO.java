@@ -25,6 +25,9 @@ public class HopDongDTO {
     private Integer chuKyThanhToan;
     private String trangThai; // HIEU_LUC, HET_HAN, DA_THANH_LY
     private Integer soLuongHoaDon;
+    private String maBamToanVen;
+    private String linkXacThuc;
+    private String qrCodeUrl;
 
     public HopDongDTO() {
     }
@@ -80,6 +83,7 @@ public class HopDongDTO {
         } else {
             dto.setSoLuongHoaDon(0);
         }
+        dto.setMaBamToanVen(com.nhatro.util.ContractHashUtil.generateContractHash(entity));
         return dto;
     }
 
@@ -209,5 +213,29 @@ public class HopDongDTO {
 
     public void setSoLuongHoaDon(Integer soLuongHoaDon) {
         this.soLuongHoaDon = soLuongHoaDon;
+    }
+
+    public String getMaBamToanVen() {
+        return maBamToanVen;
+    }
+
+    public void setMaBamToanVen(String maBamToanVen) {
+        this.maBamToanVen = maBamToanVen;
+    }
+
+    public String getLinkXacThuc() {
+        return linkXacThuc;
+    }
+
+    public void setLinkXacThuc(String linkXacThuc) {
+        this.linkXacThuc = linkXacThuc;
+    }
+
+    public String getQrCodeUrl() {
+        return qrCodeUrl;
+    }
+
+    public void setQrCodeUrl(String qrCodeUrl) {
+        this.qrCodeUrl = qrCodeUrl;
     }
 }

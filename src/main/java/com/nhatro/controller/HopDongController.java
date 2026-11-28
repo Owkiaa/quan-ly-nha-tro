@@ -1,7 +1,9 @@
 package com.nhatro.controller;
 
 import com.nhatro.dto.HopDongRequestDTO;
+import com.nhatro.dto.QuyetToanHopDongDTO;
 import com.nhatro.entity.DatCho;
+import com.nhatro.entity.HoaDon;
 import com.nhatro.entity.HopDong;
 import com.nhatro.entity.KhachThue;
 import com.nhatro.entity.PhongTro;
@@ -19,11 +21,14 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.servlet.http.HttpServletRequest;
+import com.nhatro.util.ContractHashUtil;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Controller xử lý các yêu cầu Web MVC cho phân hệ Quản lý Hợp đồng thuê phòng.
@@ -32,6 +37,10 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/hop-dong")
 public class HopDongController {
+
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+            "id", "maHopDong", "ngayBatDau", "ngayKetThuc", "tienDatCoc", "giaThueThoaThuan", "trangThai"
+    );
 
     @Autowired
     private HopDongService hopDongService;
@@ -50,30 +59,58 @@ public class HopDongController {
                         @RequestParam(defaultValue = "id,desc") String sort,
                         Model model) {
 
+        String safeSort = "id,desc";
         Sort sortObj = Sort.by(Sort.Direction.DESC, "id");
         if (sort != null && sort.contains(",")) {
             String[] parts = sort.split(",");
-            String field = parts[0];
-            Sort.Direction direction = (parts.length > 1 && "asc".equalsIgnoreCase(parts[1]))
-                    ? Sort.Direction.ASC : Sort.Direction.DESC;
-            sortObj = Sort.by(direction, field);
+            String field = parts[0].trim();
+            if (ALLOWED_SORT_FIELDS.contains(field)) {
+                String dirStr = (parts.length > 1 && "asc".equalsIgnoreCase(parts[1].trim())) ? "asc" : "desc";
+                Sort.Direction direction = "asc".equals(dirStr) ? Sort.Direction.ASC : Sort.Direction.DESC;
+                sortObj = Sort.by(direction, field);
+                safeSort = field + "," + dirStr;
+            }
         }
 
-        Pageable pageable = PageRequest.of(page, size, sortObj);
+        Pageable pageable = PageRequest.of(Math.max(page, 0), size > 0 ? size : 10, sortObj);
         Page<HopDong> pageData = hopDongService.timKiem(keyword, trangThai, pageable);
 
         model.addAttribute("pageData", pageData);
         model.addAttribute("keyword", keyword != null ? keyword : "");
         model.addAttribute("trangThai", trangThai != null ? trangThai : "");
-        model.addAttribute("sort", sort);
+        model.addAttribute("sort", safeSort);
         model.addAttribute("activeMenu", "hop-dong");
 
-        // Số liệu KPI
+        // Số liệu KPI (tổng độc lập bộ lọc)
+        model.addAttribute("totalContracts", hopDongService.demTongHopDong());
         model.addAttribute("countHieuLuc", hopDongService.demHieuLuc());
         model.addAttribute("countHetHan", hopDongService.demHetHan());
         model.addAttribute("countDaThanhLy", hopDongService.demDaThanhLy());
+        model.addAttribute("countSapHetHan", hopDongService.demHopDongSapHetHan(15));
+        model.addAttribute("today", LocalDate.now());
+        model.addAttribute("ngayCanhBao", LocalDate.now().plusDays(15));
 
         return "hop-dong/index";
+    }
+
+    /**
+     * Kích hoạt quét thủ công các hợp đồng đã quá hạn kết thúc để chuyển sang HET_HAN.
+     */
+    @PostMapping("/quet-het-han")
+    public String quetHopDongHetHan(RedirectAttributes redirectAttributes) {
+        try {
+            int count = hopDongService.quetVaDanhDauHopDongHetHan();
+            if (count > 0) {
+                redirectAttributes.addFlashAttribute("successMessage",
+                        "Đã quét và tự động chuyển " + count + " hợp đồng quá hạn sang trạng thái HẾT HẠN.");
+            } else {
+                redirectAttributes.addFlashAttribute("infoMessage",
+                        "Hiện không có hợp đồng hiệu lực nào bị quá ngày kết thúc.");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi quét hợp đồng hết hạn: " + e.getMessage());
+        }
+        return "redirect:/hop-dong";
     }
 
     /**
@@ -208,15 +245,103 @@ public class HopDongController {
     }
 
     /**
-     * Xem thông tin chi tiết một hợp đồng thuê phòng.
+     * Xem thông tin chi tiết một hợp đồng thuê phòng, bao gồm chứng thư và mã băm toàn vẹn SHA-256.
      */
     @GetMapping("/{id}")
-    public String xemChiTiet(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
+    public String xemChiTiet(@PathVariable Integer id,
+                             @RequestParam(required = false) String check,
+                             HttpServletRequest request,
+                             Model model, RedirectAttributes redirectAttributes) {
         return hopDongService.timTheoId(id)
                 .map(hd -> {
+                    String hash = hopDongService.tinhMaBamToanVen(hd);
+                    String scheme = request.getScheme();
+                    String serverName = request.getServerName();
+                    int serverPort = request.getServerPort();
+                    String contextPath = request.getContextPath();
+                    String portStr = (("http".equals(scheme) && serverPort == 80) || ("https".equals(scheme) && serverPort == 443)) ? "" : ":" + serverPort;
+                    String baseUrl = scheme + "://" + serverName + portStr + contextPath;
+
+                    String linkXacThuc = baseUrl + "/hop-dong/xac-thuc/" + hd.getMaHopDong();
+                    String qrUrl = ContractHashUtil.buildQrCodeUrl(linkXacThuc);
+
                     model.addAttribute("hopDong", hd);
+                    model.addAttribute("maBamToanVen", hash);
+                    model.addAttribute("linkXacThuc", linkXacThuc);
+                    model.addAttribute("qrCodeUrl", qrUrl);
                     model.addAttribute("activeMenu", "hop-dong");
+
+                    if ("true".equalsIgnoreCase(check)) {
+                        model.addAttribute("daKiemTraToanVen", true);
+                    }
                     return "hop-dong/detail";
+                })
+                .orElseGet(() -> {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy hợp đồng với ID: " + id);
+                    return "redirect:/hop-dong";
+                });
+    }
+
+    /**
+     * Tra cứu công khai và chứng thực tính toàn vẹn của hợp đồng qua mã hợp đồng (quét từ mã QR).
+     */
+    @GetMapping("/xac-thuc/{maHopDong}")
+    public String xacThucHopDong(@PathVariable String maHopDong,
+                                 HttpServletRequest request,
+                                 Model model) {
+        Optional<HopDong> opt = hopDongService.timTheoMaHopDong(maHopDong);
+        if (opt.isEmpty()) {
+            model.addAttribute("timThay", false);
+            model.addAttribute("maHopDong", maHopDong);
+            return "hop-dong/xac-thuc";
+        }
+
+        HopDong hd = opt.get();
+        String hash = hopDongService.tinhMaBamToanVen(hd);
+        String scheme = request.getScheme();
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
+        String contextPath = request.getContextPath();
+        String portStr = (("http".equals(scheme) && serverPort == 80) || ("https".equals(scheme) && serverPort == 443)) ? "" : ":" + serverPort;
+        String baseUrl = scheme + "://" + serverName + portStr + contextPath;
+
+        String linkXacThuc = baseUrl + "/hop-dong/xac-thuc/" + hd.getMaHopDong();
+        String qrUrl = ContractHashUtil.buildQrCodeUrl(linkXacThuc);
+
+        model.addAttribute("timThay", true);
+        model.addAttribute("hopDong", hd);
+        model.addAttribute("maBamToanVen", hash);
+        model.addAttribute("linkXacThuc", linkXacThuc);
+        model.addAttribute("qrCodeUrl", qrUrl);
+        return "hop-dong/xac-thuc";
+    }
+
+    /**
+     * Xem trước văn bản hợp đồng chuẩn khổ A4 kèm chức năng xuất file PDF.
+     */
+    @GetMapping("/{id}/xem-truoc")
+    public String xemTruocHopDong(@PathVariable Integer id,
+                                  HttpServletRequest request,
+                                  Model model,
+                                  RedirectAttributes redirectAttributes) {
+        return hopDongService.timTheoId(id)
+                .map(hd -> {
+                    String hash = hopDongService.tinhMaBamToanVen(hd);
+                    String scheme = request.getScheme();
+                    String serverName = request.getServerName();
+                    int serverPort = request.getServerPort();
+                    String contextPath = request.getContextPath();
+                    String portStr = (("http".equals(scheme) && serverPort == 80) || ("https".equals(scheme) && serverPort == 443)) ? "" : ":" + serverPort;
+                    String baseUrl = scheme + "://" + serverName + portStr + contextPath;
+
+                    String linkXacThuc = baseUrl + "/hop-dong/xac-thuc/" + hd.getMaHopDong();
+                    String qrUrl = ContractHashUtil.buildQrCodeUrl(linkXacThuc);
+
+                    model.addAttribute("hopDong", hd);
+                    model.addAttribute("maBamToanVen", hash);
+                    model.addAttribute("linkXacThuc", linkXacThuc);
+                    model.addAttribute("qrCodeUrl", qrUrl);
+                    return "hop-dong/preview";
                 })
                 .orElseGet(() -> {
                     redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy hợp đồng với ID: " + id);
@@ -244,21 +369,60 @@ public class HopDongController {
     }
 
     /**
-     * Thanh lý hợp đồng thuê phòng và tự động giải phóng phòng về TRONG.
+     * Hiển thị màn hình Bảng quyết toán tiền cọc trước khi thanh lý hợp đồng.
      */
-    @PostMapping("/{id}/thanh-ly")
-    public String thanhLyHopDong(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
+    @GetMapping("/{id}/thanh-ly")
+    public String hienThiBangQuyetToan(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
         try {
-            HopDong hd = hopDongService.thanhLyHopDong(id);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "Đã thanh lý thành công hợp đồng " + hd.getMaHopDong()
-                            + ". Phòng " + hd.getPhongTro().getMaPhong() + " đã được trả về trạng thái TRỐNG.");
+            HopDong hopDong = hopDongService.timTheoId(id)
+                    .orElseThrow(() -> new BusinessException("Không tìm thấy hợp đồng ID: " + id));
+            if (HopDongService.TRANG_THAI_DA_THANH_LY.equals(hopDong.getTrangThai())) {
+                redirectAttributes.addFlashAttribute("infoMessage", "Hợp đồng " + hopDong.getMaHopDong() + " đã được thanh lý.");
+                return "redirect:/hop-dong/" + id;
+            }
+
+            QuyetToanHopDongDTO quyetToan = hopDongService.tinhQuyetToanHopDong(id);
+            List<HoaDon> hoaDonChuaThanhToan = hopDongService.layHoaDonChuaThanhToan(id);
+
+            model.addAttribute("hopDong", hopDong);
+            model.addAttribute("quyetToan", quyetToan);
+            model.addAttribute("hoaDonChuaThanhToan", hoaDonChuaThanhToan);
+            model.addAttribute("activeMenu", "hop-dong");
+            return "hop-dong/quyet-toan";
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/hop-dong";
+        }
+    }
+
+    /**
+     * Thanh lý hợp đồng thuê phòng kèm quyết toán tiền cọc và giải phóng phòng về TRONG.
+     */
+    @PostMapping("/{id}/thanh-ly")
+    public String thanhLyHopDong(@PathVariable Integer id,
+                                 @ModelAttribute("quyetToan") QuyetToanHopDongDTO quyetToanRequest,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            QuyetToanHopDongDTO ketQua = hopDongService.thanhLyKemQuyetToan(id, quyetToanRequest);
+            String msg = String.format(
+                    "Đã thanh lý hợp đồng %s và trả phòng %s về trạng thái TRỐNG. "
+                            + "Quyết toán cọc: Cọc ban đầu %,d đ | Nợ HĐ đã trừ: %,d đ | Khấu trừ hư hại: %,d đ | Thực hoàn khách: %,d đ.",
+                    ketQua.getMaHopDong(),
+                    ketQua.getMaPhong(),
+                    ketQua.getTienDatCocBanDau().longValue(),
+                    ketQua.getTongNoHoaDon().longValue(),
+                    ketQua.getChiPhiKhauTru().longValue(),
+                    ketQua.getTienThucHoan().longValue()
+            );
+            redirectAttributes.addFlashAttribute("successMessage", msg);
+            return "redirect:/hop-dong/" + id;
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/hop-dong/" + id + "/thanh-ly";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi thanh lý hợp đồng: " + e.getMessage());
+            return "redirect:/hop-dong";
         }
-        return "redirect:/hop-dong";
     }
 
     /**

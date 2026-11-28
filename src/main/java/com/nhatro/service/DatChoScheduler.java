@@ -33,6 +33,9 @@ public class DatChoScheduler {
     @Autowired
     private DatChoService datChoService; // Inject Service để đảm bảo đi qua Spring Proxy
 
+    @Autowired
+    private HopDongService hopDongService;
+
     /**
      * Quét định kỳ mỗi 60 giây (fixedDelay = 60000ms), bắt đầu sau khi ứng dụng chạy 10 giây (initialDelay = 10000ms).
      * Ghi rõ Thread.currentThread().getName() (ví dụ: [scheduling-1]) để phục vụ chụp hình làm minh chứng báo cáo.
@@ -40,6 +43,18 @@ public class DatChoScheduler {
     @Scheduled(fixedDelay = 60000, initialDelay = 10000)
     public void autoReleaseExpiredBookings() {
         runScanAndRelease(false);
+    }
+
+    /**
+     * Tác vụ nền định kỳ hằng ngày (00:05) tự động quét hợp đồng HIEU_LUC có ngayKetThuc < hôm nay sang HET_HAN.
+     */
+    @Scheduled(cron = "0 5 0 * * *")
+    public void autoMarkExpiredContracts() {
+        String threadName = Thread.currentThread().getName();
+        int count = hopDongService.quetVaDanhDauHopDongHetHan();
+        if (count > 0) {
+            log.info("[{}] [DatChoScheduler] Đã tự động chuyển {} hợp đồng quá hạn sang HET_HAN", threadName, count);
+        }
     }
 
     /**

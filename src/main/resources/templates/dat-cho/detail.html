@@ -40,6 +40,12 @@
                         <span>Ký Hợp Đồng Ngay</span>
                     </a>
                     <button th:if="${datCho.trangThai == 'DANG_GIU'}"
+                            type="button" class="btn btn-outline-primary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2"
+                            data-bs-toggle="modal" data-bs-target="#modalGiaHanDatCho">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>Gia Hạn Giữ Chỗ</span>
+                    </button>
+                    <button th:if="${datCho.trangThai == 'DANG_GIU'}"
                             type="button" class="btn btn-outline-danger btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2"
                             data-bs-toggle="modal" data-bs-target="#modalHuyDatCho">
                         <i class="fa-solid fa-ban"></i>
@@ -153,6 +159,42 @@
             </div>
         </div>
     </main>
+
+    <!-- Modal Gia Hạn Giữ Chỗ -->
+    <div class="modal fade" id="modalGiaHanDatCho" tabindex="-1" aria-hidden="true" th:if="${datCho.trangThai == 'DANG_GIU'}">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <form th:action="@{'/dat-cho/' + ${datCho.id} + '/gia-han'}" method="POST">
+                    <div class="modal-body p-4 text-center">
+                        <div class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mb-3"
+                             style="width: 64px; height: 64px; font-size: 1.75rem;">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">Gia Hạn Thời Gian Giữ Chỗ</h5>
+                        <p class="text-secondary small mb-3">
+                            Hạn hiện tại: <strong class="font-mono" th:text="${#temporals.format(datCho.hanGiuCho, 'dd/MM/yyyy HH:mm')}">02/01/2026 10:00</strong>
+                        </p>
+
+                        <div class="text-start mb-2">
+                            <label class="form-label small fw-semibold text-secondary">Chọn thời gian gia hạn thêm:</label>
+                            <select name="soGioThem" class="form-select font-mono">
+                                <option value="12">+12 Giờ</option>
+                                <option value="24" selected>+24 Giờ (1 Ngày)</option>
+                                <option value="48">+48 Giờ (2 Ngày)</option>
+                                <option value="72">+72 Giờ (3 Ngày)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-0 py-3 d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-3" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 rounded-3">
+                            <i class="fa-solid fa-check me-1"></i> Xác Nhận Gia Hạn
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal Hủy Giữ Chỗ -->
     <div class="modal fade" id="modalHuyDatCho" tabindex="-1" aria-hidden="true" th:if="${datCho.trangThai == 'DANG_GIU'}">

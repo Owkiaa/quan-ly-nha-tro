@@ -82,7 +82,7 @@ public class ClientHandler implements Runnable {
              BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
              PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8), true)) {
 
-            out.println("OK#Ket noi thanh cong! Cac lenh ho tro: LIST_ROOM | BOOK <ma_phong>#<ho_ten>#<cccd>#<sdt> | EXIT");
+            out.println("OK#Ket noi thanh cong! Cac lenh ho tro: PING | LIST_ROOM | ROOM_DETAIL <ma_phong> | BOOK <ma_phong>#<ho_ten>#<cccd>#<sdt> | EXIT");
 
             String rawLine;
             while ((rawLine = in.readLine()) != null) {
@@ -92,16 +92,22 @@ public class ClientHandler implements Runnable {
                 }
                 log.info("[{}] Nhận lệnh từ client: {}", threadName, command);
 
-                if ("EXIT".equalsIgnoreCase(command)) {
+                String upperCmd = command.toUpperCase();
+                if ("EXIT".equals(upperCmd)) {
                     out.println("BYE#Tam biet");
                     log.info("[{}] Client yêu cầu ngắt kết nối.", threadName);
                     break;
-                } else if ("LIST_ROOM".equalsIgnoreCase(command)) {
+                } else if ("PING".equals(upperCmd)) {
+                    out.println("PONG#Server online");
+                    log.info("[{}] Đã phản hồi PING -> PONG#Server online", threadName);
+                } else if ("LIST_ROOM".equals(upperCmd)) {
                     handleListRoom(out, threadName);
-                } else if ("BOOK".equalsIgnoreCase(command) || command.toUpperCase().startsWith("BOOK ")) {
+                } else if ("ROOM_DETAIL".equals(upperCmd) || upperCmd.startsWith("ROOM_DETAIL ")) {
+                    handleRoomDetail(command, out, threadName);
+                } else if ("BOOK".equals(upperCmd) || upperCmd.startsWith("BOOK ")) {
                     handleBook(command, out, threadName);
                 } else {
-                    out.println("FAIL#Lenh khong hop le. Ho tro: LIST_ROOM, BOOK <ma_phong>#<ho_ten>#<cccd>#<sdt>, EXIT");
+                    out.println("FAIL#Lenh khong hop le. Ho tro: PING, LIST_ROOM, ROOM_DETAIL <ma_phong>, BOOK <ma_phong>#<ho_ten>#<cccd>#<sdt>, EXIT");
                 }
             }
         } catch (IOException e) {
@@ -119,22 +125,56 @@ public class ClientHandler implements Runnable {
             List<PhongTro> danhSachPhongTrong = getDatChoService().layDanhSachPhongTrong();
             if (danhSachPhongTrong == null || danhSachPhongTrong.isEmpty()) {
                 out.println("OK#Hien khong co phong trong nao trong he thong.");
+                out.println("END_LIST_ROOM");
             } else {
-                StringBuilder sb = new StringBuilder("=== DANH SÁCH PHÒNG TRỌ TRỐNG ===\n");
+                out.println("OK#DANH SACH PHONG TRO TRONG (" + danhSachPhongTrong.size() + ")");
                 for (PhongTro phong : danhSachPhongTrong) {
-                    sb.append("Mã phòng: ").append(phong.getMaPhong())
-                            .append(" | Tên: ").append(phong.getTenPhong())
-                            .append(" | Giá: ").append(phong.getGiaThue())
-                            .append(" | Trạng thái: ").append(phong.getTrangThai())
-                            .append("\n");
+                    out.println("Mã phòng: " + phong.getMaPhong()
+                            + " | Tên: " + phong.getTenPhong()
+                            + " | Loại: " + phong.getLoaiPhong()
+                            + " | Diện tích: " + phong.getDienTich() + "m2"
+                            + " | Giá: " + phong.getGiaThue()
+                            + " | Trạng thái: " + phong.getTrangThai());
                 }
-                out.println(sb.toString().trim());
+                out.println("END_LIST_ROOM");
             }
             log.info("[{}] Đã xử lý xong lệnh LIST_ROOM ({} phòng trống).",
                     threadName, danhSachPhongTrong != null ? danhSachPhongTrong.size() : 0);
         } catch (Exception dbEx) {
             out.println("FAIL#Loi truy xuat CSDL: " + dbEx.getMessage());
+            out.println("END_LIST_ROOM");
             log.error("[{}] Lỗi CSDL khi lấy danh sách phòng trống: {}", threadName, dbEx.getMessage(), dbEx);
+        }
+    }
+
+    private void handleRoomDetail(String command, PrintWriter out, String threadName) {
+        if (command.length() <= "ROOM_DETAIL".length()) {
+            out.println("FAIL#Thieu ma phong. Cu phap: ROOM_DETAIL <ma_phong>");
+            return;
+        }
+
+        String maPhong = command.substring("ROOM_DETAIL".length()).trim();
+        if (maPhong.isEmpty()) {
+            out.println("FAIL#Thieu ma phong. Cu phap: ROOM_DETAIL <ma_phong>");
+            return;
+        }
+
+        try {
+            PhongTro phong = getPhongTroService().getByMaPhong(maPhong);
+            out.println("OK#CHI TIET PHONG " + phong.getMaPhong()
+                    + " | Tên: " + phong.getTenPhong()
+                    + " | Loại: " + phong.getLoaiPhong()
+                    + " | Diện tích: " + phong.getDienTich() + "m2"
+                    + " | Giá thuê: " + phong.getGiaThue()
+                    + " | Trạng thái: " + phong.getTrangThai()
+                    + " | Mô tả: " + (phong.getMoTa() != null ? phong.getMoTa() : "Không có"));
+            log.info("[{}] Đã trả chi tiết phòng {}", threadName, phong.getMaPhong());
+        } catch (ResourceNotFoundException | BusinessException ex) {
+            out.println("FAIL#" + ex.getMessage());
+            log.warn("[{}] Không tìm thấy phòng {}: {}", threadName, maPhong, ex.getMessage());
+        } catch (Exception ex) {
+            out.println("FAIL#Loi truy van chi tiet phong: " + ex.getMessage());
+            log.error("[{}] Lỗi khi lấy chi tiết phòng {}: {}", threadName, maPhong, ex.getMessage(), ex);
         }
     }
 
@@ -162,7 +202,6 @@ public class ClientHandler implements Runnable {
             cccd = parts[2].trim();
             sdt = parts[3].trim();
         } else {
-            // Hỗ trợ cú pháp rút gọn BOOK <ma_phong>
             maPhong = payload;
             hoTen = "Khách đặt qua Socket";
             cccd = "079204000000";
@@ -170,7 +209,6 @@ public class ClientHandler implements Runnable {
         }
 
         try {
-            // Tìm ID phòng trước ở giao dịch đọc ngắn, sau đó gọi datChoPhong để findByIdForUpdate làm truy vấn đầu tiên trong Transaction
             PhongTro phong = getPhongTroService().getByMaPhong(maPhong);
             DatCho datCho = getDatChoService().datChoPhong(
                     phong.getId(), hoTen, cccd, sdt, null, "Đặt qua Socket Client", 24);

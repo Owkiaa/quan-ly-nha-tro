@@ -38,6 +38,8 @@ public class DatChoService {
     public static final String PHONG_DA_DAT = "DA_DAT";
     public static final String PHONG_DA_THUE = "DA_THUE";
 
+    public static final int MAX_ACTIVE_BOOKINGS_PER_CCCD = 2;
+
     @Autowired
     private PhongTroRepository phongTroRepository;
 
@@ -51,6 +53,18 @@ public class DatChoService {
     private DatChoMonitor datChoMonitor;
 
     private final Object bookingLock = new Object();
+
+    /**
+     * Overload hỗ trợ Cổng Khách thuê (TV3): đặt giữ chỗ trực tuyến theo khachId đã xác thực trong Session.
+     * Ủy quyền trực tiếp vào quy trình datChoPhong(...) để dùng chung khóa bi quan findByIdForUpdate.
+     */
+    @Transactional
+    public DatCho datChoPhong(Integer khachId, Integer phongId, int soGioGiuCho, String ghiChu) {
+        KhachThue khach = khachThueRepository.findById(khachId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy hồ sơ khách thuê với ID: " + khachId));
+        return datChoPhong(phongId, khach.getHoTen(), khach.getCccd(), khach.getSoDienThoai(),
+                khach.getEmail(), ghiChu, soGioGiuCho);
+    }
 
     /**
      * Quy trình đặt giữ chỗ phòng kết hợp Monitor Lock (synchronized Chương 4) và Pessimistic Write Lock (findByIdForUpdate).
@@ -92,8 +106,17 @@ public class DatChoService {
                         " đã được đặt hoặc đang thuê (Trạng thái: " + phong.getTrangThai() + ").");
             }
 
-            // 3. Tìm hoặc tạo mới hồ sơ khách thuê theo CCCD
+            // 2b. Chống spam giữ chỗ theo CCCD: mỗi CCCD chỉ được giữ tối đa 2 phòng đang DANG_GIU cùng lúc
             String cleanCccd = cccd.trim();
+            long activeBookings = datChoRepository.countByKhachThueCccdAndTrangThai(cleanCccd, TRANG_THAI_DANG_GIU);
+            if (activeBookings >= MAX_ACTIVE_BOOKINGS_PER_CCCD) {
+                log.warn("[{}] Từ chối đặt phòng {}: CCCD {} đang giữ {} phiếu DANG_GIU (tối đa {})",
+                        threadName, phong.getMaPhong(), cleanCccd, activeBookings, MAX_ACTIVE_BOOKINGS_PER_CCCD);
+                throw new BusinessException("Khách thuê với CCCD " + cleanCccd + " hiện đang giữ tối đa "
+                        + MAX_ACTIVE_BOOKINGS_PER_CCCD + " phòng. Vui lòng ký hợp đồng hoặc hủy bớt phiếu giữ chỗ cũ.");
+            }
+
+            // 3. Tìm hoặc tạo mới hồ sơ khách thuê theo CCCD
             KhachThue khachThue = khachThueRepository.findByCccd(cleanCccd)
                     .orElseGet(() -> {
                         log.info("[{}] Khách thuê với CCCD {} chưa tồn tại trong CSDL, tiến hành tạo mới...", threadName, cleanCccd);
@@ -212,6 +235,38 @@ public class DatChoService {
     }
 
     /**
+     * Gia hạn thêm thời gian giữ chỗ (tối đa +72 giờ mỗi lần) cho phiếu đang DANG_GIU.
+     */
+    @Transactional
+    public DatCho giaHanDatCho(Integer datChoId, int soGioThem) {
+        String threadName = Thread.currentThread().getName();
+        if (soGioThem <= 0 || soGioThem > 72) {
+            throw new BusinessException("Số giờ gia hạn giữ chỗ phải từ 1 đến 72 giờ.");
+        }
+
+        DatCho datCho = datChoRepository.findById(datChoId)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy bản ghi đặt chỗ ID: " + datChoId));
+
+        if (!TRANG_THAI_DANG_GIU.equals(datCho.getTrangThai())) {
+            throw new BusinessException("Chỉ có thể gia hạn cho phiếu đặt chỗ đang ở trạng thái ĐANG GIỮ.");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime mocTinh = (datCho.getHanGiuCho() != null && datCho.getHanGiuCho().isAfter(now))
+                ? datCho.getHanGiuCho() : now;
+        LocalDateTime hanMoi = mocTinh.plusHours(soGioThem);
+
+        datCho.setHanGiuCho(hanMoi);
+        String oldGhiChu = datCho.getGhiChu() != null ? datCho.getGhiChu() + " | " : "";
+        datCho.setGhiChu(oldGhiChu + "Gia hạn +" + soGioThem + "h");
+        DatCho saved = datChoRepository.save(datCho);
+
+        log.info("[{}] Đã gia hạn giữ chỗ ID: {} (Phòng {}) thêm {}h, hạn mới: {}",
+                threadName, datChoId, datCho.getPhongTro().getMaPhong(), soGioThem, hanMoi);
+        return saved;
+    }
+
+    /**
      * Giải phóng một bản ghi đặt giữ chỗ quá hạn trong một Transaction độc lập.
      * Phương thức này được gọi qua Bean Proxy của DatChoService từ DatChoScheduler
      * để đảm bảo @Transactional và findByIdForUpdate (Pessimistic Lock) hoạt động chính xác.
@@ -290,5 +345,9 @@ public class DatChoService {
 
     public long demDaChuyenHopDong() {
         return datChoRepository.countByTrangThai(TRANG_THAI_DA_CHUYEN_HOP_DONG);
+    }
+
+    public long demTongDatCho() {
+        return datChoRepository.count();
     }
 }

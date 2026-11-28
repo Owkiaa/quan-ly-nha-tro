@@ -2,6 +2,7 @@ package com.nhatro.controller;
 
 import com.nhatro.config.AuthInterceptor;
 import com.nhatro.dto.IncidentForm;
+import com.nhatro.entity.DatCho;
 import com.nhatro.entity.HoaDon;
 import com.nhatro.entity.HopDong;
 import com.nhatro.entity.PhongTro;
@@ -22,10 +23,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
-/** Cổng Khách thuê (TV3): tra cứu phòng trống, hợp đồng, hóa đơn và gửi phản ánh sự cố. */
+/**
+ * Cổng Khách thuê (TV3): tra cứu phòng trống, giữ chỗ trực tuyến, hợp đồng, hóa đơn và phản ánh sự cố.
+ *
+ * <p>Cô lập dữ liệu: {@code khachId} CHỈ lấy từ session (do TV1 lưu sau khi đăng nhập), không bao giờ nhận từ
+ * tham số URL hay form, nên khách không thể xem/sửa dữ liệu của người khác bằng cách đổi id trên đường dẫn.
+ */
 @Controller
 @RequestMapping("/tenant")
 public class TenantPortalController {
@@ -34,9 +42,10 @@ public class TenantPortalController {
      * >>> CHỖ DUY NHẤT phụ thuộc cách đăng nhập của TV1.
      * Sau khi đăng nhập, TV1 lưu id hồ sơ khách (tai_khoan.khach_id) vào session với tên này
      * (đặt theo kiểu SESSION_FULLNAME, SESSION_ROLE của fragments.html).
-     * Nếu TV1 đặt tên khác, chỉ cần sửa hằng số này.
+     * Nếu TV1 đặt tên khác (ví dụ "khachId"), chỉ cần sửa hằng số này.
      */
     private static final String SESSION_KHACH_ID = AuthInterceptor.SESSION_KHACH_ID;
+    private static final DateTimeFormatter GIO_PHUT = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
     private final TenantPortalService service;
 
@@ -73,17 +82,31 @@ public class TenantPortalController {
 
     // ------------------------------------------------------------ Phòng trống
 
+    /**
+     * Lọc nâng cao (tất cả đều tùy chọn): keyword, loaiPhong, giaTu, giaDen, dienTichToiThieu.
+     * Các giá trị lọc được đưa lại ra Model để form giữ nguyên lựa chọn của khách.
+     */
     @GetMapping("/rooms")
     public String rooms(@RequestParam(required = false) String keyword,
+                        @RequestParam(required = false) String loaiPhong,
+                        @RequestParam(required = false) BigDecimal giaTu,
+                        @RequestParam(required = false) BigDecimal giaDen,
+                        @RequestParam(required = false) Double dienTichToiThieu,
                         @RequestParam(required = false) String sort,
                         @PageableDefault(size = 8, sort = "giaThue") Pageable pageable,
                         HttpSession session, Model model) {
         if (!isLoggedIn(session)) {
             return "redirect:/login";
         }
-        Page<PhongTro> page = service.searchAvailableRooms(keyword, pageable);
+        Page<PhongTro> page = service.searchAvailableRooms(keyword, loaiPhong, giaTu, giaDen,
+                dienTichToiThieu, pageable);
         model.addAttribute("page", page);
         model.addAttribute("keyword", nz(keyword));
+        model.addAttribute("loaiPhong", nz(loaiPhong));
+        model.addAttribute("giaTu", giaTu);
+        model.addAttribute("giaDen", giaDen);
+        model.addAttribute("dienTichToiThieu", dienTichToiThieu);
+        model.addAttribute("loaiPhongOptions", service.getRoomTypes());
         model.addAttribute("trangThai", "");
         model.addAttribute("sort", nz(sort));
         return "tenant/rooms";
@@ -102,6 +125,47 @@ public class TenantPortalController {
         }
         model.addAttribute("room", room.get());
         return "tenant/room-detail";
+    }
+
+    // ------------------------------------------------------------ Đặt giữ chỗ trực tuyến
+
+    /** Giữ chỗ phòng {id} cho khách đang đăng nhập (khachId lấy từ session, không nhận từ request). */
+    @PostMapping("/rooms/{id}/book")
+    public String bookRoom(@PathVariable Integer id,
+                           @RequestParam(required = false) Integer soGioGiuCho,
+                           @RequestParam(required = false) String ghiChu,
+                           HttpSession session, RedirectAttributes redirect) {
+        Integer khachId = currentKhachId(session);
+        if (khachId == null) {
+            return redirectMissingKhachProfile(session, redirect);
+        }
+        try {
+            DatCho datCho = service.bookRoomForTenant(khachId, id, soGioGiuCho, ghiChu);
+            String han = (datCho != null && datCho.getHanGiuCho() != null)
+                    ? " Phiếu có hiệu lực đến " + datCho.getHanGiuCho().format(GIO_PHUT) + "."
+                    : "";
+            redirect.addFlashAttribute("successMessage", "Đã giữ chỗ phòng thành công." + han);
+            return "redirect:/tenant/rooms";
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirect.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/tenant/rooms/" + id;
+        }
+    }
+
+    /** Hủy phiếu giữ chỗ {id}; chỉ hủy được phiếu của chính khách đang đăng nhập. */
+    @PostMapping("/bookings/{id}/cancel")
+    public String cancelBooking(@PathVariable Integer id, HttpSession session, RedirectAttributes redirect) {
+        Integer khachId = currentKhachId(session);
+        if (khachId == null) {
+            return redirectMissingKhachProfile(session, redirect);
+        }
+        try {
+            service.cancelBookingByKhach(khachId, id);
+            redirect.addFlashAttribute("successMessage", "Đã hủy phiếu giữ chỗ.");
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirect.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/tenant/rooms";
     }
 
     // ------------------------------------------------------------ Hợp đồng

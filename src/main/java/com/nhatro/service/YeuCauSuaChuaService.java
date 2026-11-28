@@ -22,4 +22,10 @@ public interface YeuCauSuaChuaService {
     YeuCauSuaChua capNhatChiPhiVaHoanThanh(Integer id, BigDecimal chiPhi);
 
     void delete(Integer id);
+
+    long countByTrangThai(String trangThai);
+
+    long countByMucDo(String mucDo);
+
+    BigDecimal sumTongChiPhi();
 }

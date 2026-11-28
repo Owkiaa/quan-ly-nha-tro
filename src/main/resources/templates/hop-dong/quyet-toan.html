@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/fragments :: head('Quyết Toán Tiền Cọc & Thanh Lý')}"></head>
+<body>
+
+    <!-- Top Navbar -->
+    <nav th:replace="~{layout/fragments :: navbar('hop-dong')}"></nav>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <div class="container-xl" style="max-width: 900px;">
+            <!-- Flash Alerts -->
+            <div th:replace="~{layout/fragments :: alerts}"></div>
+
+            <!-- Page Header -->
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <div>
+                    <a th:href="@{'/hop-dong/' + ${hopDong.id}}" class="text-decoration-none text-muted small d-inline-flex align-items-center gap-1 mb-1">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Quay lại chi tiết hợp đồng</span>
+                    </a>
+                    <h3 class="fw-bold mb-0">Bảng Quyết Toán Tiền Cọc &amp; Thanh Lý</h3>
+                    <p class="text-muted small mb-0">Đối soát minh bạch tiền cọc, hóa đơn còn nợ và chi phí khấu trừ trước khi thu hồi phòng</p>
+                </div>
+                <div>
+                    <span class="badge bg-light text-dark border font-mono px-3 py-2 fs-6" th:text="${hopDong.maHopDong}">HD-P101-001</span>
+                </div>
+            </div>
+
+            <form th:action="@{'/hop-dong/' + ${hopDong.id} + '/thanh-ly'}" th:object="${quyetToan}" method="POST">
+                <input type="hidden" th:field="*{hopDongId}">
+
+                <!-- Thông tin tóm tắt Hợp đồng -->
+                <div class="card-custom p-4 mb-4">
+                    <div class="row g-3 small">
+                        <div class="col-md-4 col-6">
+                            <div class="text-secondary">Phòng trọ:</div>
+                            <div class="fw-bold text-dark fs-6 font-mono" th:text="${hopDong.phongTro.maPhong} + ' - ' + ${hopDong.phongTro.tenPhong}">P101</div>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <div class="text-secondary">Khách thuê:</div>
+                            <div class="fw-bold text-dark fs-6" th:text="${hopDong.khachThue.hoTen}">Nguyễn Văn A</div>
+                        </div>
+                        <div class="col-md-4 col-12">
+                            <div class="text-secondary">Thời hạn hợp đồng:</div>
+                            <div class="fw-semibold font-mono text-dark"
+                                 th:text="${#temporals.format(hopDong.ngayBatDau, 'dd/MM/yyyy')} + ' ➔ ' + ${#temporals.format(hopDong.ngayKetThuc, 'dd/MM/yyyy')}">01/01/2026 ➔ 01/07/2026</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danh sách hóa đơn chưa thanh toán (nếu có) -->
+                <div class="card-custom p-4 mb-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                        <h6 class="fw-bold text-dark text-uppercase small mb-0">
+                            <i class="fa-solid fa-file-invoice-dollar text-danger me-2"></i>1. Hóa Đơn Chưa Thanh Toán Cần Đối Soát
+                        </h6>
+                        <span class="badge bg-danger-subtle text-danger font-mono"
+                              th:text="${#lists.size(hoaDonChuaThanhToan)} + ' hóa đơn nợ'">0 hóa đơn nợ</span>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(hoaDonChuaThanhToan)}" class="alert alert-success py-2 px-3 small border-0 rounded-3 mb-0">
+                        <i class="fa-solid fa-circle-check me-1"></i>
+                        Khách thuê đã thanh toán đầy đủ toàn bộ hóa đơn. Không có công nợ hóa đơn cần trừ vào tiền cọc.
+                    </div>
+
+                    <div th:unless="${#lists.isEmpty(hoaDonChuaThanhToan)}">
+                        <div class="table-responsive mb-3">
+                            <table class="table table-sm table-bordered align-middle mb-0 small">
+                                <thead class="table-light text-secondary">
+                                    <tr>
+                                        <th>Mã Hóa Đơn</th>
+                                        <th>Tháng / Năm</th>
+                                        <th class="text-end">Tổng Tiền Nợ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="hd : ${hoaDonChuaThanhToan}">
+                                        <td class="font-mono fw-semibold" th:text="${hd.maHoaDon}">HD001</td>
+                                        <td class="font-mono" th:text="${hd.thangNam}">11/2026</td>
+                                        <td class="text-end font-mono fw-bold text-danger"
+                                            th:text="${#numbers.formatDecimal(hd.tongTien, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" th:field="*{gachNoHoaDon}" id="chkGachNo" onchange="tinhTienThucHoan()">
+                            <label class="form-check-label small fw-semibold text-dark" for="chkGachNo">
+                                Tự động khấu trừ tổng nợ hóa đơn này vào tiền đặt cọc và chuyển các hóa đơn sang trạng thái <span class="badge bg-success-subtle text-success">ĐÃ THANH TOÁN</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bảng tính quyết toán tiền cọc -->
+                <div class="card-custom p-4 mb-4">
+                    <h6 class="fw-bold text-dark text-uppercase small mb-3 pb-2 border-bottom">
+                        <i class="fa-solid fa-calculator text-warning me-2"></i>2. Bảng Kê Quyết Toán Tiền Cọc
+                    </h6>
+
+                    <div class="row g-3 align-items-center mb-3">
+                        <div class="col-md-6 text-secondary fw-semibold small">(+) Tiền đặt cọc ban đầu của hợp đồng:</div>
+                        <div class="col-md-6 text-md-end">
+                            <span class="fw-bold font-mono text-primary fs-5" id="displayTienCoc"
+                                  th:text="${#numbers.formatDecimal(quyetToan.tienDatCocBanDau, 0, 'POINT', 0, 'COMMA')} + ' đ'">3,000,000 đ</span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 align-items-center mb-3">
+                        <div class="col-md-6 text-secondary fw-semibold small">(-) Tổng tiền hóa đơn chưa thanh toán:</div>
+                        <div class="col-md-6 text-md-end">
+                            <span class="fw-bold font-mono text-danger fs-6" id="displayNoHoaDon"
+                                  th:text="'- ' + ${#numbers.formatDecimal(quyetToan.tongNoHoaDon, 0, 'POINT', 0, 'COMMA')} + ' đ'">- 0 đ</span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 align-items-start mb-3 pb-3 border-bottom">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-secondary mb-1">(-) Chi phí khấu trừ hư hại / dọn dẹp (VNĐ):</label>
+                            <input type="number" class="form-control form-control-sm font-mono" th:field="*{chiPhiKhauTru}"
+                                   id="inputKhauTru" min="0" step="10000" oninput="tinhTienThucHoan()" placeholder="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-secondary mb-1">Lý do khấu trừ (nếu có):</label>
+                            <input type="text" class="form-control form-control-sm" th:field="*{lyDoKhauTru}"
+                                   placeholder="Ví dụ: Làm hỏng vòi nước, thay ổ khóa mới, vệ sinh phòng..." maxlength="255">
+                        </div>
+                    </div>
+
+                    <!-- Tổng kết thực hoàn -->
+                    <div class="p-3 rounded-3 bg-light border d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div>
+                            <div class="fw-bold text-dark fs-6">(=) SỐ TIỀN CỌC THỰC HOÀN CHO KHÁCH:</div>
+                            <div class="small text-muted" id="ghiChuThucHoan">Chủ trọ hoàn trả lại cho khách thuê khi nhận bàn giao phòng.</div>
+                        </div>
+                        <div class="fw-bold font-mono fs-4 text-success" id="displayThucHoan"
+                             th:text="${#numbers.formatDecimal(quyetToan.tienThucHoan, 0, 'POINT', 0, 'COMMA')} + ' đ'">3,000,000 đ</div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="small text-muted">
+                        <i class="fa-solid fa-circle-info text-info me-1"></i>
+                        Sau khi xác nhận, hợp đồng sẽ chuyển sang <strong>ĐÃ THANH LÝ</strong> và phòng về trạng thái <strong>TRỐNG</strong>.
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a th:href="@{'/hop-dong/' + ${hopDong.id}}" class="btn btn-outline-secondary px-4">Hủy bỏ</a>
+                        <button type="submit" class="btn btn-warning px-4 fw-semibold text-dark shadow-sm">
+                            <i class="fa-solid fa-check-double me-1"></i> Xác Nhận Thanh Lý &amp; Quyết Toán
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{layout/fragments :: footer}"></footer>
+
+    <!-- Scripts -->
+    <th:block th:replace="~{layout/fragments :: scripts}"></th:block>
+
+    <script th:inline="javascript">
+        const tienCocBanDau = Number(/*[[${quyetToan.tienDatCocBanDau}]]*/ 0);
+        const tongNoHoaDon = Number(/*[[${quyetToan.tongNoHoaDon}]]*/ 0);
+
+        function formatVnd(amount) {
+            return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
+        }
+
+        function tinhTienThucHoan() {
+            const chkGachNo = document.getElementById('chkGachNo');
+            const truNo = (!chkGachNo || chkGachNo.checked) ? tongNoHoaDon : 0;
+
+            const inputKhauTru = document.getElementById('inputKhauTru');
+            const khauTru = Math.max(0, Number(inputKhauTru ? inputKhauTru.value : 0) || 0);
+
+            const displayNo = document.getElementById('displayNoHoaDon');
+            if (displayNo) {
+                displayNo.textContent = '- ' + formatVnd(truNo);
+            }
+
+            const thucHoan = tienCocBanDau - truNo - khauTru;
+            const displayThucHoan = document.getElementById('displayThucHoan');
+            const ghiChu = document.getElementById('ghiChuThucHoan');
+
+            if (thucHoan >= 0) {
+                displayThucHoan.className = 'fw-bold font-mono fs-4 text-success';
+                displayThucHoan.textContent = formatVnd(thucHoan);
+                ghiChu.textContent = 'Chủ trọ hoàn trả lại cho khách thuê khi nhận bàn giao phòng.';
+            } else {
+                displayThucHoan.className = 'fw-bold font-mono fs-4 text-danger';
+                displayThucHoan.textContent = formatVnd(thucHoan) + ' (Khách bù thêm)';
+                ghiChu.textContent = 'Tiền cọc không đủ bù công nợ/hư hại — khách thuê cần thanh toán thêm ' + formatVnd(Math.abs(thucHoan)) + '.';
+            }
+        }
+    </script>
+</body>
+</html>

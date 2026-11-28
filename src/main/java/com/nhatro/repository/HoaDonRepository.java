@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -21,6 +22,8 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
 
     boolean existsByHopDongIdAndThangNam(Integer hopDongId, String thangNam);
 
+    List<HoaDon> findByHopDongIdAndTrangThai(Integer hopDongId, String trangThai);
+
     @Query(value = "SELECT hd FROM HoaDon hd JOIN FETCH hd.hopDong h JOIN FETCH h.phongTro JOIN FETCH h.khachThue WHERE " +
            "(:keyword IS NULL OR :keyword = '' OR LOWER(hd.maHoaDon) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(h.maHopDong) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(h.phongTro.maPhong) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:thangNam IS NULL OR :thangNam = '' OR hd.thangNam = :thangNam) AND " +
@@ -32,6 +35,12 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
     Page<HoaDon> search(@Param("keyword") String keyword, @Param("thangNam") String thangNam, @Param("trangThai") String trangThai, Pageable pageable);
 
     java.util.Optional<HoaDon> findTopByHopDongIdOrderByNgayLapDesc(Integer hopDongId);
+
+    @Query("SELECT hd FROM HoaDon hd JOIN FETCH hd.hopDong WHERE hd.thangNam = :thangNam")
+    List<HoaDon> findByThangNamWithHopDong(@Param("thangNam") String thangNam);
+
+    @Query("SELECT hd FROM HoaDon hd JOIN FETCH hd.hopDong WHERE hd.hopDong.id IN :hopDongIds ORDER BY hd.ngayLap DESC, hd.id DESC")
+    List<HoaDon> findLatestByHopDongIds(@Param("hopDongIds") List<Integer> hopDongIds);
 
     @Query("SELECT COALESCE(SUM(hd.tongTien), 0) FROM HoaDon hd WHERE hd.trangThai = 'DA_THANH_TOAN'")
     java.math.BigDecimal sumTongDoanhThuDaThu();

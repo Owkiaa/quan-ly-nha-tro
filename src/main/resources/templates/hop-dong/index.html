@@ -18,12 +18,33 @@
                     <h3 class="fw-bold mb-1">Quản Lý Hợp Đồng Thuê Phòng</h3>
                     <p class="text-muted small mb-0">Quản lý vòng đời hợp đồng, thỏa thuận giá thuê, tiền cọc, gia hạn và thanh lý phòng</p>
                 </div>
-                <div>
+                <div class="d-flex align-items-center gap-2">
+                    <form th:action="@{/hop-dong/quet-het-han}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2"
+                                title="Quét và chuyển trạng thái các hợp đồng đã quá ngày kết thúc">
+                            <i class="fa-solid fa-arrows-rotate text-warning"></i>
+                            <span>Quét Hết Hạn</span>
+                        </button>
+                    </form>
                     <a th:href="@{/hop-dong/them-moi}" class="btn btn-primary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2">
                         <i class="fa-solid fa-plus"></i>
                         <span>Lập Hợp Đồng Mới</span>
                     </a>
                 </div>
+            </div>
+
+            <!-- Cảnh báo hợp đồng sắp hết hạn trong 15 ngày tới -->
+            <div th:if="${countSapHetHan != null and countSapHetHan > 0}"
+                 class="alert alert-warning border-0 border-start border-warning border-4 shadow-sm rounded-3 d-flex align-items-center justify-content-between gap-2 mb-4">
+                <div class="d-flex align-items-center gap-2 small">
+                    <i class="fa-solid fa-bell text-warning fs-5"></i>
+                    <span>
+                        Có <strong class="font-mono" th:text="${countSapHetHan}">0</strong> hợp đồng đang hiệu lực sẽ <strong>hết hạn trong vòng 15 ngày tới</strong>. Vui lòng liên hệ khách thuê để gia hạn hoặc chuẩn bị thanh lý.
+                    </span>
+                </div>
+                <a th:href="@{/hop-dong(trangThai='HIEU_LUC', sort='ngayKetThuc,asc')}" class="btn btn-sm btn-warning text-dark fw-semibold px-3 rounded-pill">
+                    Xem ngay
+                </a>
             </div>
 
             <!-- Quick Stat KPI Strip (1 hàng gọn gàng, Tổng độc lập bộ lọc) -->
@@ -169,6 +190,14 @@
                                     <span th:if="${item.trangThai == 'HIEU_LUC'}" class="badge-status badge-trong">
                                         <i class="fa-solid fa-circle-check"></i> Hiệu Lực
                                     </span>
+                                    <div th:if="${item.trangThai == 'HIEU_LUC' and ngayCanhBao != null and !item.ngayKetThuc.isAfter(ngayCanhBao)}" class="mt-1">
+                                        <span th:if="${item.ngayKetThuc.isBefore(today)}" class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.65rem;">
+                                            <i class="fa-solid fa-triangle-exclamation me-1"></i>Đã quá hạn
+                                        </span>
+                                        <span th:unless="${item.ngayKetThuc.isBefore(today)}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" style="font-size: 0.65rem;">
+                                            <i class="fa-regular fa-bell me-1"></i>Sắp hết hạn
+                                        </span>
+                                    </div>
                                     <span th:if="${item.trangThai == 'HET_HAN'}" class="badge-status badge-dadat">
                                         <i class="fa-solid fa-clock"></i> Hết Hạn
                                     </span>
@@ -186,15 +215,15 @@
                                         <a th:href="@{'/hop-dong/' + ${item.id}}" class="btn-action action-view" title="Xem chi tiết">
                                             <i class="fa-regular fa-eye"></i>
                                         </a>
-                                        <button th:if="${item.trangThai == 'HIEU_LUC' or item.trangThai == 'HET_HAN'}"
-                                                type="button" class="btn-action action-edit"
-                                                th:data-id="${item.id}"
-                                                th:data-mahopdong="${item.maHopDong}"
-                                                th:data-maphong="${item.phongTro.maPhong}"
-                                                onclick="moModalThanhLy(this)"
-                                                title="Thanh lý hợp đồng">
+                                        <a th:href="@{'/hop-dong/' + ${item.id} + '/xem-truoc'}" class="btn-action action-view text-primary" title="Xem trước &amp; Tải PDF">
+                                            <i class="fa-solid fa-file-pdf"></i>
+                                        </a>
+                                        <a th:if="${item.trangThai == 'HIEU_LUC' or item.trangThai == 'HET_HAN'}"
+                                           th:href="@{'/hop-dong/' + ${item.id} + '/thanh-ly'}"
+                                           class="btn-action action-edit"
+                                           title="Quyết toán tiền cọc &amp; Thanh lý">
                                             <i class="fa-solid fa-handshake-slash"></i>
-                                        </button>
+                                        </a>
                                         <button type="button" class="btn-action action-delete"
                                                 th:data-id="${item.id}"
                                                 th:data-mahopdong="${item.maHopDong}"

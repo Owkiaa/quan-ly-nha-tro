@@ -3,8 +3,10 @@ package com.nhatro.service;
 import com.nhatro.dto.DashboardDTO;
 import com.nhatro.repository.HoaDonRepository;
 import com.nhatro.repository.PhongTroRepository;
+import com.nhatro.repository.YeuCauSuaChuaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -26,6 +28,10 @@ public class DashboardService {
     @Autowired
     private HoaDonRepository hoaDonRepository;
 
+    @Autowired
+    private YeuCauSuaChuaRepository yeuCauSuaChuaRepository;
+
+    @Transactional(readOnly = true)
     public DashboardDTO getDashboardStats() {
         DashboardDTO dto = new DashboardDTO();
 
@@ -46,8 +52,13 @@ public class DashboardService {
 
         BigDecimal tongDaThu = hoaDonRepository.sumTongDoanhThuDaThu();
         BigDecimal tongNo = hoaDonRepository.sumTongNoChuaThu();
-        dto.setTongDoanhThuDaThu(tongDaThu != null ? tongDaThu : BigDecimal.ZERO);
+        BigDecimal tongChiPhiSuaChua = yeuCauSuaChuaRepository.sumTongChiPhi();
+        BigDecimal tongDaThuChuan = tongDaThu != null ? tongDaThu : BigDecimal.ZERO;
+        BigDecimal tongChiPhiChuan = tongChiPhiSuaChua != null ? tongChiPhiSuaChua : BigDecimal.ZERO;
+        dto.setTongDoanhThuDaThu(tongDaThuChuan);
         dto.setTongNoChuaThu(tongNo != null ? tongNo : BigDecimal.ZERO);
+        dto.setTongChiPhiSuaChua(tongChiPhiChuan);
+        dto.setLoiNhuanThucNhan(tongDaThuChuan.subtract(tongChiPhiChuan));
 
         long hdDaThu = hoaDonRepository.countByTrangThai("DA_THANH_TOAN");
         long hdChuaThu = hoaDonRepository.countByTrangThai("CHUA_THANH_TOAN");

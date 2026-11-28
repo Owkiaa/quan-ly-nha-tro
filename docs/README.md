@@ -6,4 +6,4 @@ Thư mục lưu trữ các tài liệu thiết kế và sơ đồ của đồ á
 - **Sơ đồ ERD (Cơ sở dữ liệu)**: Đang cập nhật
 - **Sơ đồ Lớp (Class Diagram)**: Đang cập nhật
 - **Sơ đồ Tuần tự (Sequence Diagram)**: Đang cập nhật
-- **Giao thức Socket (Client - Server)**: Đang cập nhật
+- **Giao thức Socket (Client - Server)**: Xem chi tiết tại [SOCKET_PROTOCOL.md](./SOCKET_PROTOCOL.md) (TV4 — Đoàn Văn Mẩn)

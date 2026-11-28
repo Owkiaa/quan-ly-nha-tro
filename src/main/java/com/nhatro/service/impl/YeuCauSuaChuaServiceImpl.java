@@ -2,6 +2,7 @@ package com.nhatro.service.impl;
 
 import com.nhatro.entity.YeuCauSuaChua;
 import com.nhatro.exception.BusinessException;
+import com.nhatro.exception.ResourceNotFoundException;
 import com.nhatro.repository.YeuCauSuaChuaRepository;
 import com.nhatro.service.YeuCauSuaChuaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ public class YeuCauSuaChuaServiceImpl implements YeuCauSuaChuaService {
     @Override
     public YeuCauSuaChua getById(Integer id) {
         return yeuCauRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy yêu cầu sửa chữa ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu sửa chữa ID: " + id));
     }
 
     @Override
@@ -46,6 +47,9 @@ public class YeuCauSuaChuaServiceImpl implements YeuCauSuaChuaService {
             throw new BusinessException("Tên thợ sửa chữa không được để trống.");
         }
         YeuCauSuaChua yeuCau = getById(id);
+        if ("HOAN_THANH".equals(yeuCau.getTrangThai())) {
+            throw new BusinessException("Không thể phân công lại phiếu sửa chữa đã hoàn thành.");
+        }
         yeuCau.setThoSuaChua(thoSuaChua.trim());
         yeuCau.setTrangThai("DANG_SUA");
         return yeuCauRepository.save(yeuCau);
@@ -58,6 +62,9 @@ public class YeuCauSuaChuaServiceImpl implements YeuCauSuaChuaService {
             throw new BusinessException("Chi phí sửa chữa không được để trống hoặc âm.");
         }
         YeuCauSuaChua yeuCau = getById(id);
+        if ("HOAN_THANH".equals(yeuCau.getTrangThai())) {
+            throw new BusinessException("Phiếu sửa chữa đã hoàn thành, không thể nghiệm thu lại.");
+        }
         yeuCau.setChiPhi(chiPhi);
         yeuCau.setTrangThai("HOAN_THANH");
         yeuCau.setNgayHoanThanh(LocalDateTime.now());
@@ -67,6 +74,23 @@ public class YeuCauSuaChuaServiceImpl implements YeuCauSuaChuaService {
     @Override
     @Transactional
     public void delete(Integer id) {
-        yeuCauRepository.deleteById(id);
+        YeuCauSuaChua yeuCau = getById(id);
+        yeuCauRepository.delete(yeuCau);
+    }
+
+    @Override
+    public long countByTrangThai(String trangThai) {
+        return yeuCauRepository.countByTrangThai(trangThai);
+    }
+
+    @Override
+    public long countByMucDo(String mucDo) {
+        return yeuCauRepository.countByMucDo(mucDo);
+    }
+
+    @Override
+    public BigDecimal sumTongChiPhi() {
+        BigDecimal total = yeuCauRepository.sumTongChiPhi();
+        return total != null ? total : BigDecimal.ZERO;
     }
 }
