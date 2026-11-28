@@ -22,7 +22,7 @@ jobs:
           cache: maven
 
       - name: Compile and run unit tests
-        run: ./mvnw -B test-compile test '-Dtest=!ConcurrencyBookingTest'
+        run: chmod +x mvnw && ./mvnw -B test-compile test '-Dtest=!ConcurrencyBookingTest'
 
       - name: Compile Socket Desktop Client
         run: |
