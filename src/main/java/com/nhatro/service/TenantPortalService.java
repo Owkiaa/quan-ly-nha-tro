@@ -216,10 +216,12 @@ public class TenantPortalService {
                 .orElseThrow(() -> new IllegalArgumentException(MSG_KHONG_TIM_THAY_KHACH));
 
         List<HopDong> contracts = contractRepository.findActiveByKhachAndPhong(khachId, phongId);
-        if (contracts.isEmpty()) {
-            throw new IllegalArgumentException(MSG_KHONG_CO_HOP_DONG);
-        }
-        PhongTro phong = contracts.get(0).getPhongTro();
+        // Phòng thủ nhiều lớp: truy vấn đã lọc HIEU_LUC, nhưng tầng nghiệp vụ vẫn kiểm tra lại trạng thái.
+        PhongTro phong = contracts.stream()
+                .filter(h -> "HIEU_LUC".equals(h.getTrangThai()))
+                .map(HopDong::getPhongTro)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(MSG_KHONG_CO_HOP_DONG));
 
         YeuCauSuaChua yc = new YeuCauSuaChua();
         yc.setPhongTro(phong);
