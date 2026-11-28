@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,4 +43,9 @@ public interface HopDongRepository extends JpaRepository<HopDong, Integer> {
 
     @Query("SELECT h FROM HopDong h JOIN FETCH h.phongTro JOIN FETCH h.khachThue WHERE h.trangThai = :trangThai ORDER BY h.phongTro.maPhong ASC")
     java.util.List<HopDong> findByTrangThaiWithDetails(@Param("trangThai") String trangThai);
+
+    @Query("SELECT h FROM HopDong h JOIN FETCH h.phongTro JOIN FETCH h.khachThue WHERE h.trangThai = 'HIEU_LUC' AND h.ngayKetThuc < :today")
+    List<HopDong> findExpiredContracts(@Param("today") LocalDate today);
+
+    long countByTrangThaiAndNgayKetThucBetween(String trangThai, LocalDate start, LocalDate end);
 }

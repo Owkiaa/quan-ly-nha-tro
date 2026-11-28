@@ -495,4 +495,48 @@ public class HopDongService {
                 LocalDate.now()
         );
     }
+
+    /**
+     * Đánh dấu một hợp đồng đã quá hạn từ HIEU_LUC sang HET_HAN (gọi từ HopDongScheduler qua Spring Proxy).
+     */
+    @Transactional
+    public void markContractExpired(Integer hopDongId) {
+        String threadName = Thread.currentThread().getName();
+        HopDong hopDong = hopDongRepository.findById(hopDongId).orElse(null);
+        if (hopDong != null && TRANG_THAI_HIEU_LUC.equals(hopDong.getTrangThai())
+                && hopDong.getNgayKetThuc() != null
+                && hopDong.getNgayKetThuc().isBefore(LocalDate.now())) {
+            hopDong.setTrangThai(TRANG_THAI_HET_HAN);
+            hopDongRepository.save(hopDong);
+            log.info("[{}] Đã tự động chuyển hợp đồng {} (Phòng: {}) sang trạng thái HET_HAN (hạn kết thúc: {})",
+                    threadName, hopDong.getMaHopDong(), hopDong.getPhongTro().getMaPhong(), hopDong.getNgayKetThuc());
+        }
+    }
+
+    /**
+     * Quét và chuyển trạng thái toàn bộ hợp đồng đã quá hạn (kích hoạt thủ công từ giao diện).
+     */
+    @Transactional
+    public int quetVaDanhDauHopDongHetHan() {
+        String threadName = Thread.currentThread().getName();
+        LocalDate today = LocalDate.now();
+        List<HopDong> expiredContracts = hopDongRepository.findExpiredContracts(today);
+        int count = 0;
+        for (HopDong hd : expiredContracts) {
+            hd.setTrangThai(TRANG_THAI_HET_HAN);
+            hopDongRepository.save(hd);
+            count++;
+        }
+        log.info("[{}] Quét thủ công hợp đồng hết hạn: đã chuyển {} hợp đồng sang HET_HAN", threadName, count);
+        return count;
+    }
+
+    /**
+     * Đếm số hợp đồng đang hiệu lực sắp hết hạn trong N ngày tới.
+     */
+    public long demHopDongSapHetHan(int soNgay) {
+        LocalDate today = LocalDate.now();
+        return hopDongRepository.countByTrangThaiAndNgayKetThucBetween(
+                TRANG_THAI_HIEU_LUC, today, today.plusDays(soNgay));
+    }
 }

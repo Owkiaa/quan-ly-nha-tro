@@ -76,8 +76,31 @@ public class HopDongController {
         model.addAttribute("countHieuLuc", hopDongService.demHieuLuc());
         model.addAttribute("countHetHan", hopDongService.demHetHan());
         model.addAttribute("countDaThanhLy", hopDongService.demDaThanhLy());
+        model.addAttribute("countSapHetHan", hopDongService.demHopDongSapHetHan(15));
+        model.addAttribute("today", LocalDate.now());
+        model.addAttribute("ngayCanhBao", LocalDate.now().plusDays(15));
 
         return "hop-dong/index";
+    }
+
+    /**
+     * Kích hoạt quét thủ công các hợp đồng đã quá hạn kết thúc để chuyển sang HET_HAN.
+     */
+    @PostMapping("/quet-het-han")
+    public String quetHopDongHetHan(RedirectAttributes redirectAttributes) {
+        try {
+            int count = hopDongService.quetVaDanhDauHopDongHetHan();
+            if (count > 0) {
+                redirectAttributes.addFlashAttribute("successMessage",
+                        "Đã quét và tự động chuyển " + count + " hợp đồng quá hạn sang trạng thái HẾT HẠN.");
+            } else {
+                redirectAttributes.addFlashAttribute("infoMessage",
+                        "Hiện không có hợp đồng hiệu lực nào bị quá ngày kết thúc.");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi quét hợp đồng hết hạn: " + e.getMessage());
+        }
+        return "redirect:/hop-dong";
     }
 
     /**
